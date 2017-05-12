@@ -12,12 +12,11 @@ maintainer:          z.palmer@openmailbox.org
 -- copyright:           
 category:            Network
 build-type:          Simple
-extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 executable server
   main-is:             Main.hs
-  -- other-modules:       
+  other-modules:       CardUtilities, Types
   other-extensions:    TemplateHaskell
   build-depends:       base >=4.9 && <4.10, lens >=4.15 && <4.16, random == 1.1
   hs-source-dirs:      src

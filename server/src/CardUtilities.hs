@@ -1,6 +1,10 @@
-module Utilities
+module CardUtilities
 (
     takeCard,
+    hearts,
+    clubs,
+    diamond,
+    spade,
     fullDeck
 )
 where
@@ -25,3 +29,15 @@ deleteNth n xs
 fullDeck :: [Card]
 fullDeck = [Card value' suit' | value' <- [minBound :: Value .. maxBound],
                                 suit' <- [minBound :: Suit .. maxBound]]
+
+hearts :: [Card]
+hearts = [Card value' Heart | value' <- [minBound :: Value .. maxBound]]
+
+clubs :: [Card]
+clubs = [Card value' Club | value' <- [minBound :: Value .. maxBound]]
+
+diamond :: [Card]
+diamond = [Card value' Diamond | value' <- [minBound :: Value .. maxBound]]
+
+spade :: [Card]
+spade = [Card value' Spade | value' <- [minBound :: Value .. maxBound]]

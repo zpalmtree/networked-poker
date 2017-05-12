@@ -1,3 +1,4 @@
 *.hdevtools
 dist
 *.swp
+*.stack-work

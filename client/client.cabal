@@ -12,7 +12,6 @@ maintainer:          z.palmer@openmailbox.org
 -- copyright:           
 category:            Network
 build-type:          Simple
-extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 executable client
