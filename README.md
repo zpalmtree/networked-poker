@@ -3,9 +3,24 @@ A collection of programs to allow multiple clients to play poker together on one
 
 ## Installation
 
+#### Install prerequistes
+You need stack installed.
+
+##### Debian based:
+`sudo apt-get install haskell-stack`
+
+##### Arch based:
+`sudo pacman -S stack`
+
+#### Clone the repository
+
 `git clone https://github.com/ZedPea/networked-poker.git`
 
 `cd networked-poker`
+
+#### Setup stack and compile
+
+`stack setup`
 
 `stack install`
 
