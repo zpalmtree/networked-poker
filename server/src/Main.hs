@@ -3,47 +3,52 @@ module Main where
 import Types
 import Control.Lens
 import Betting
+import PlayerUtilities
+import CardUtilities
+import StateUtilities
 
 main :: IO ()
 main = return ()
 
-action :: Game -> Game
-action game
-    | game^.roundDone = game
-    | otherwise = case game^.state of
-        PreFlop -> action $ preflop game
-        Flop -> action $ flop game
-        Turn -> action $ turn game
-        River -> action $ river game
-        Showdown -> showdown game
-
-preflop :: Game -> Game
-preflop game = undefined
-
-flop :: Game -> Game
-flop = undefined
-
-turn :: Game -> Game
-turn = undefined
-
-river :: Game -> Game
-river = undefined
+bettingRound :: Game -> IO Game
+bettingRound game
+    | isShowdown game = return $ showdown game
+    | numInPlay game == 1 = return . nextRound $ giveWinnings index' game
+    | numInPlay game - numAllIn game <= 1 = bettingRound =<< nextState game
+    where index' = victorIndex game
 
 showdown :: Game -> Game
 showdown = undefined
 
-repeatN :: Int -> (Game -> IO Game) -> Game -> IO Game
-repeatN 0 _ game = return game
-repeatN n f game = do
-    newGame <- f game
-    repeatN (n-1) f newGame
+nextState :: Game -> IO Game
+nextState game = case game^.state of
+    PreFlop -> revealFlop game
+    Flop -> revealTurn game
+    Turn -> revealRiver game
+    River -> return $ game & state .~ Showdown
+    _ -> error "Programming error in nextState"
 
-initialBets :: Game -> IO Game
-initialBets game = repeatN (game^.playerInfo.numPlayers) bettingRound game
+giveWinnings :: Int -> Game -> Game
+giveWinnings player game = game & playerInfo.players.ix player.chips
+                                  +~ gatherChips game
 
+nextRound :: Game -> Game
+nextRound game = game & allPlayers.cards .~ Nothing
+                      & allPlayers.inPlay .~ True
+                      & allPlayers.bet .~ 0
+                      & playerInfo.dealer .~ advanceDealer game
+                      & playerInfo.playerTurn .~ advancePlayerTurn game
+                      & state .~ PreFlop
+                      & cardInfo .~ Cards Nothing fullDeck
+                      & roundDone .~ False
+                      & bets.pot .~ 0
+                      & bets.currentBet .~ 0
+    where allPlayers = playerInfo.players.traversed
+
+{-
 bettingRound :: Game -> IO Game
 bettingRound game
-    | not $ currentPlayer^.inPlay = go (\x -> return (id x))
+    | not $ currentPlayer^.inPlay = go return
     | currentPlayer^.bet >= game^.bets.currentBet = go foldCheckRaise
     | otherwise = go foldCallRaise 
     where currentPlayer = game^.playerInfo.players ^?! ix player
@@ -51,6 +56,7 @@ bettingRound game
           go f = do
             newState <- f game
             return $ nextPlayer newState
+-}
 
 foldCheckRaise :: Game -> IO Game
 foldCheckRaise game = do
@@ -91,7 +97,4 @@ call :: Game -> Game
 call = undefined
 
 nextPlayer :: Game -> Game
-nextPlayer game = game & playerInfo.playerTurn .~ next
-    where currentPlayer = game^.playerInfo.playerTurn
-          numPlayers' = game^.playerInfo.numPlayers
-          next = (currentPlayer + 1) `rem` numPlayers'
+nextPlayer game = game & playerInfo.playerTurn .~ advancePlayerTurn game

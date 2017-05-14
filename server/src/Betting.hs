@@ -17,3 +17,7 @@ smallBlind player game = makeBet (game^.bets.smallBlindSize) player game
 
 bigBlind :: Int -> Game -> Game
 bigBlind player game = makeBet (game^.bets.bigBlindSize) player game
+
+gatherChips :: Game -> Int
+gatherChips game = game^.bets.pot + 
+                   sum (game^..playerInfo.players.traversed.bet)

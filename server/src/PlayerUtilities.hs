@@ -1,12 +1,28 @@
 module PlayerUtilities where
 
 import Types
+import Control.Lens
 
-testPlayer1 :: Player
-testPlayer1 = Player 1 "test" 1000 Nothing True False 0
+numInPlay :: Game -> Int
+numInPlay game = length $ filter (^.inPlay) (game^.playerInfo.players)
 
-testPlayer2 :: Player
-testPlayer2 = Player 2 "test2" 1000 Nothing True False 0
+numAllIn :: Game -> Int
+numAllIn game = length $ filter (^.allIn) (game^.playerInfo.players)
 
-testPlayers :: Players
-testPlayers = Players 2 [testPlayer1, testPlayer2] 1 0
+numPlayers' :: Game -> Int
+numPlayers' game = game^.playerInfo.numPlayers
+
+currentPlayerIndex :: Game -> Int
+currentPlayerIndex game = game^.playerInfo.playerTurn
+
+victorIndex :: Game -> Int
+victorIndex game = head $ game^..playerInfo.players.traversed.num
+
+advanceDealer :: Game -> Int
+advanceDealer game = advance (game^.playerInfo.dealer) game
+
+advancePlayerTurn :: Game -> Int
+advancePlayerTurn game = advance (game^.playerInfo.playerTurn) game
+
+advance :: Int -> Game -> Int
+advance index' game = (index' + 1) `rem` numPlayers' game
