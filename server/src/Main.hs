@@ -12,20 +12,40 @@ main = return ()
 
 bettingRound :: Game -> IO Game
 bettingRound game
+    -- in showdown -> no more betting can happen
     | isShowdown game = return $ showdown game
+    -- only one player left -> they get the winnings, start next round
     | numInPlay game == 1 = return . nextRound $ giveWinnings index' game
+    {- max of one person isn't all in -> no more betting can happen -> deal
+    more cards, but can't do anymore betting -}
     | numInPlay game - numAllIn game <= 1 = bettingRound =<< nextState game
+    -- player isn't in play, go onto next player 
+    | not $ getCurrentPlayer game^.inPlay = bettingRound $ nextPlayer game 
+    -- player is in play, and hasn't made their initial bet, so prompt for bet
+    | not $ getCurrentPlayer game^.madeInitialBet = bettingRound . nextPlayer
+                                                    $ promptBet game
+    {- player is in play, and has made initial bet, but isn't matched with
+    current bet level -> has to call/fold/raise -}
+    | getCurrentPlayer game^.madeInitialBet && 
+      getCurrentPlayer game^.bet < game^.bets.currentBet
+        = bettingRound . nextPlayer $ promptBet game
+    {- else the player has already made their bet so move on to next load of 
+    cards and bets -}
+    | otherwise = bettingRound =<< nextState game
     where index' = victorIndex game
+
+promptBet :: Game -> Game
+promptBet = undefined
 
 showdown :: Game -> Game
 showdown = undefined
 
 nextState :: Game -> IO Game
 nextState game = case game^.state of
-    PreFlop -> revealFlop game
-    Flop -> revealTurn game
-    Turn -> revealRiver game
-    River -> return $ game & state .~ Showdown
+    PreFlop -> revealFlop $ updatePot game
+    Flop -> revealTurn $ updatePot game
+    Turn -> revealRiver $ updatePot game
+    River -> return . updatePot $ game & state .~ Showdown
     _ -> error "Programming error in nextState"
 
 giveWinnings :: Int -> Game -> Game
@@ -44,19 +64,6 @@ nextRound game = game & allPlayers.cards .~ Nothing
                       & bets.pot .~ 0
                       & bets.currentBet .~ 0
     where allPlayers = playerInfo.players.traversed
-
-{-
-bettingRound :: Game -> IO Game
-bettingRound game
-    | not $ currentPlayer^.inPlay = go return
-    | currentPlayer^.bet >= game^.bets.currentBet = go foldCheckRaise
-    | otherwise = go foldCallRaise 
-    where currentPlayer = game^.playerInfo.players ^?! ix player
-          player = game^.playerInfo.playerTurn
-          go f = do
-            newState <- f game
-            return $ nextPlayer newState
--}
 
 foldCheckRaise :: Game -> IO Game
 foldCheckRaise game = do
@@ -82,16 +89,15 @@ foldCallRaise game = do
         _ -> putStrLn "bad input" >> foldCheckRaise game
 
 fold :: Game -> Game
-fold game = game & playerInfo.players.ix player.inPlay .~ False
-    where player = game^.playerInfo.playerTurn
+fold game = game & mutateCurrentPlayer game . inPlay .~ False
 
 raise :: Int -> Game -> Game
 raise amount game
     | playerChips < amount = error "Not enough chips!"
-    | playerChips == amount = goAllIn player game
-    | otherwise = makeBet amount player game
-    where player = game^.playerInfo.playerTurn
-          playerChips = game^.playerInfo.players ^?! ix player.chips
+    | playerChips == amount = goAllIn game
+    | otherwise = makeBet amount game
+    where playerChips = getCurrentPlayer game^.chips
+
 
 call :: Game -> Game
 call = undefined

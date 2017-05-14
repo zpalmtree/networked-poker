@@ -33,7 +33,7 @@ drawCard game = do
 
 addCard :: Maybe [Card] -> Card -> Maybe [Card]
 addCard Nothing card = Just [card]
-addCard cards card = fmap (++ [card]) cards
+addCard tableCards' card = fmap (++ [card]) tableCards'
 
 revealFlop :: Game -> IO Game
 revealFlop game = (& state .~ Flop) <$> 

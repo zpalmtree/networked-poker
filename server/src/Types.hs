@@ -19,7 +19,8 @@ data Player = Player {
     _cards :: Maybe (Card, Card),
     _inPlay :: Bool,
     _allIn :: Bool,
-    _bet :: Int
+    _bet :: Int,
+    _madeInitialBet :: Bool
 } deriving Show
 
 data Players = Players {

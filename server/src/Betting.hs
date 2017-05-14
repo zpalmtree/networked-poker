@@ -2,22 +2,27 @@ module Betting where
 
 import Types
 import Control.Lens
+import PlayerUtilities
 
-makeBet :: Int -> Int -> Game -> Game
-makeBet amount player game = game & playerInfo.players.ix player.chips -~ amount
-                                  & playerInfo.players.ix player.bet +~ amount
+makeBet :: Int -> Game -> Game
+makeBet amount game = game & mutateCurrentPlayer game . chips -~ amount
+                           & mutateCurrentPlayer game . bet +~ amount
 
-goAllIn :: Int -> Game -> Game
-goAllIn player game = let newState = makeBet playerChips player game
-                      in  newState & playerInfo.players.ix player.allIn .~ True
-    where playerChips = game^.playerInfo.players ^?! ix player.chips
+goAllIn :: Game -> Game
+goAllIn game = makeBet (getCurrentPlayer game^.chips) game
+                & mutateCurrentPlayer game . allIn .~ True
 
-smallBlind :: Int -> Game -> Game
-smallBlind player game = makeBet (game^.bets.smallBlindSize) player game
+smallBlind :: Game -> Game
+smallBlind game = makeBet (game^.bets.smallBlindSize) game
 
-bigBlind :: Int -> Game -> Game
-bigBlind player game = makeBet (game^.bets.bigBlindSize) player game
+bigBlind :: Game -> Game
+bigBlind game = makeBet (game^.bets.bigBlindSize) game
 
 gatherChips :: Game -> Int
-gatherChips game = game^.bets.pot + 
-                   sum (game^..playerInfo.players.traversed.bet)
+gatherChips game = game^.bets.pot
+                    + sum (game^..playerInfo.players.traversed.bet)
+
+updatePot :: Game -> Game
+updatePot game = game & bets.pot +~ gatherChips game
+                      & bets.currentBet .~ 0
+                      & playerInfo.players.traversed.bet .~ 0
