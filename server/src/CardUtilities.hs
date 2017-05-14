@@ -5,7 +5,8 @@ module CardUtilities
     clubs,
     diamond,
     spade,
-    fullDeck
+    fullDeck,
+    testCards
 )
 where
 
@@ -41,3 +42,6 @@ diamond = [Card value' Diamond | value' <- [minBound :: Value .. maxBound]]
 
 spade :: [Card]
 spade = [Card value' Spade | value' <- [minBound :: Value .. maxBound]]
+
+testCards :: Cards
+testCards = Cards Nothing fullDeck
