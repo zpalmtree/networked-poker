@@ -9,11 +9,11 @@ data Game = Game {
     _state :: State,
     _cardInfo :: Cards,
     _roundDone :: Bool,
-    _bets :: Bets
+    _bets :: Bets,
+    _gameFinished :: Bool
 } deriving Show
 
 data Player = Player {
-    _num :: Int,
     _name :: String,
     _chips :: Int,
     _cards :: Maybe (Card, Card),
@@ -46,6 +46,8 @@ data Card = Card {
     _value :: Value,
     _suit :: Suit
 } deriving Show
+
+data Action = Fold | Check | Call | Raise deriving Show
 
 data State = PreFlop | Flop | Turn | River | Showdown deriving Show
 

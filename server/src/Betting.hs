@@ -5,12 +5,12 @@ import Control.Lens
 import PlayerUtilities
 
 makeBet :: Int -> Game -> Game
-makeBet amount game = game & mutateCurrentPlayer game . chips -~ amount
-                           & mutateCurrentPlayer game . bet +~ amount
+makeBet amount game = game & setCurrentPlayer game . chips -~ amount
+                           & setCurrentPlayer game . bet +~ amount
 
 goAllIn :: Game -> Game
 goAllIn game = makeBet (getCurrentPlayer game^.chips) game
-                & mutateCurrentPlayer game . allIn .~ True
+                & setCurrentPlayer game . allIn .~ True
 
 smallBlind :: Game -> Game
 smallBlind game = makeBet (game^.bets.smallBlindSize) game

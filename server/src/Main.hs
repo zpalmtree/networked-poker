@@ -6,32 +6,52 @@ import Betting
 import PlayerUtilities
 import CardUtilities
 import StateUtilities
+import Control.Monad
 
 main :: IO ()
 main = return ()
 
-bettingRound :: Game -> IO Game
-bettingRound game
+play :: IO ()
+play = do
+    initial <- setup
+    final <- gameLoop initial
+    void $ cleanup final
+
+gameLoop :: Game -> IO Game
+gameLoop game = do
+    newGame <- playRound game
+    if newGame^.gameFinished
+        then return game
+        else gameLoop newGame
+
+setup :: IO Game
+setup = undefined
+
+cleanup :: Game -> IO ()
+cleanup = undefined
+
+playRound :: Game -> IO Game
+playRound game
     -- in showdown -> no more betting can happen
-    | isShowdown game = return $ showdown game
+    | isShowdown game = return . nextRound $ showdown game
     -- only one player left -> they get the winnings, start next round
     | numInPlay game == 1 = return . nextRound $ giveWinnings index' game
     {- max of one person isn't all in -> no more betting can happen -> deal
     more cards, but can't do anymore betting -}
-    | numInPlay game - numAllIn game <= 1 = bettingRound =<< nextState game
+    | numInPlay game - numAllIn game <= 1 = playRound =<< nextState game
     -- player isn't in play, go onto next player 
-    | not $ getCurrentPlayer game^.inPlay = bettingRound $ nextPlayer game 
+    | not $ getCurrentPlayer game^.inPlay = playRound $ nextPlayer game 
     -- player is in play, and hasn't made their initial bet, so prompt for bet
-    | not $ getCurrentPlayer game^.madeInitialBet = bettingRound . nextPlayer
+    | not $ getCurrentPlayer game^.madeInitialBet = playRound . nextPlayer
                                                     $ promptBet game
     {- player is in play, and has made initial bet, but isn't matched with
     current bet level -> has to call/fold/raise -}
     | getCurrentPlayer game^.madeInitialBet && 
       getCurrentPlayer game^.bet < game^.bets.currentBet
-        = bettingRound . nextPlayer $ promptBet game
+        = playRound . nextPlayer $ promptBet game
     {- else the player has already made their bet so move on to next load of 
     cards and bets -}
-    | otherwise = bettingRound =<< nextState game
+    | otherwise = playRound =<< nextState game
     where index' = victorIndex game
 
 promptBet :: Game -> Game
@@ -53,17 +73,19 @@ giveWinnings player game = game & playerInfo.players.ix player.chips
                                   +~ gatherChips game
 
 nextRound :: Game -> Game
-nextRound game = game & allPlayers.cards .~ Nothing
-                      & allPlayers.inPlay .~ True
-                      & allPlayers.bet .~ 0
-                      & playerInfo.dealer .~ advanceDealer game
-                      & playerInfo.playerTurn .~ advancePlayerTurn game
-                      & state .~ PreFlop
-                      & cardInfo .~ Cards Nothing fullDeck
-                      & roundDone .~ False
-                      & bets.pot .~ 0
-                      & bets.currentBet .~ 0
+nextRound game = newState & allPlayers.cards .~ Nothing
+                          & allPlayers.inPlay .~ True
+                          & allPlayers.bet .~ 0
+                          & playerInfo.dealer .~ advanceDealer newState
+                          & playerInfo.playerTurn .~ advancePlayerTurn newState
+                          & state .~ PreFlop
+                          & cardInfo .~ Cards Nothing fullDeck
+                          & roundDone .~ False
+                          & bets.pot .~ 0
+                          & bets.currentBet .~ 0
     where allPlayers = playerInfo.players.traversed
+          newState = removeOutPlayers game
+          
 
 foldCheckRaise :: Game -> IO Game
 foldCheckRaise game = do
@@ -89,7 +111,7 @@ foldCallRaise game = do
         _ -> putStrLn "bad input" >> foldCheckRaise game
 
 fold :: Game -> Game
-fold game = game & mutateCurrentPlayer game . inPlay .~ False
+fold game = game & setCurrentPlayer game . inPlay .~ False
 
 raise :: Int -> Game -> Game
 raise amount game
