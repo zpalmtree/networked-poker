@@ -17,19 +17,18 @@ flush cards' = maximum (numOfSuit cards') >= numCardsInHand
 -- if there's an ace, check for a straight with ace being high and low
 -- note - if 7 cards aren't passed to this, it won't work correctly
 straight :: [Card] -> Bool
-straight c
-    | any hasAce c = any (`isStraight` True) [x, x', x''] 
-                  || any (`isStraight` False) [x, x', x'']
-    | otherwise = any (`isStraight` True) [x, x', x'']
+straight c = isStraight x || isStraight x' || isStraight x''
     where x = take 5 c
           x' = take 5 $ drop 1 c
           x'' = drop 2 c
 
 {- difference between max and min = 4 means it's a straight
 example: 2,3,4,5,6 -> 6 - 2 == 4 -}
-isStraight :: [Card] -> Bool -> Bool
-isStraight c aceHigh = maximum values - minimum values == straightDifference
-    where values = cardValues c aceHigh
+isStraight :: [Card] -> Bool
+isStraight c = f values || f valuesAceLow
+    where f v = maximum v - minimum v == straightDifference
+          valuesAceLow = cardValues c False
+          values = cardValues c True
           straightDifference = 4
 
 cardValues :: [Card] -> Bool -> [Int]
