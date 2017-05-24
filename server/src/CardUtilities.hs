@@ -3,8 +3,8 @@ module CardUtilities
     drawCard,
     hearts,
     clubs,
-    diamond,
-    spade,
+    diamonds,
+    spades,
     fullDeck,
     revealFlop,
     revealTurn,
@@ -61,8 +61,8 @@ hearts = [Card value' Heart | value' <- [minBound :: Value .. maxBound]]
 clubs :: [Card]
 clubs = [Card value' Club | value' <- [minBound :: Value .. maxBound]]
 
-diamond :: [Card]
-diamond = [Card value' Diamond | value' <- [minBound :: Value .. maxBound]]
+diamonds :: [Card]
+diamonds = [Card value' Diamond | value' <- [minBound :: Value .. maxBound]]
 
-spade :: [Card]
-spade = [Card value' Spade | value' <- [minBound :: Value .. maxBound]]
+spades :: [Card]
+spades = [Card value' Spade | value' <- [minBound :: Value .. maxBound]]

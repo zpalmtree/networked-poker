@@ -45,16 +45,19 @@ data Bets = Bets {
 data Card = Card {
     _value :: Value,
     _suit :: Suit
-} deriving Show
+} deriving (Eq, Show)
 
 data Action = Fold | Check | Call | Raise deriving Show
 
+data Hand = HighCard | Pair | TwoPair | ThreeOfAKind | Straight | Flush |
+            FullHouse | FourOfAKind | StraightFlush deriving (Show, Eq, Ord)
+
 data State = PreFlop | Flop | Turn | River | Showdown deriving Show
 
-data Suit = Heart | Spade | Club | Diamond deriving (Show, Bounded, Enum)
+data Suit = Heart | Spade | Club | Diamond deriving (Show, Bounded, Enum, Eq)
 
 data Value = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten |
-             Jack | Queen | King | Ace deriving (Show, Bounded, Enum)
+             Jack | Queen | King | Ace deriving (Show, Bounded, Enum, Eq, Ord)
 
 makeLenses ''Game
 makeLenses ''Player

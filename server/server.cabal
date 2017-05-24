@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 executable server
   main-is:             Main.hs
   other-modules:       Betting, CardUtilities, PlayerUtilities, StateUtilities,
-                       TestStates, Types
+                       TestStates, Types, HandValue
   other-extensions:    TemplateHaskell
   build-depends:       base >=4.9 && <4.10, lens >=4.15 && <4.16, random == 1.1
   hs-source-dirs:      src
