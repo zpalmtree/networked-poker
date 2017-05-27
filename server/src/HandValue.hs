@@ -18,12 +18,14 @@ flush cards' = maximum (numOfSuit cards') >= numCardsInHand
 -- note - if 7 cards aren't passed to this, it won't work correctly
 straight :: [Card] -> Bool
 straight c = isStraight x || isStraight x' || isStraight x''
-    where x = take 5 c
-          x' = take 5 $ drop 1 c
-          x'' = drop 2 c
+    where x = take 5 fixed
+          x' = take 5 $ drop 1 fixed
+          x'' = drop 2 fixed
+          fixed = sorted c
 
 {- difference between max and min = 4 means it's a straight
-example: 2,3,4,5,6 -> 6 - 2 == 4 -}
+example: 2,3,4,5,6 -> 6 - 2 == 4 
+5 cards should be passed to this function. -}
 isStraight :: [Card] -> Bool
 isStraight c = f values || f valuesAceLow
     where f v = maximum v - minimum v == straightDifference
