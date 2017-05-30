@@ -1,8 +1,14 @@
 module HandValue
 (
+    handValue,
+    straightFlush,
+    fourOfAKind,
+    fullHouse,
     flush,
     straight,
-    straightFlush
+    threeOfAKind,
+    twoPair,
+    pair
 )
 where
 
@@ -11,8 +17,47 @@ import CardUtilities
 import Data.List
 import Data.Function
 
+handValue :: [Card] -> Hand
+handValue cards'
+    | straightFlush cards' = StraightFlush
+    | fourOfAKind cards' = FourOfAKind
+    | fullHouse cards' = FullHouse
+    | flush cards' = Flush
+    | straight cards' = Straight
+    | threeOfAKind cards' = ThreeOfAKind
+    | twoPair cards' = TwoPair
+    | pair cards' = Pair
+    | otherwise = HighCard
+
 straightFlush :: [Card] -> Bool
 straightFlush cards' = any (\x -> straight x && flush x) (handSubsets cards')
+
+fourOfAKind :: [Card] -> Bool
+fourOfAKind = xOfAKind 4
+
+threeOfAKind :: [Card] -> Bool
+threeOfAKind = xOfAKind 3
+
+twoPair :: [Card] -> Bool
+twoPair cards' = (length . filter (>=2) $ numOfEachValue cards') >= 2
+
+pair :: [Card] -> Bool
+pair = xOfAKind 2
+
+{- filter for the cards which we have two or more of, sort descending, if
+longer than two then if the head is >= 3, it must be a full house -}
+fullHouse :: [Card] -> Bool
+fullHouse cards'
+    | length sorted' >= 2 = head sorted' >= 3
+    | otherwise = False
+    where pairOrAbove = filter (>=2) $ numOfEachValue cards'
+          sorted' = sortBy (flip compare) pairOrAbove
+
+xOfAKind :: Int -> [Card] -> Bool
+xOfAKind x cards' = maximum (numOfEachValue cards') == x
+
+numOfEachValue :: [Card] -> [Int]
+numOfEachValue cards' = map length . group . sort $ map getValue cards'
 
 flush :: [Card] -> Bool
 flush cards' = maximum (numOfSuit cards') >= sizeOfHand
@@ -25,20 +70,15 @@ straight c = isStraight x || isStraight x' || isStraight x''
           x'' = drop 2 fixed
           fixed = sorted c
 
-{- difference between max and min = 4 means it's a straight
-example: 2,3,4,5,6 -> 6 - 2 == 4 
-5 cards should be passed to this function. -}
 isStraight :: [Card] -> Bool
-isStraight c = f values || f valuesAceLow
-    where f v = maximum v - minimum v == straightDifference
-          valuesAceLow = cardValues c False
+isStraight c = consecutive values || consecutive valuesAceLow
+    where valuesAceLow = cardValues c False
           values = cardValues c True
-          straightDifference = 4
 
 cardValues :: [Card] -> Bool -> [Int]
 cardValues c aceHigh
-    | aceHigh = map (cardValue . getValue) c
-    | otherwise = map (cardValueAceLow . getValue) c
+    | aceHigh = sort $ map (cardValue . getValue) c
+    | otherwise = sort $ map (cardValueAceLow . getValue) c
 
 numOfSuit :: [Card] -> [Int]
 numOfSuit c = map (`numSuit` c) [isHeart, isClub, isDiamond, isSpade]
@@ -82,3 +122,13 @@ handSubsets xs = combsBySize xs !! sizeOfHand
 
 sizeOfHand :: Int
 sizeOfHand = 5
+
+consecutive :: (Eq a, Num a) => [a] -> Bool
+consecutive [] = True
+consecutive xs = consecutive' xs (head xs)
+
+consecutive' :: (Num t, Eq t) => [t] -> t -> Bool
+consecutive' [] _ = True
+consecutive' (x:xs) val
+    | x == val = consecutive' xs (val + 1)
+    | otherwise = False
