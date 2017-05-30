@@ -8,7 +8,8 @@ module CardUtilities
     fullDeck,
     revealFlop,
     revealTurn,
-    revealRiver
+    revealRiver,
+    getSevenCards
 )
 where
 
@@ -66,3 +67,13 @@ diamonds = [Card value' Diamond | value' <- [minBound :: Value .. maxBound]]
 
 spades :: [Card]
 spades = [Card value' Spade | value' <- [minBound :: Value .. maxBound]]
+
+getSevenCards :: IO [Card]
+getSevenCards = getSevenCards' 7 fullDeck
+
+getSevenCards' :: Int -> [Card] -> IO [Card]
+getSevenCards' 0 _ = return []
+getSevenCards' n deck' = do
+   (newDeck, card) <- getRandomCard deck'
+   rest <- getSevenCards' (n-1) newDeck
+   return $ card : rest

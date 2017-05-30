@@ -45,7 +45,10 @@ data Bets = Bets {
 data Card = Card {
     _value :: Value,
     _suit :: Suit
-} deriving (Eq, Show)
+} deriving Eq
+
+instance Show Card where
+    show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"
 
 data Action = Fold | Check | Call | Raise deriving Show
 

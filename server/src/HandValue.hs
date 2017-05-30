@@ -1,20 +1,22 @@
-module HandValue where
+module HandValue
+(
+    flush,
+    straight,
+    straightFlush
+)
+where
 
 import Types
 import CardUtilities
 import Data.List
 import Data.Function
 
-numCardsInHand :: Int
-numCardsInHand = 5
-
 straightFlush :: [Card] -> Bool
-straightFlush = undefined
+straightFlush cards' = any (\x -> straight x && flush x) (handSubsets cards')
 
 flush :: [Card] -> Bool
-flush cards' = maximum (numOfSuit cards') >= numCardsInHand
+flush cards' = maximum (numOfSuit cards') >= sizeOfHand
 
--- if there's an ace, check for a straight with ace being high and low
 -- note - if 7 cards aren't passed to this, it won't work correctly
 straight :: [Card] -> Bool
 straight c = isStraight x || isStraight x' || isStraight x''
@@ -62,10 +64,6 @@ sorted = sortBy (compare `on` getValue)
 getValue :: Card -> Value
 getValue (Card v _) = v
 
-hasAce :: Card -> Bool
-hasAce (Card Ace _) = True
-hasAce _ = False
-
 cardValue :: Value -> Int
 cardValue Two = 2
 cardValue c = 1 + cardValue (pred c)
@@ -74,3 +72,13 @@ cardValueAceLow :: Value -> Int
 cardValueAceLow Ace = 1
 cardValueAceLow Two = 2
 cardValueAceLow c = 1 + cardValueAceLow (pred c)
+
+--For the 7 cards on the table, get all unique 5 card hands. There will be 21.
+--taken from http://rosettacode.org/wiki/Combinations#Haskell
+handSubsets :: [Card] -> [[Card]]
+handSubsets xs = combsBySize xs !! sizeOfHand
+    where combsBySize = foldr f ([[]] : repeat [])
+          f x next = zipWith (++) (map (map (x:)) ([]:next)) next
+
+sizeOfHand :: Int
+sizeOfHand = 5
