@@ -1,14 +1,15 @@
 module HandValue
 (
     handValue,
-    straightFlush,
-    fourOfAKind,
-    fullHouse,
-    flush,
-    straight,
-    threeOfAKind,
-    twoPair,
-    pair
+    isStraightFlush,
+    isFourOfAKind,
+    isFullHouse,
+    isFlush,
+    isStraight,
+    isThreeOfAKind,
+    isTwoPair,
+    isPair,
+    straightKicker
 )
 where
 
@@ -17,61 +18,72 @@ import CardUtilities
 import Data.List
 import Data.Function
 
+straightKicker :: [Card] -> Int
+straightKicker cards' = maximum $ map straightKicker' straights
+    where straights = filter isStraight (handSubsets cards')
+
+straightKicker' :: [Card] -> Int
+straightKicker' straight'
+    | valuesAceLow == [1..5] = maximum valuesAceLow
+    | otherwise = maximum $ map (cardValue . getValue) straight'
+    where valuesAceLow = map (cardValueAceLow . getValue) straight'
+
 handValue :: [Card] -> Hand
 handValue cards'
-    | straightFlush cards' = StraightFlush
-    | fourOfAKind cards' = FourOfAKind
-    | fullHouse cards' = FullHouse
-    | flush cards' = Flush
-    | straight cards' = Straight
-    | threeOfAKind cards' = ThreeOfAKind
-    | twoPair cards' = TwoPair
-    | pair cards' = Pair
+    | isStraightFlush cards' = StraightFlush
+    | isFourOfAKind cards' = FourOfAKind
+    | isFullHouse cards' = FullHouse
+    | isFlush cards' = Flush
+    | isStraight cards' = Straight
+    | isThreeOfAKind cards' = ThreeOfAKind
+    | isTwoPair cards' = TwoPair
+    | isPair cards' = Pair
     | otherwise = HighCard
 
-straightFlush :: [Card] -> Bool
-straightFlush cards' = any (\x -> straight x && flush x) (handSubsets cards')
+isStraightFlush :: [Card] -> Bool
+isStraightFlush cards' = any (\x -> isStraight x && isFlush x)
+                             (handSubsets cards')
 
-fourOfAKind :: [Card] -> Bool
-fourOfAKind = xOfAKind 4
+isFourOfAKind :: [Card] -> Bool
+isFourOfAKind = isXOfAKind 4
 
-threeOfAKind :: [Card] -> Bool
-threeOfAKind = xOfAKind 3
+isThreeOfAKind :: [Card] -> Bool
+isThreeOfAKind = isXOfAKind 3
 
-twoPair :: [Card] -> Bool
-twoPair cards' = (length . filter (>=2) $ numOfEachValue cards') >= 2
+isTwoPair :: [Card] -> Bool
+isTwoPair cards' = (length . filter (>=2) $ numOfEachValue cards') >= 2
 
-pair :: [Card] -> Bool
-pair = xOfAKind 2
+isPair :: [Card] -> Bool
+isPair = isXOfAKind 2
 
 {- filter for the cards which we have two or more of, sort descending, if
 longer than two then if the head is >= 3, it must be a full house -}
-fullHouse :: [Card] -> Bool
-fullHouse cards'
+isFullHouse :: [Card] -> Bool
+isFullHouse cards'
     | length sorted' >= 2 = head sorted' >= 3
     | otherwise = False
     where pairOrAbove = filter (>=2) $ numOfEachValue cards'
           sorted' = sortBy (flip compare) pairOrAbove
 
-xOfAKind :: Int -> [Card] -> Bool
-xOfAKind x cards' = maximum (numOfEachValue cards') == x
+isXOfAKind :: Int -> [Card] -> Bool
+isXOfAKind x cards' = maximum (numOfEachValue cards') == x
 
 numOfEachValue :: [Card] -> [Int]
 numOfEachValue cards' = map length . group . sort $ map getValue cards'
 
-flush :: [Card] -> Bool
-flush cards' = maximum (numOfSuit cards') >= sizeOfHand
+isFlush :: [Card] -> Bool
+isFlush cards' = maximum (numOfSuit cards') >= sizeOfHand
 
 -- note - if 7 cards aren't passed to this, it won't work correctly
-straight :: [Card] -> Bool
-straight c = isStraight x || isStraight x' || isStraight x''
+isStraight :: [Card] -> Bool
+isStraight c = isStraight' x || isStraight' x' || isStraight' x''
     where x = take 5 fixed
           x' = take 5 $ drop 1 fixed
           x'' = drop 2 fixed
           fixed = sorted c
 
-isStraight :: [Card] -> Bool
-isStraight c = consecutive values || consecutive valuesAceLow
+isStraight' :: [Card] -> Bool
+isStraight' c = consecutive values || consecutive valuesAceLow
     where valuesAceLow = cardValues c False
           values = cardValues c True
 
