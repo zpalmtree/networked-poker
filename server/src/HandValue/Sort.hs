@@ -14,7 +14,7 @@ import Data.Function
 
 sortDupesFirst :: [Card] -> [Card] -> Ordering
 sortDupesFirst c1 c2 = groupedSort (grouped c1) (grouped c2)
-    where grouped c = group $ sort $ map (cardValue . getValue) c
+    where grouped c = group . sort $ map (cardValue . getValue) c
 
 {- sort first by length -> three of a kind more important than two of a kind,
 then sort by actual value 
@@ -35,13 +35,13 @@ sortXOfAKind xOfAKind1 xOfAKind2
     | sortOnLength xOfAKind1 < sortOnLength xOfAKind2 = LT
     | otherwise = compare (compareKickers xOfAKind1) (compareKickers xOfAKind2)
     where sortOnLength x = sortBy (flip $ on compare length) $ grouped x
-          grouped c = group $ sort $ map (cardValue . getValue) c
+          grouped c = group . sort $ map (cardValue . getValue) c
           compareKickers x = sortBy (flip compare) $ sortOnLength x
 
 sortStraight :: [Card] -> [Card] -> Ordering
 sortStraight straight1 straight2 = compare (straightKicker straight1) 
                                            (straightKicker straight2)
-    where aceLow x = map (cardValueAceLow . getValue) x
+    where aceLow = map (cardValueAceLow . getValue)
           straightKicker straight'
             | aceLow straight' == [1..5] = maximum $ aceLow straight'
             | otherwise = maximum $ map (cardValue . getValue) straight'

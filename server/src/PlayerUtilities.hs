@@ -24,11 +24,7 @@ setCurrentPlayer :: (Applicative f) => Game -> (Player -> f Player) -> Game
 setCurrentPlayer game = playerInfo.players.ix (currentPlayerIndex game)
 
 victorIndex :: Game -> Int
-victorIndex game = f (game^.playerInfo.players) 0
-    where f [] n = n
-          f (x:xs) n
-            | x^.inPlay = n
-            | otherwise = f xs (n+1)
+victorIndex game = head (filter (^.inPlay) (game^.playerInfo.players))^.num
 
 advanceDealer :: Game -> Int
 advanceDealer game = advance (game^.playerInfo.dealer) game
@@ -39,10 +35,12 @@ advancePlayerTurn game = advance (currentPlayerIndex game) game
 advance :: Int -> Game -> Int
 advance index' game = (index' + 1) `rem` numPlayers' game
 
+--reset the numbers to [0..length players] and remove players with no chips
 removeOutPlayers :: Game -> Game
 removeOutPlayers game
     | newGame^.playerInfo.numPlayers <= 1 = game & gameFinished .~ True
     | otherwise = newGame
-    where newPlayers = filter (\x -> x^.chips > 0) (game^.playerInfo.players)
+    where newPlayers = imap (num .~) $ 
+                       filter (\x -> x^.chips > 0) (game^.playerInfo.players)
           newGame = game & playerInfo.players .~ newPlayers
                          & playerInfo.numPlayers .~ length newPlayers

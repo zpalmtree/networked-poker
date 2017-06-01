@@ -15,12 +15,15 @@ data Game = Game {
 
 data Player = Player {
     _name :: String,
+    _num :: Int,
     _chips :: Int,
-    _cards :: Maybe (Card, Card),
+    _cards :: Maybe [Card],
     _inPlay :: Bool,
     _allIn :: Bool,
     _bet :: Int,
-    _madeInitialBet :: Bool
+    _madeInitialBet :: Bool,
+    _hand :: Maybe [Card],
+    _handValue :: Maybe Hand
 } deriving Show
 
 data Players = Players {
