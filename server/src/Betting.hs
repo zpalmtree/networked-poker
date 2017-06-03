@@ -1,8 +1,9 @@
 module Betting where
 
 import Types
-import Control.Lens
 import PlayerUtilities
+
+import Control.Lens
 
 makeBet :: Int -> Game -> Game
 makeBet amount game = game & setCurrentPlayer game . chips -~ amount

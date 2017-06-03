@@ -1,12 +1,14 @@
 module Main where
 
 import Types
-import Control.Lens
 import Betting
 import PlayerUtilities
 import CardUtilities
 import StateUtilities
+import HandValue
+
 import Control.Monad
+import Control.Lens
 
 main :: IO ()
 main = return ()
@@ -58,7 +60,10 @@ promptBet :: Game -> Game
 promptBet = undefined
 
 showdown :: Game -> Game
-showdown = undefined
+showdown game = uncurry (distributeWinnings game) $ getWinners game
+
+distributeWinnings :: Game -> [Player] -> [Player] -> Game
+distributeWinnings = undefined
 
 nextState :: Game -> IO Game
 nextState game = case game^.state of

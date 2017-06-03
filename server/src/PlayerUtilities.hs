@@ -1,6 +1,7 @@
 module PlayerUtilities where
 
 import Types
+
 import Control.Lens
 
 numInPlay :: Game -> Int

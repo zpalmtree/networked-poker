@@ -16,6 +16,7 @@ where
 
 import Types
 import CardUtilities
+
 import Data.List
 import Data.Function
 

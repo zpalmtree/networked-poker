@@ -14,8 +14,9 @@ module HandValue.Value
 where
 
 import Types
-import Data.List
 import HandValue.Utilities
+
+import Data.List
 
 isStraightFlush7Card :: [Card] -> Bool
 isStraightFlush7Card cards' = any isStraightFlush5Card $ handSubsets cards'

@@ -8,6 +8,7 @@ where
 
 import Types
 import HandValue.Utilities
+
 import Data.List
 
 sortOnValue :: [Card] -> [Card] -> Ordering

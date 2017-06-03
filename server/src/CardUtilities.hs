@@ -13,9 +13,10 @@ module CardUtilities
 )
 where
 
+import Types
+
 import System.Random
 import Control.Lens
-import Types
 
 getRandomCard :: [Card] -> IO ([Card], Card)
 getRandomCard [] = error "Can't take a card from empty deck"

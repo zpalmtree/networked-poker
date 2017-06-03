@@ -1,14 +1,13 @@
 module HandValue
 (
-    bestHand,
-    getWinnersLosers,
-    getHandValue
+    getWinners
 )
 where
 
 import Types
 import HandValue.Value
 import HandValue.Best
+
 import Control.Lens
 import Data.Maybe
 import Data.List
@@ -46,3 +45,35 @@ getWinnersLosers game = span (((==) `on` (^.handValue)) $ head sorted') sorted'
 
 sortOnHandValue :: Player -> Player -> Ordering
 sortOnHandValue p1 p2 = compare (p1^.handValue) (p2^.handValue)
+
+getWinners :: Game -> ([Player], [Player])
+getWinners game = let results = getHandValue game
+                      (topHands, loserHands) = getWinnersLosers results
+                  in  getWinners' topHands loserHands
+
+{- if any better than the head of list, filter them out, and retry. If none
+better, filter any that are equal, and return. -}
+getWinners' :: [Player] -> [Player] -> ([Player], [Player])
+getWinners' [] _ = error "Potential winners can't be an empty list"
+getWinners' topHands@(x:xs) loserHands
+    | length topHands == 1 = (topHands, loserHands)
+    | any greaterHandValue xs = getWinners' better (loserHands ++ worse)
+    | otherwise = (best, loserHands ++ others)
+    where greaterHandValue h = greaterHand h x
+          equalHandValue h = equalHand h x
+          (better, worse) = partition greaterHandValue topHands
+          (best, others) = partition equalHandValue topHands
+
+greaterHand :: Player -> Player -> Bool
+greaterHand p1 p2 = greaterHand' (fromJust $ p1^.handValue, fromJust $ p1^.hand)
+                                 (fromJust $ p2^.handValue, fromJust $ p2^.hand)
+
+greaterHand' :: (Hand, [Card]) -> (Hand, [Card]) -> Bool
+greaterHand' = undefined
+
+equalHand :: Player -> Player -> Bool
+equalHand p1 p2 = equalHand' (fromJust $ p1^.handValue, fromJust $ p1^.hand)
+                             (fromJust $ p2^.handValue, fromJust $ p2^.hand)
+
+equalHand' :: (Hand, [Card]) -> (Hand, [Card]) -> Bool
+equalHand' = undefined

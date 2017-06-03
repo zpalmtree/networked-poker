@@ -16,6 +16,7 @@ import Types
 import HandValue.Utilities
 import HandValue.Sort
 import HandValue.Value
+
 import Data.List
 
 bestStraightFlush :: [Card] -> [Card]

@@ -1,6 +1,7 @@
 module StateUtilities where
 
 import Types
+
 import Control.Lens
 
 isShowdown :: Game -> Bool
