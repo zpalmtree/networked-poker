@@ -7,6 +7,7 @@ where
 import Types
 import HandValue.Value
 import HandValue.Best
+import HandValue.Sort
 
 import Control.Lens
 import Data.Maybe
@@ -65,15 +66,42 @@ getWinners' topHands@(x:xs) loserHands
           (best, others) = partition equalHandValue topHands
 
 greaterHand :: Player -> Player -> Bool
-greaterHand p1 p2 = greaterHand' (fromJust $ p1^.handValue, fromJust $ p1^.hand)
-                                 (fromJust $ p2^.handValue, fromJust $ p2^.hand)
-
-greaterHand' :: (Hand, [Card]) -> (Hand, [Card]) -> Bool
-greaterHand' = undefined
+greaterHand p1 p2 = handCompare (fromJust $ p1^.handValue, fromJust $ p1^.hand)
+                                (fromJust $ p2^.handValue, fromJust $ p2^.hand)
+                                 GT
 
 equalHand :: Player -> Player -> Bool
-equalHand p1 p2 = equalHand' (fromJust $ p1^.handValue, fromJust $ p1^.hand)
-                             (fromJust $ p2^.handValue, fromJust $ p2^.hand)
+equalHand p1 p2 = handCompare (fromJust $ p1^.handValue, fromJust $ p1^.hand)
+                              (fromJust $ p2^.handValue, fromJust $ p2^.hand)
+                               EQ
 
-equalHand' :: (Hand, [Card]) -> (Hand, [Card]) -> Bool
-equalHand' = undefined
+handCompare :: (Hand, [Card]) -> (Hand, [Card]) -> Ordering -> Bool
+handCompare (StraightFlush, c1)
+            (StraightFlush, c2) ordFunc = sortStraight c1 c2 == ordFunc
+
+
+handCompare (FourOfAKind, c1)
+            (FourOfAKind, c2) ordFunc = sortXOfAKind c1 c2 == ordFunc
+
+handCompare (FullHouse, c1)
+            (FullHouse, c2) ordFunc = sortXOfAKind c1 c2 == ordFunc
+
+handCompare (Flush, c1)
+            (Flush, c2) ordFunc = sortOnValue c1 c2 == ordFunc
+                    
+handCompare (Straight, c1)
+            (Straight, c2) ordFunc = sortStraight c1 c2 == ordFunc
+
+handCompare (ThreeOfAKind, c1)
+            (ThreeOfAKind, c2) ordFunc = sortXOfAKind c1 c2 == ordFunc
+
+handCompare (TwoPair, c1)
+            (TwoPair, c2) ordFunc = sortXOfAKind c1 c2 == ordFunc
+
+handCompare (Pair, c1)
+            (Pair, c2) ordFunc = sortXOfAKind c1 c2 == ordFunc
+
+handCompare (HighCard, c1)
+            (HighCard, c2) ordFunc = sortOnValue c1 c2 == ordFunc
+
+handCompare _ _ _ = error "Cards must be of same hand type"
