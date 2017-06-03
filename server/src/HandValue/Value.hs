@@ -30,7 +30,9 @@ isThreeOfAKind :: [Card] -> Bool
 isThreeOfAKind = isXOfAKind 3
 
 isTwoPair :: [Card] -> Bool
-isTwoPair cards' = (length . filter (>=2) $ numOfEachValue cards') >= 2
+isTwoPair cards'
+    | (length . filter (>=2) $ numOfEachValue cards') >= 2 = True
+    | otherwise = any (>=4) $ numOfEachValue cards'
 
 isPair :: [Card] -> Bool
 isPair = isXOfAKind 2

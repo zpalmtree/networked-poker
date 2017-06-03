@@ -25,7 +25,7 @@ bestFourOfAKind :: [Card] -> [Card]
 bestFourOfAKind = bestX sortXOfAKind isFourOfAKind
 
 bestFullHouse :: [Card] -> [Card]
-bestFullHouse = bestX sortDupesFirst isFullHouse
+bestFullHouse = bestX sortXOfAKind isFullHouse
 
 bestFlush :: [Card] -> [Card]
 bestFlush = bestX sortOnValue isFlush
@@ -37,10 +37,10 @@ bestThreeOfAKind :: [Card] -> [Card]
 bestThreeOfAKind = bestX sortXOfAKind isThreeOfAKind
 
 bestTwoPair :: [Card] -> [Card]
-bestTwoPair = bestX sortDupesFirst isTwoPair
+bestTwoPair = bestX sortXOfAKind isTwoPair
 
 bestPair :: [Card] -> [Card]
-bestPair = bestX sortDupesFirst isPair
+bestPair = bestX sortXOfAKind isPair
 
 bestHighCard :: [Card] -> [Card]
 bestHighCard = bestX sortOnValue (const True)

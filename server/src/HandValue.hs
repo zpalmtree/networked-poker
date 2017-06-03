@@ -1,8 +1,8 @@
 module HandValue
 (
     bestHand,
-    winner,
-    getWinnersLosers
+    getWinnersLosers,
+    getHandValue
 )
 where
 
@@ -12,6 +12,7 @@ import HandValue.Best
 import Control.Lens
 import Data.Maybe
 import Data.List
+import Data.Function
 
 bestHand :: [Card] -> (Hand, [Card])
 bestHand cards'
@@ -25,8 +26,8 @@ bestHand cards'
     | isPair cards' = (Pair, bestPair cards')
     | otherwise = (HighCard, bestHighCard cards')
 
-winner :: Game -> Game
-winner game = game & playerInfo.players.traversed %~ getCardValues
+getHandValue :: Game -> Game
+getHandValue game = game & playerInfo.players.traversed %~ getCardValues
     where getCardValues = getValue . fromJust $ game^.cardInfo.tableCards
 
 getValue :: [Card] -> Player -> Player
@@ -40,13 +41,8 @@ and the players who have lost. Callee will need to compare tied hands for
 tiebreakers. Once the values have been updated, will probably need to re-sort
 the player list on num -}
 getWinnersLosers :: Game -> ([Player], [Player])
-getWinnersLosers game = (head grouped, concat $ tail grouped)
-    where grouped = groupBy groupOnHandValue sorted'
-          sorted' = sortBy (flip sortOnHandValue) (game^.playerInfo.players)
+getWinnersLosers game = span (((==) `on` (^.handValue)) $ head sorted') sorted'
+    where sorted' = sortBy (flip sortOnHandValue) (game^.playerInfo.players)
 
 sortOnHandValue :: Player -> Player -> Ordering
-sortOnHandValue p1 p2 = compare (fromJust $ p1^.handValue) 
-                                (fromJust $ p2^.handValue)
-
-groupOnHandValue :: Player -> Player -> Bool
-groupOnHandValue p1 p2 = fromJust (p1^.handValue) == fromJust (p2^.handValue)
+sortOnHandValue p1 p2 = compare (p1^.handValue) (p2^.handValue)
