@@ -1,4 +1,8 @@
-module Main where
+module Main
+(
+    main
+)
+where
 
 import Types
 import Betting
@@ -8,10 +12,12 @@ import StateUtilities
 import HandValue
 
 import Control.Monad
-import Control.Lens
+import Control.Lens hiding (Fold)
+import Data.List
+import Data.Function
 
 main :: IO ()
-main = return ()
+main = play
 
 play :: IO ()
 play = do
@@ -37,7 +43,7 @@ playRound game
     -- in showdown -> no more betting can happen
     | isShowdown game = return . nextRound $ showdown game
     -- only one player left -> they get the winnings, start next round
-    | numInPlay game == 1 = return . nextRound $ giveWinnings index' game
+    | numInPlay game == 1 = return . nextRound $ giveWinnings winner game
     {- max of one person isn't all in -> no more betting can happen -> deal
     more cards, but can't do anymore betting -}
     | numInPlay game - numAllIn game <= 1 = playRound =<< nextState game
@@ -45,25 +51,64 @@ playRound game
     | not $ getCurrentPlayer game^.inPlay = playRound $ nextPlayer game 
     -- player is in play, and hasn't made their initial bet, so prompt for bet
     | not $ getCurrentPlayer game^.madeInitialBet = playRound . nextPlayer
-                                                    $ promptBet game
+                                                    =<< promptBet game True
     {- player is in play, and has made initial bet, but isn't matched with
     current bet level -> has to call/fold/raise -}
     | getCurrentPlayer game^.madeInitialBet && 
       getCurrentPlayer game^.bet < game^.bets.currentBet
-        = playRound . nextPlayer $ promptBet game
+        = playRound . nextPlayer =<< promptBet game False
     {- else the player has already made their bet so move on to next load of 
     cards and bets -}
     | otherwise = playRound =<< nextState game
-    where index' = victorIndex game
+    where winner = victor (game^.playerInfo.players)
 
-promptBet :: Game -> Game
-promptBet = undefined
+promptBet :: Game -> Bool -> IO Game
+promptBet game canCheck
+    | canCheck = do
+        input <- foldCheckRaise game
+        return $ handleInput game input
+    | otherwise = do
+        input <- foldCallRaise game
+        return $ handleInput game input
+
+handleInput :: Game -> Action Int -> Game
+handleInput game action = case action of
+    Fold -> fold game
+    Check -> game
+    Call -> call game
+    (Raise raiseAmount) -> raise raiseAmount game
+    AllIn -> goAllIn game
+
+{- these will get input from the network later on... -}
+foldCheckRaise :: Game -> IO (Action a)
+foldCheckRaise game = undefined
+
+foldCallRaise :: Game -> IO (Action a)
+foldCallRaise game = undefined
+
+fold :: Game -> Game
+fold game = game & setCurrentPlayer game . inPlay .~ False
+
+{- obviously we wouldn't actually crash the server here, this error will
+be propagated to the client later on -}
+raise :: Int -> Game -> Game
+raise amount game
+    | playerChips < amount = error "Not enough chips!"
+    | playerChips == amount = goAllIn game
+    | otherwise = makeBet amount game
+    where playerChips = getCurrentPlayer game^.chips
+
+call :: Game -> Game
+call game = raise (game^.bets.currentBet) game
 
 showdown :: Game -> Game
 showdown game = uncurry (distributeWinnings game) $ getWinners game
 
 distributeWinnings :: Game -> [Player] -> [Player] -> Game
-distributeWinnings = undefined
+distributeWinnings game winners losers = game & playerInfo.players .~ sorted
+    where (spareRecipient, rest) = leftOfDealer game winners 1
+          newPlayers = giveWinningsSplitPot game (spareRecipient, rest, losers)
+          sorted = sortBy (compare `on` (^.num)) newPlayers
 
 nextState :: Game -> IO Game
 nextState game = case game^.state of
@@ -73,14 +118,26 @@ nextState game = case game^.state of
     River -> return . updatePot $ game & state .~ Showdown
     _ -> error "Programming error in nextState"
 
-giveWinnings :: Int -> Game -> Game
-giveWinnings player game = game & playerInfo.players.ix player.chips
-                                  +~ gatherChips game
+giveWinningsSplitPot :: Game -> (Player, [Player], [Player]) -> [Player]
+giveWinningsSplitPot game (spare, rest, losers) = newSpare : newRest ++ losers
+    where chips' = gatherChips game
+          chipsPerPerson = chips' `div` numPlayers' game
+          spareChips = chips' `rem` numPlayers' game
+          newSpare = addChips spare (chipsPerPerson + spareChips)
+          newRest = map (`addChips` chipsPerPerson) rest
+          addChips p bonusChips = p & chips +~ bonusChips
+
+giveWinnings :: (Player, [Player]) -> Game -> Game
+giveWinnings (winner, losers) game = game & playerInfo.players .~ newPlayers
+    where newPlayer = winner & chips +~ gatherChips game
+          newPlayers = newPlayer : losers
 
 nextRound :: Game -> Game
-nextRound game = newState & allPlayers.cards .~ Nothing
+nextRound game = newState & allPlayers.cards .~ []
                           & allPlayers.inPlay .~ True
                           & allPlayers.bet .~ 0
+                          & allPlayers.hand .~ []
+                          & allPlayers.handValue .~ Nothing
                           & playerInfo.dealer .~ advanceDealer newState
                           & playerInfo.playerTurn .~ advancePlayerTurn newState
                           & state .~ PreFlop
@@ -90,44 +147,7 @@ nextRound game = newState & allPlayers.cards .~ Nothing
                           & bets.currentBet .~ 0
     where allPlayers = playerInfo.players.traversed
           newState = removeOutPlayers game
-          
 
-foldCheckRaise :: Game -> IO Game
-foldCheckRaise game = do
-    putStrLn "fold, check, or raise?"
-    input <- getLine
-    case input of
-        "fold" -> return $ fold game
-        "check" -> return game
-        {- this will actually be input from the network, so we'll do some fancy
-        parsing, for now just passing a fixed value to test -}
-        "raise" -> return $ raise 100 game
-        _ -> putStrLn "bad input" >> foldCheckRaise game
-
-
-foldCallRaise :: Game -> IO Game
-foldCallRaise game = do
-    putStrLn "fold, call, or raise?"
-    input <- getLine
-    case input of
-        "fold" -> return $ fold game
-        "call" -> return $ call game
-        "raise" -> return $ raise 100 game
-        _ -> putStrLn "bad input" >> foldCheckRaise game
-
-fold :: Game -> Game
-fold game = game & setCurrentPlayer game . inPlay .~ False
-
-raise :: Int -> Game -> Game
-raise amount game
-    | playerChips < amount = error "Not enough chips!"
-    | playerChips == amount = goAllIn game
-    | otherwise = makeBet amount game
-    where playerChips = getCurrentPlayer game^.chips
-
-
-call :: Game -> Game
-call = undefined
 
 nextPlayer :: Game -> Game
 nextPlayer game = game & playerInfo.playerTurn .~ advancePlayerTurn game

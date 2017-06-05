@@ -11,7 +11,7 @@ makeBet amount game = game & setCurrentPlayer game . chips -~ amount
 
 goAllIn :: Game -> Game
 goAllIn game = makeBet (getCurrentPlayer game^.chips) game
-                & setCurrentPlayer game . allIn .~ True
+             & setCurrentPlayer game . allIn .~ True
 
 smallBlind :: Game -> Game
 smallBlind game = makeBet (game^.bets.smallBlindSize) game
@@ -21,7 +21,7 @@ bigBlind game = makeBet (game^.bets.bigBlindSize) game
 
 gatherChips :: Game -> Int
 gatherChips game = game^.bets.pot
-                    + sum (game^..playerInfo.players.traversed.bet)
+                 + sum (game^..playerInfo.players.traversed.bet)
 
 updatePot :: Game -> Game
 updatePot game = game & bets.pot +~ gatherChips game

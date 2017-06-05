@@ -17,12 +17,12 @@ data Player = Player {
     _name :: String,
     _num :: Int,
     _chips :: Int,
-    _cards :: Maybe [Card],
+    _cards :: [Card],
     _inPlay :: Bool,
     _allIn :: Bool,
     _bet :: Int,
     _madeInitialBet :: Bool,
-    _hand :: Maybe [Card],
+    _hand :: [Card],
     _handValue :: Maybe Hand
 } deriving Show
 
@@ -53,7 +53,17 @@ data Card = Card {
 instance Show Card where
     show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"
 
-data Action = Fold | Check | Call | Raise deriving Show
+data Pots = Pots {
+    _mainPot :: Pot,
+    _sidePots :: [Pot]
+} deriving Show
+
+data Pot = Pot {
+    _money :: Int,
+    _playerID :: [Int]
+} deriving Show
+
+data Action a = Fold | Check | Call | Raise a | AllIn deriving Show
 
 data Hand = HighCard | Pair | TwoPair | ThreeOfAKind | Straight | Flush |
             FullHouse | FourOfAKind | StraightFlush deriving (Show, Eq, Ord)
@@ -71,3 +81,4 @@ makeLenses ''Players
 makeLenses ''Cards
 makeLenses ''Bets
 makeLenses ''Card
+makeLenses ''Pots

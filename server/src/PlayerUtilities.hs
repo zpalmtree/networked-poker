@@ -3,6 +3,7 @@ module PlayerUtilities where
 import Types
 
 import Control.Lens
+import Data.List
 
 numInPlay :: Game -> Int
 numInPlay game = length $ filter (^.inPlay) (game^.playerInfo.players)
@@ -24,8 +25,9 @@ setCurrentPlayer :: (Applicative f) => Game -> (Player -> f Player) -> Game
                                                -> f Game
 setCurrentPlayer game = playerInfo.players.ix (currentPlayerIndex game)
 
-victorIndex :: Game -> Int
-victorIndex game = head (filter (^.inPlay) (game^.playerInfo.players))^.num
+victor :: [Player] -> (Player, [Player])
+victor players' = let (winners, losers) = partition (^.inPlay) players'
+                  in  (head winners, losers)
 
 advanceDealer :: Game -> Int
 advanceDealer game = advance (game^.playerInfo.dealer) game
@@ -45,3 +47,12 @@ removeOutPlayers game
                        filter (\x -> x^.chips > 0) (game^.playerInfo.players)
           newGame = game & playerInfo.players .~ newPlayers
                          & playerInfo.numPlayers .~ length newPlayers
+
+{- gets the player who's closest to left of dealer. This is used to give the
+spare chips to this player in the case of a split pot. -}
+leftOfDealer :: Game -> [Player] -> Int -> (Player, [Player])
+leftOfDealer game players' n
+    | not . null $ fst nearest = (head $ fst nearest, snd nearest)
+    | otherwise = leftOfDealer game players' (n+1)
+    where nearest = partition near players'
+          near p = p^.num == (game^.playerInfo.dealer+n) `rem` numPlayers' game

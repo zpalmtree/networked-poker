@@ -31,9 +31,9 @@ getHandValue game = game & playerInfo.players.traversed %~ getCardValues
     where getCardValues = getValue . fromJust $ game^.cardInfo.tableCards
 
 getValue :: [Card] -> Player -> Player
-getValue cards' p = p & hand .~ Just hand'
+getValue cards' p = p & hand .~ hand'
                       & handValue .~ Just value'
-    where allCards = cards' ++ fromJust (p^.cards)
+    where allCards = cards' ++ p^.cards
           (value', hand') = bestHand allCards
 
 {- this function will return the players who are tied for the best hands,
@@ -66,19 +66,18 @@ getWinners' topHands@(x:xs) loserHands
           (best, others) = partition equalHandValue topHands
 
 greaterHand :: Player -> Player -> Bool
-greaterHand p1 p2 = handCompare (fromJust $ p1^.handValue, fromJust $ p1^.hand)
-                                (fromJust $ p2^.handValue, fromJust $ p2^.hand)
+greaterHand p1 p2 = handCompare (fromJust $ p1^.handValue, p1^.hand)
+                                (fromJust $ p2^.handValue, p2^.hand)
                                  GT
 
 equalHand :: Player -> Player -> Bool
-equalHand p1 p2 = handCompare (fromJust $ p1^.handValue, fromJust $ p1^.hand)
-                              (fromJust $ p2^.handValue, fromJust $ p2^.hand)
+equalHand p1 p2 = handCompare (fromJust $ p1^.handValue, p1^.hand)
+                              (fromJust $ p2^.handValue, p2^.hand)
                                EQ
 
 handCompare :: (Hand, [Card]) -> (Hand, [Card]) -> Ordering -> Bool
 handCompare (StraightFlush, c1)
             (StraightFlush, c2) ordFunc = sortStraight c1 c2 == ordFunc
-
 
 handCompare (FourOfAKind, c1)
             (FourOfAKind, c2) ordFunc = sortXOfAKind c1 c2 == ordFunc
