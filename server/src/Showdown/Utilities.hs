@@ -1,4 +1,4 @@
-module HandValue.Utilities
+module Showdown.Utilities
 (
     handSubsets,
     cardValue,

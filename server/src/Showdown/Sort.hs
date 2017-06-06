@@ -1,4 +1,4 @@
-module HandValue.Sort
+module Showdown.Sort
 (
     sortOnValue,
     sortXOfAKind,
@@ -7,7 +7,7 @@ module HandValue.Sort
 where
 
 import Types
-import HandValue.Utilities
+import Showdown.Utilities
 
 import Data.List
 

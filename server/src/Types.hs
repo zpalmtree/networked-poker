@@ -34,12 +34,12 @@ data Players = Players {
 } deriving Show
 
 data Cards = Cards {
-    _tableCards :: Maybe [Card],
+    _tableCards :: [Card],
     _deck :: [Card]
 } deriving Show
 
 data Bets = Bets {
-    _pot :: Int,
+    _pots :: [Pot],
     _currentBet :: Int,
     _smallBlindSize :: Int,
     _bigBlindSize :: Int
@@ -53,14 +53,9 @@ data Card = Card {
 instance Show Card where
     show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"
 
-data Pots = Pots {
-    _mainPot :: Pot,
-    _sidePots :: [Pot]
-} deriving Show
-
 data Pot = Pot {
-    _money :: Int,
-    _playerID :: [Int]
+    _pot :: Int,
+    _playerIDs :: [Int]
 } deriving Show
 
 data Action a = Fold | Check | Call | Raise a | AllIn deriving Show
@@ -81,4 +76,4 @@ makeLenses ''Players
 makeLenses ''Cards
 makeLenses ''Bets
 makeLenses ''Card
-makeLenses ''Pots
+makeLenses ''Pot

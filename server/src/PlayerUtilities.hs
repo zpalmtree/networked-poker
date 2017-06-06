@@ -1,4 +1,17 @@
-module PlayerUtilities where
+module PlayerUtilities
+(
+    leftOfDealer,
+    setCurrentPlayer,
+    getCurrentPlayer,
+    numInPlay,
+    numAllIn,
+    nextPlayer,
+    victor,
+    advanceDealer,
+    advancePlayerTurn,
+    removeOutPlayers
+)
+where
 
 import Types
 
@@ -56,3 +69,6 @@ leftOfDealer game players' n
     | otherwise = leftOfDealer game players' (n+1)
     where nearest = partition near players'
           near p = p^.num == (game^.playerInfo.dealer+n) `rem` numPlayers' game
+
+nextPlayer :: Game -> Game
+nextPlayer game = game & playerInfo.playerTurn .~ advancePlayerTurn game

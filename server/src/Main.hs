@@ -9,7 +9,7 @@ import Betting
 import PlayerUtilities
 import CardUtilities
 import StateUtilities
-import HandValue
+import Showdown
 
 import Control.Monad
 import Control.Lens hiding (Fold)
@@ -81,10 +81,10 @@ handleInput game action = case action of
 
 {- these will get input from the network later on... -}
 foldCheckRaise :: Game -> IO (Action a)
-foldCheckRaise game = undefined
+foldCheckRaise = undefined
 
 foldCallRaise :: Game -> IO (Action a)
-foldCallRaise game = undefined
+foldCallRaise = undefined
 
 fold :: Game -> Game
 fold game = game & setCurrentPlayer game . inPlay .~ False
@@ -101,14 +101,14 @@ raise amount game
 call :: Game -> Game
 call game = raise (game^.bets.currentBet) game
 
+{-
 showdown :: Game -> Game
 showdown game = uncurry (distributeWinnings game) $ getWinners game
+-}
 
-distributeWinnings :: Game -> [Player] -> [Player] -> Game
-distributeWinnings game winners losers = game & playerInfo.players .~ sorted
-    where (spareRecipient, rest) = leftOfDealer game winners 1
-          newPlayers = giveWinningsSplitPot game (spareRecipient, rest, losers)
-          sorted = sortBy (compare `on` (^.num)) newPlayers
+showdown :: Game -> Game
+showdown game = foldl distributePot results (results^.bets.pots)
+    where results = getHandValue game
 
 nextState :: Game -> IO Game
 nextState game = case game^.state of
@@ -118,19 +118,10 @@ nextState game = case game^.state of
     River -> return . updatePot $ game & state .~ Showdown
     _ -> error "Programming error in nextState"
 
-giveWinningsSplitPot :: Game -> (Player, [Player], [Player]) -> [Player]
-giveWinningsSplitPot game (spare, rest, losers) = newSpare : newRest ++ losers
-    where chips' = gatherChips game
-          chipsPerPerson = chips' `div` numPlayers' game
-          spareChips = chips' `rem` numPlayers' game
-          newSpare = addChips spare (chipsPerPerson + spareChips)
-          newRest = map (`addChips` chipsPerPerson) rest
-          addChips p bonusChips = p & chips +~ bonusChips
-
 giveWinnings :: (Player, [Player]) -> Game -> Game
 giveWinnings (winner, losers) game = game & playerInfo.players .~ newPlayers
     where newPlayer = winner & chips +~ gatherChips game
-          newPlayers = newPlayer : losers
+          newPlayers = sortBy (compare `on` (^.num)) $ newPlayer : losers
 
 nextRound :: Game -> Game
 nextRound game = newState & allPlayers.cards .~ []
@@ -141,13 +132,9 @@ nextRound game = newState & allPlayers.cards .~ []
                           & playerInfo.dealer .~ advanceDealer newState
                           & playerInfo.playerTurn .~ advancePlayerTurn newState
                           & state .~ PreFlop
-                          & cardInfo .~ Cards Nothing fullDeck
+                          & cardInfo .~ Cards [] fullDeck
                           & roundDone .~ False
-                          & bets.pot .~ 0
+                          & bets.pots .~ []
                           & bets.currentBet .~ 0
     where allPlayers = playerInfo.players.traversed
           newState = removeOutPlayers game
-
-
-nextPlayer :: Game -> Game
-nextPlayer game = game & playerInfo.playerTurn .~ advancePlayerTurn game

@@ -1,4 +1,4 @@
-module HandValue.Best
+module Showdown.Best
 (
     bestStraightFlush,
     bestFourOfAKind,
@@ -13,9 +13,9 @@ module HandValue.Best
 where
 
 import Types
-import HandValue.Utilities
-import HandValue.Sort
-import HandValue.Value
+import Showdown.Utilities
+import Showdown.Sort
+import Showdown.Value
 
 import Data.List
 

@@ -4,10 +4,10 @@ import Types
 import CardUtilities
 
 testBets :: Bets
-testBets = Bets 0 0 10 20
+testBets = Bets [] 0 10 20
 
 testCards :: Cards
-testCards = Cards Nothing fullDeck
+testCards = Cards [] fullDeck
 
 testGame :: Game
 testGame = Game testPlayers PreFlop testCards False testBets False

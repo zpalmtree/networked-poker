@@ -33,9 +33,8 @@ drawCard game = do
                   & cardInfo.tableCards .~ addCard tableCards' card
     where tableCards' = game^.cardInfo.tableCards
 
-addCard :: Maybe [Card] -> Card -> Maybe [Card]
-addCard Nothing card = Just [card]
-addCard tableCards' card = fmap (++ [card]) tableCards'
+addCard :: [Card] -> Card -> [Card]
+addCard tableCards' card = card : tableCards'
 
 revealFlop :: Game -> IO Game
 revealFlop game = (& state .~ Flop) <$> 

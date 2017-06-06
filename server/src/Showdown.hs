@@ -1,13 +1,15 @@
-module HandValue
+module Showdown
 (
-    getWinners
+    distributePot,
+    getHandValue
 )
 where
 
 import Types
-import HandValue.Value
-import HandValue.Best
-import HandValue.Sort
+import Showdown.Value
+import Showdown.Best
+import Showdown.Sort
+import PlayerUtilities
 
 import Control.Lens
 import Data.Maybe
@@ -28,7 +30,7 @@ bestHand cards'
 
 getHandValue :: Game -> Game
 getHandValue game = game & playerInfo.players.traversed %~ getCardValues
-    where getCardValues = getValue . fromJust $ game^.cardInfo.tableCards
+    where getCardValues = getValue $ game^.cardInfo.tableCards
 
 getValue :: [Card] -> Player -> Player
 getValue cards' p = p & hand .~ hand'
@@ -40,17 +42,21 @@ getValue cards' p = p & hand .~ hand'
 and the players who have lost. Callee will need to compare tied hands for 
 tiebreakers. Once the values have been updated, will probably need to re-sort
 the player list on num -}
-getWinnersLosers :: Game -> ([Player], [Player])
-getWinnersLosers game = span (((==) `on` (^.handValue)) $ head sorted') sorted'
-    where sorted' = sortBy (flip sortOnHandValue) (game^.playerInfo.players)
+getWinnersLosers :: [Player] -> ([Player], [Player])
+getWinnersLosers p = span (((==) `on` (^.handValue)) $ head sorted') sorted'
+    where sorted' = sortBy (flip sortOnShowdown) p
 
-sortOnHandValue :: Player -> Player -> Ordering
-sortOnHandValue p1 p2 = compare (p1^.handValue) (p2^.handValue)
+sortOnShowdown :: Player -> Player -> Ordering
+sortOnShowdown p1 p2 = compare (p1^.handValue) (p2^.handValue)
 
-getWinners :: Game -> ([Player], [Player])
-getWinners game = let results = getHandValue game
-                      (topHands, loserHands) = getWinnersLosers results
-                  in  getWinners' topHands loserHands
+distributePot :: Game -> Pot -> Game
+distributePot game sidePot = newGame
+    where people = filter isInPot (game^.playerInfo.players)
+          isInPot p = p^.num `elem` sidePot^.playerIDs          
+          (topHands, loserHands) = getWinnersLosers people
+          (winners, _) = getWinners' topHands loserHands
+          (spareRecipient, rest) = leftOfDealer game winners 1
+          newGame = giveWinningsSplitPot game sidePot (spareRecipient, rest)
 
 {- if any better than the head of list, filter them out, and retry. If none
 better, filter any that are equal, and return. -}
@@ -58,12 +64,12 @@ getWinners' :: [Player] -> [Player] -> ([Player], [Player])
 getWinners' [] _ = error "Potential winners can't be an empty list"
 getWinners' topHands@(x:xs) loserHands
     | length topHands == 1 = (topHands, loserHands)
-    | any greaterHandValue xs = getWinners' better (loserHands ++ worse)
+    | any greaterShowdown xs = getWinners' better (loserHands ++ worse)
     | otherwise = (best, loserHands ++ others)
-    where greaterHandValue h = greaterHand h x
-          equalHandValue h = equalHand h x
-          (better, worse) = partition greaterHandValue topHands
-          (best, others) = partition equalHandValue topHands
+    where greaterShowdown h = greaterHand h x
+          equalShowdown h = equalHand h x
+          (better, worse) = partition greaterShowdown topHands
+          (best, others) = partition equalShowdown topHands
 
 greaterHand :: Player -> Player -> Bool
 greaterHand p1 p2 = handCompare (fromJust $ p1^.handValue, p1^.hand)
@@ -104,3 +110,19 @@ handCompare (HighCard, c1)
             (HighCard, c2) ordFunc = sortOnValue c1 c2 == ordFunc
 
 handCompare _ _ _ = error "Cards must be of same hand type"
+
+giveWinningsSplitPot :: Game -> Pot -> (Player, [Player]) -> Game
+giveWinningsSplitPot game sidePot (spare, rest) = newGame
+    where newPlayers = map (addChips ids (spare^.num) sidePot) p
+          ids = map (^.num) rest
+          p = game^.playerInfo.players
+          newGame = game & playerInfo.players .~ newPlayers
+
+addChips :: [Int] -> Int -> Pot -> Player -> Player
+addChips ids spareId sidePot p
+    | p^.num == spareId = p & chips +~ chipsPerPerson + spareChips
+    | p^.num `elem` ids = p & chips +~ chipsPerPerson
+    | otherwise = p
+    where chips' = sidePot^.pot
+          chipsPerPerson = chips' `div` (length ids + 1)
+          spareChips = chips' `rem` (length ids + 1)

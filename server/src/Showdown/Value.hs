@@ -1,4 +1,4 @@
-module HandValue.Value
+module Showdown.Value
 (
     isStraightFlush7Card,
     isStraightFlush5Card,
@@ -14,7 +14,7 @@ module HandValue.Value
 where
 
 import Types
-import HandValue.Utilities
+import Showdown.Utilities
 
 import Data.List
 
