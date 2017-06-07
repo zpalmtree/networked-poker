@@ -48,6 +48,7 @@ updatePotSimple game
 
 updatePot :: Game -> Game
 updatePot game
+    | sum (game^..playerInfo.players.traversed.bet) == 0 = game
     | null betters = game
     | length betters == 1 = refund game refundPlayer
     | not $ any (^.allIn) (game^.playerInfo.players) = updatePotSimple game

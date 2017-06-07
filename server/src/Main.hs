@@ -27,7 +27,7 @@ play = do
 
 gameLoop :: Game -> IO Game
 gameLoop game = do
-    newGame <- playRound game
+    newGame <- playRound' game
     if newGame^.gameFinished
         then return game
         else gameLoop newGame
@@ -37,6 +37,9 @@ setup = undefined
 
 cleanup :: Game -> IO ()
 cleanup = undefined
+
+playRound' :: Game -> IO Game
+playRound' game = playRound . bigBlind . nextPlayer $ smallBlind game
 
 playRound :: Game -> IO Game
 playRound game
