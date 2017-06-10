@@ -4,6 +4,8 @@ module Types where
 
 import Control.Lens
 
+{-# ANN module "Hlint: ignore Use module export list" #-}
+
 data Game = Game {
     _playerInfo :: Players,
     _state :: State,
@@ -23,14 +25,15 @@ data Player = Player {
     _bet :: Int,
     _madeInitialBet :: Bool,
     _hand :: [Card],
-    _handValue :: Maybe Hand
+    _handValue :: Maybe Hand,
+    _raiseMatched :: Bool
 } deriving Show
 
 data Players = Players {
     _numPlayers :: Int,
     _players :: [Player],
-    _playerTurn :: Int,
-    _dealer :: Int
+    _dealer :: Int,
+    _playerTurn :: Int
 } deriving Show
 
 data Cards = Cards {
@@ -42,7 +45,8 @@ data Bets = Bets {
     _pots :: [Pot],
     _currentBet :: Int,
     _smallBlindSize :: Int,
-    _bigBlindSize :: Int
+    _bigBlindSize :: Int,
+    _minimumRaise :: Int
 } deriving Show
 
 data Card = Card {
