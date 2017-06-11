@@ -18,7 +18,7 @@ raiseNotInteger :: String
 raiseNotInteger = "Bad input, please enter an integer to raise to."
 
 badCheckInput :: String
-badCheckInput = "Bad input, please enter fold, check, or raise."
+badCheckInput = "Bad input, please enter check, or raise."
 
 badCallInput :: String
 badCallInput = "Bad input, please enter fold, call, or raise."
@@ -27,7 +27,7 @@ inputRaise :: String
 inputRaise = "What do you want to raise to? :"
 
 inputCheck :: String
-inputCheck = "Fold, check, or raise?: "
+inputCheck = "Check, or raise?: "
 
 inputCall :: String
 inputCall = "Fold, call, or raise?: "

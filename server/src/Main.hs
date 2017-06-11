@@ -34,7 +34,7 @@ gameLoop game = do
         else gameLoop newGame
 
 setup :: IO Game
-setup = return . initialGame smallBlindSize' $ initialPlayers players'
+setup = dealCards . initialGame smallBlindSize' $ initialPlayers players'
     where players' = [testPlayer1, testPlayer2, testPlayer3, testPlayer4]
           smallBlindSize' = 10
 
@@ -51,10 +51,10 @@ playRound' = playRound . nextPlayer . bigBlind . nextPlayer . smallBlind
 playRound :: Game -> IO Game
 playRound game
     -- in showdown -> no more betting can happen
-    | isShowdown game = return . nextRound $ showdown game
+    | isShowdown game = nextRound $ showdown game
 
     -- only one player left -> they get the winnings, start next round
-    | numInPlay game == 1 = return . nextRound $ giveWinnings winner game
+    | numInPlay game == 1 = nextRound $ giveWinnings winner game
 
     -- max of one person isn't all in -> no more betting can happen -> deal
     -- more cards, but can't do anymore betting
@@ -93,26 +93,33 @@ showdown game = foldl distributePot results (results^.bets.pots)
 
 nextState :: Game -> IO Game
 nextState game = case game^.state of
-    PreFlop -> revealFlop $ updatePot game
-    Flop -> revealTurn $ updatePot game
-    Turn -> revealRiver $ updatePot game
-    River -> return . updatePot $ game & state .~ Showdown
+    PreFlop -> revealFlop $ updatePot newState
+    Flop -> revealTurn $ updatePot newState
+    Turn -> revealRiver $ updatePot newState
+    River -> return . updatePot $ newState & state .~ Showdown
     _ -> error "Programming error in nextState"
-
-nextRound :: Game -> Game
-nextRound game = newState & allPlayers.cards .~ []
-                          & allPlayers.inPlay .~ True
-                          & allPlayers.bet .~ 0
-                          & allPlayers.hand .~ []
-                          & allPlayers.handValue .~ Nothing
-                          & allPlayers.raiseMatched .~ True
-                          & playerInfo.dealer .~ advanceDealer newState
-                          & playerInfo.playerTurn .~ advancePlayerTurn newState
-                          & state .~ PreFlop
-                          & cardInfo .~ Cards [] fullDeck
-                          & roundDone .~ False
-                          & bets.pots .~ []
+    where newState = game & allPlayers.madeInitialBet .~ False
+                          & allPlayers.canReRaise .~ True
+                          & playerInfo.playerTurn .~ advanceDealer game
                           & bets.currentBet .~ 0
-                          & bets.minimumRaise .~ newState^.bets.bigBlindSize
+                          & bets.minimumRaise .~ game^.bets.bigBlindSize
+          allPlayers = playerInfo.players.traversed
+
+nextRound :: Game -> IO Game
+nextRound game = dealCards $ 
+    newState & allPlayers.inPlay .~ True
+             & allPlayers.bet .~ 0
+             & allPlayers.madeInitialBet .~ False
+             & allPlayers.hand .~ []
+             & allPlayers.handValue .~ Nothing
+             & allPlayers.canReRaise .~ True
+             & playerInfo.dealer .~ advanceDealer newState
+             & playerInfo.playerTurn .~ advancePlayerTurn newState
+             & state .~ PreFlop
+             & cardInfo .~ Cards [] fullDeck
+             & roundDone .~ False
+             & bets.pots .~ []
+             & bets.currentBet .~ 0
+             & bets.minimumRaise .~ newState^.bets.bigBlindSize
     where allPlayers = playerInfo.players.traversed
           newState = removeOutPlayers game

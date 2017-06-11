@@ -9,7 +9,8 @@ module CardUtilities
     revealFlop,
     revealTurn,
     revealRiver,
-    getSevenCards
+    getSevenCards,
+    dealCards
 )
 where
 
@@ -17,6 +18,19 @@ import Types
 
 import System.Random
 import Control.Lens
+
+dealCards :: Game -> IO Game
+dealCards game = dealCards' game [] 0
+
+dealCards' :: Game -> [Player] -> Int -> IO Game
+dealCards' game newPlayers n
+    | n == numPlayers' = return $ game & playerInfo.players .~ newPlayers
+    | otherwise = do
+        (newGame, newCards) <- drawPlayerCards game
+        let newPlayer = player & cards .~ newCards
+        dealCards' newGame (newPlayer : newPlayers) (n+1)
+    where numPlayers' = game^.playerInfo.numPlayers
+          player = game^.playerInfo.players ^?! ix n
 
 getRandomCard :: [Card] -> IO ([Card], Card)
 getRandomCard [] = error "Can't take a card from empty deck"
@@ -32,6 +46,12 @@ drawCard game = do
     return $ game & cardInfo.deck .~ newDeck
                   & cardInfo.tableCards .~ addCard tableCards' card
     where tableCards' = game^.cardInfo.tableCards
+
+drawPlayerCards :: Game -> IO (Game, [Card])
+drawPlayerCards game = do
+    (newDeck, card1) <- getRandomCard (game^.cardInfo.deck)
+    (newDeck', card2) <- getRandomCard newDeck
+    return (game & cardInfo.deck .~ newDeck', [card1, card2])
 
 addCard :: [Card] -> Card -> [Card]
 addCard tableCards' card = card : tableCards'

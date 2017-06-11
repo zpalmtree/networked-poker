@@ -5,7 +5,7 @@ module Betting
     smallBlind,
     bigBlind,
     promptBet,
-    giveWinnings
+    giveWinnings,
 )
 where
 
@@ -18,8 +18,14 @@ import Data.List
 import Data.Function
 
 makeBet :: Int -> Game -> Game
-makeBet amount game = game & setCurrentPlayer game . chips -~ amount
-                           & setCurrentPlayer game . bet +~ amount
+makeBet amount game
+    | newBet > (newState^.bets.currentBet) = newState & bets.currentBet .~ newBet
+    | otherwise = newState
+    where newState = game & setCurrentPlayer game . chips -~ amount
+                          & setCurrentPlayer game . bet +~ amount
+
+          newBet = getCurrentPlayer newState^.bet
+
 
 goAllIn :: Game -> Game
 goAllIn game = makeBet (getCurrentPlayer game^.chips) game
@@ -75,16 +81,43 @@ addPot game betSize = game & bets.pots %~ (newPot :)
 
 updateMinimumRaise :: Game -> Int -> Game
 updateMinimumRaise game raise' = game & bets.minimumRaise .~ raise'
+                                      & allPlayers.canReRaise .~ True
+                                      & setRaiseMatched .~ False
+    where allPlayers = playerInfo.players.traversed
+          setRaiseMatched = setCurrentPlayer game.canReRaise
 
 promptBet :: Game -> Bool -> IO Game
 promptBet game canCheck
-    | game^.bets.currentBet >= totalChips = foldAllIn game
+    {- doesn't have enough chips to match the current bet
+       must fold or go all in -}
+    | game^.bets.currentBet >= totalChips = do
+        input <- foldAllIn game
+        return $ handleInput game input
+
+    {- can check, but doesn't have enough chips to make a minimum raise, so
+       must go all in if they want to raise -}
+    | canCheck && getCurrentPlayer game^.chips < game^.bets.minimumRaise = do
+        input <- checkAllIn game
+        return $ handleInput game input
+
+    {- matches current bet, so can check or raise -}
     | canCheck = do
-        input <- foldCheckRaise game
+        input <- checkRaiseAllIn game
         return $ handleInput game input
+
+    {- raise hasn't been matched, so can only fold or call
+       this is due to a player going all in with a raise lower than the minimum
+       bet, so technically the raise hasn't been matched. Player can't re-raise
+       in this case. -}
+    | not (getCurrentPlayer game^.canReRaise) = do
+        input <- foldCallAllIn game
+        return $ handleInput game input
+
+    {- otherise it's a standard betting optino of fold/call/raise -}
     | otherwise = do
-        input <- foldCallRaise game
+        input <- foldCallRaiseAllIn game
         return $ handleInput game input
+
     where totalChips = getCurrentPlayer game^.bet + getCurrentPlayer game^.chips
 
 handleInput :: Game -> Action Int -> Game
@@ -92,22 +125,17 @@ handleInput game action = case action of
     Fold -> fold game
     Check -> game
     Call -> call game
-    (Raise n) -> updateMinimumRaise (raise n game) n
+    (Raise n) -> raise n game
     AllIn -> goAllIn game
 
 fold :: Game -> Game
 fold game = game & setCurrentPlayer game . inPlay .~ False
 
---if not all in -> set raise to matched - currentplayer
---if all in, check if raise was matched
 raise :: Int -> Game -> Game
-raise amount game
-    | playerChips == amount = goAllIn game
-    | otherwise = makeBet amount game
-    where playerChips = getCurrentPlayer game^.chips
+raise amount game = updateMinimumRaise (makeBet amount game) amount
 
 call :: Game -> Game
-call game = raise (game^.bets.currentBet - getCurrentPlayer game^.bet) game
+call game = makeBet (game^.bets.currentBet - getCurrentPlayer game^.bet) game
 
 giveWinnings :: (Player, [Player]) -> Game -> Game
 giveWinnings (winner, losers) game = game & playerInfo.players .~ newPlayers

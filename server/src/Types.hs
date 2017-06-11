@@ -26,7 +26,7 @@ data Player = Player {
     _madeInitialBet :: Bool,
     _hand :: [Card],
     _handValue :: Maybe Hand,
-    _raiseMatched :: Bool
+    _canReRaise :: Bool
 } deriving Show
 
 data Players = Players {

@@ -1,8 +1,10 @@
 module Input.Terminal
 (
-    foldCheckRaise,
-    foldCallRaise,
-    foldAllIn
+    checkRaiseAllIn,
+    checkAllIn,
+    foldCallRaiseAllIn,
+    foldAllIn,
+    foldCallAllIn
 )
 where
 
@@ -13,20 +15,21 @@ import Data.Char
 import Data.Maybe
 import Control.Lens hiding (Fold)
 
-{- Things we need to validate here:
+{-
 - Player makes raise of n, do they actually have n chips?
-- Player makes raise of n, is n >= minimum bet?
+- Player all's in, is it bigger than minimum bet? if so, set raise to matched
+- Need to recheck functions after reworking them -> all in options
+- Update messages
 -}
 
-foldCheckRaise :: Game -> IO (Action Int)
-foldCheckRaise game = do
+checkRaiseAllIn :: Game -> IO (Action Int)
+checkRaiseAllIn game = do
     putStr inputCheck
     input <- map toLower <$> getLine
     case input of
-        "fold" -> return Fold
         "check" -> return Check
         "raise" -> getRaiseAmount game
-        _ -> putStrLn badCheckInput >> foldCheckRaise game
+        _ -> putStrLn badCheckInput >> checkRaiseAllIn game
 
 {- Note: raise amount is new bet value, not current bet + raise.
 So, "I want to raise to 500" means if the current bet is 100, the new bet will
@@ -39,8 +42,8 @@ getRaiseAmount game = do
         Nothing -> putStrLn raiseNotInteger >> getRaiseAmount game
         Just a -> isValidRaise game a
 
-foldCallRaise :: Game -> IO (Action a)
-foldCallRaise = undefined
+foldCallRaiseAllIn :: Game -> IO (Action Int)
+foldCallRaiseAllIn = undefined
 
 --don't give them option of invalidly raising if they don't have the chips
 isValidRaise :: Game -> Int -> IO (Action Int)
@@ -52,4 +55,11 @@ isValidRaise game raise'
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads
 
+foldAllIn :: Game -> IO (Action Int)
 foldAllIn = undefined
+
+foldCallAllIn :: Game -> IO (Action Int)
+foldCallAllIn = undefined
+
+checkAllIn :: Game -> IO (Action Int)
+checkAllIn = undefined
