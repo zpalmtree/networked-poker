@@ -5,7 +5,7 @@ module Betting
     smallBlind,
     bigBlind,
     promptBet,
-    giveWinnings,
+    giveWinnings
 )
 where
 
@@ -19,17 +19,13 @@ import Data.Function
 
 makeBet :: Int -> Game -> Game
 makeBet amount game
-    | newBet > (newState^.bets.currentBet) = newState & bets.currentBet .~ newBet
+    | newBet > (newState^.bets.currentBet)
+      = newState & bets.currentBet .~ newBet
     | otherwise = newState
     where newState = game & setCurrentPlayer game . chips -~ amount
                           & setCurrentPlayer game . bet +~ amount
 
           newBet = getCurrentPlayer newState^.bet
-
-
-goAllIn :: Game -> Game
-goAllIn game = makeBet (getCurrentPlayer game^.chips) game
-             & setCurrentPlayer game . allIn .~ True
 
 smallBlind :: Game -> Game
 smallBlind game = makeBet (game^.bets.smallBlindSize) game
@@ -132,10 +128,25 @@ fold :: Game -> Game
 fold game = game & setCurrentPlayer game . inPlay .~ False
 
 raise :: Int -> Game -> Game
-raise amount game = updateMinimumRaise (makeBet amount game) amount
+raise amount game
+    | amount == getCurrentPlayer game^.chips = goAllIn game
+    | otherwise = updateMinimumRaise (makeBet amount game) amount
 
 call :: Game -> Game
 call game = makeBet (game^.bets.currentBet - getCurrentPlayer game^.bet) game
+
+{- if it's a raise and it's greater than the minimum bet, then let any previous
+   raisers re-raise, plus update minimum raise -}
+goAllIn :: Game -> Game
+goAllIn game
+    | bet' > game^.bets.currentBet && raise' > game^.bets.minimumRaise
+      = updateMinimumRaise newGame raise'
+    | otherwise = newGame
+    where newGame = makeBet raise' game
+                  & setCurrentPlayer game . allIn .~ True
+          bet' = (getCurrentPlayer game^.chips) + (getCurrentPlayer game^.bet)
+          raise' = getCurrentPlayer game^.chips
+
 
 giveWinnings :: (Player, [Player]) -> Game -> Game
 giveWinnings (winner, losers) game = game & playerInfo.players .~ newPlayers

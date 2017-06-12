@@ -4,7 +4,7 @@
 name:                server
 version:             0.1.0.0
 synopsis:            A server hosting a poker game
--- description:         
+description:         Play texas hold em' poker against other players across the internet
 license:             BSD3
 license-file:        LICENSE
 author:              ZedPea
