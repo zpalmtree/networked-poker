@@ -11,7 +11,7 @@ where
 
 import Types
 import PlayerUtilities
-import Input.Terminal
+import Input.Terminal.Input
 
 import Control.Lens hiding (Fold)
 import Data.List

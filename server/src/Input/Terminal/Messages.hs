@@ -1,4 +1,4 @@
-module Messages
+module Input.Terminal.Messages
 (
     invalidRaiseAmount,
     raiseNotInteger,
@@ -45,19 +45,19 @@ badFoldCallRaiseAllInInput = "Bad input, please enter fold, call, raise, or \
                              \all in."
 
 inputRaise :: String
-inputRaise = "What do you want to raise to?: "
+inputRaise = "Player number %d, %s, What do you want to raise to?: "
 
 inputFoldAllIn :: String
-inputFoldAllIn = "Fold, or all in?: "
+inputFoldAllIn = "Player number %d, %s, Fold, or all in?: "
 
 inputCheckAllIn :: String
-inputCheckAllIn = "Check, or all in?: "
+inputCheckAllIn = "Player number %d, %s, Check, or all in?: "
 
 inputFoldCallAllIn :: String
-inputFoldCallAllIn = "Fold, call, or all in?: "
+inputFoldCallAllIn = "Player number %d, %s, Fold, call, or all in?: "
 
 inputCheckRaiseAllIn :: String
-inputCheckRaiseAllIn = "Check, raise, or all in?: "
+inputCheckRaiseAllIn = "Player number %d, %s, Check, raise, or all in?: "
 
 inputFoldCallRaiseAllIn :: String
-inputFoldCallRaiseAllIn = "Fold, call, raise, or all in?: "
+inputFoldCallRaiseAllIn = "Player number %d, %s, Fold, call, raise, or all in?: "

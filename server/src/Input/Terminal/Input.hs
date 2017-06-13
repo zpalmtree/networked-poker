@@ -1,4 +1,4 @@
-module Input.Terminal
+module Input.Terminal.Input
 (
     checkRaiseAllIn,
     checkAllIn,
@@ -9,9 +9,10 @@ module Input.Terminal
 where
 
 import Types
-import Messages
+import Input.Terminal.Messages
 import PlayerUtilities
 
+import Text.Printf
 import Data.Char
 import Data.Maybe
 import System.IO
@@ -51,19 +52,20 @@ checkAllIn = getAction actionMapping inputCheckAllIn badCheckAllInInput
 getAction :: [(String, IO (Action Int))] -> String -> String -> Game 
                                          -> IO (Action Int)
 getAction actionMapping inputMsg badInputMsg game = do
-    putStr inputMsg >> hFlush stdout
+    printf inputMsg (player^.num) (player^.name) >> hFlush stdout
     input <- map toLower <$> getLine
     fromMaybe badInput (lookup input actionMapping)
     where badInput = do
             putStrLn badInputMsg
             getAction actionMapping inputMsg badInputMsg game
+          player = getCurrentPlayer game
 
 -- Note: raise amount is new bet value, not current bet + raise.
 -- So, "I want to raise to 500" means if the current bet is 100, the new bet
 -- will be 500, not 600.
 getRaiseAmount :: Game -> IO (Action Int)
 getRaiseAmount game = do
-    putStr inputRaise >> hFlush stdout
+    printf inputRaise (player^.num) (player^.name) >> hFlush stdout
     input <- maybeRead <$> getLine
     case input of
         Nothing -> putStrLn raiseNotInteger >> getRaiseAmount game
@@ -71,6 +73,7 @@ getRaiseAmount game = do
                         then return $ Raise raise'
                         else putStrLn invalidRaiseAmount >> getRaiseAmount game
     where maybeRead = fmap fst . listToMaybe . reads
+          player = getCurrentPlayer game
 
 isValidRaise :: Int -> Game -> Bool
 isValidRaise raise' game = raiseSize >= game^.bets.minimumRaise
