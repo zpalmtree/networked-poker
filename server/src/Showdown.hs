@@ -38,10 +38,10 @@ getValue cards' p = p & hand .~ hand'
     where allCards = cards' ++ p^.cards
           (value', hand') = bestHand allCards
 
-{- this function will return the players who are tied for the best hands,
-and the players who have lost. Callee will need to compare tied hands for 
-tiebreakers. Once the values have been updated, will probably need to re-sort
-the player list on num -}
+-- this function will return the players who are tied for the best hands,
+-- and the players who have lost. Callee will need to compare tied hands for 
+-- tiebreakers. Once the values have been updated, will probably need to
+-- re-sort the player list on num
 getWinnersLosers :: [Player] -> ([Player], [Player])
 getWinnersLosers p = span (((==) `on` (^.handValue)) $ head sorted') sorted'
     where sorted' = sortBy (flip sortOnShowdown) p
@@ -58,8 +58,8 @@ distributePot game sidePot = newGame
           (spareRecipient, rest) = leftOfDealer game winners 1
           newGame = giveWinningsSplitPot game sidePot (spareRecipient, rest)
 
-{- if any better than the head of list, filter them out, and retry. If none
-better, filter any that are equal, and return. -}
+-- if any better than the head of list, filter them out, and retry. If none
+-- better, filter any that are equal, and return.
 getWinners' :: [Player] -> [Player] -> ([Player], [Player])
 getWinners' [] _ = error "Potential winners can't be an empty list"
 getWinners' topHands@(x:xs) loserHands

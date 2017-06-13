@@ -58,9 +58,9 @@ getAction actionMapping inputMsg badInputMsg game = do
             putStrLn badInputMsg
             getAction actionMapping inputMsg badInputMsg game
 
-{- Note: raise amount is new bet value, not current bet + raise.
-So, "I want to raise to 500" means if the current bet is 100, the new bet will
-be 500, not 600. -}
+-- Note: raise amount is new bet value, not current bet + raise.
+-- So, "I want to raise to 500" means if the current bet is 100, the new bet
+-- will be 500, not 600.
 getRaiseAmount :: Game -> IO (Action Int)
 getRaiseAmount game = do
     putStr inputRaise >> hFlush stdout

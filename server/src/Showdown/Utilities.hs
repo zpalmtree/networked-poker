@@ -61,8 +61,8 @@ cardValueAceLow Ace = 1
 cardValueAceLow Two = 2
 cardValueAceLow c = 1 + cardValueAceLow (pred c)
 
---For the 7 cards on the table, get all unique 5 card hands. There will be 21.
---taken from http://rosettacode.org/wiki/Combinations#Haskell
+-- For the 7 cards on the table, get all unique 5 card hands. There will be 21.
+-- Taken from http://rosettacode.org/wiki/Combinations#Haskell
 handSubsets :: [Card] -> [[Card]]
 handSubsets xs = combsBySize xs !! sizeOfHand
     where combsBySize = foldr f ([[]] : repeat [])

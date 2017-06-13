@@ -38,8 +38,8 @@ isTwoPair cards'
 isPair :: [Card] -> Bool
 isPair = isXOfAKind 2
 
-{- filter for the cards which we have two or more of, sort descending, if
-longer than two then if the head is >= 3, it must be a full house -}
+-- filter for the cards which we have two or more of, sort descending, if
+-- longer than two then if the head is >= 3, it must be a full house
 isFullHouse :: [Card] -> Bool
 isFullHouse cards'
     | length sorted' >= 2 = head sorted' >= 3

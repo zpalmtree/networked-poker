@@ -35,7 +35,7 @@ getCurrentPlayer game = game^.playerInfo.players ^?!
                         ix (currentPlayerIndex game)
 
 setCurrentPlayer :: (Applicative f) => Game -> (Player -> f Player) -> Game
-                                               -> f Game
+                                            -> f Game
 setCurrentPlayer game = playerInfo.players.ix (currentPlayerIndex game)
 
 victor :: [Player] -> (Player, [Player])
@@ -61,8 +61,8 @@ removeOutPlayers game
           newGame = game & playerInfo.players .~ newPlayers
                          & playerInfo.numPlayers .~ length newPlayers
 
-{- gets the player who's closest to left of dealer. This is used to give the
-spare chips to this player in the case of a split pot. -}
+-- gets the player who's closest to left of dealer. This is used to give the
+-- spare chips to this player in the case of a split pot.
 leftOfDealer :: Game -> [Player] -> Int -> (Player, [Player])
 leftOfDealer game players' n
     | not . null $ fst nearest = (head $ fst nearest, snd nearest)

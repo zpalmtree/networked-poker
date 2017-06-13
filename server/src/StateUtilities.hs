@@ -1,4 +1,8 @@
-module StateUtilities where
+module StateUtilities
+(
+    isShowdown
+)
+where
 
 import Types
 
