@@ -15,12 +15,16 @@ module CardUtilities
 where
 
 import Types
+import Output.Terminal.Output
 
 import System.Random
 import Control.Lens
 
 dealCards :: Game -> IO Game
-dealCards game = dealCards' game [] 0
+dealCards game = do
+    newState <- dealCards' game [] 0
+    outputPlayerCards newState
+    return newState
 
 dealCards' :: Game -> [Player] -> Int -> IO Game
 dealCards' game newPlayers n
@@ -35,9 +39,9 @@ dealCards' game newPlayers n
 getRandomCard :: [Card] -> IO ([Card], Card)
 getRandomCard [] = error "Can't take a card from empty deck"
 getRandomCard deck' = do
-   cardNum <- getStdRandom (randomR (0, length deck' - 1)) 
+   cardNum <- getStdRandom $ randomR (0, length deck' - 1)
    let card = deck' !! cardNum
-   let fixedDeck = deleteNth (cardNum+1) deck'
+   let fixedDeck = deleteNth (cardNum + 1) deck'
    return (fixedDeck, card)
 
 drawCard :: Game -> IO Game

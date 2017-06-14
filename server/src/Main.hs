@@ -11,11 +11,10 @@ import CardUtilities
 import StateUtilities
 import Showdown
 import TestStates
+import Output.Terminal.Output
 
 import Control.Monad
 import Control.Lens
-import Data.List
-import Data.Function
 
 main :: IO ()
 main = play
@@ -42,11 +41,7 @@ setup' = initialGame smallBlindSize' $ initialPlayers players'
           smallBlindSize' = 10
 
 cleanup :: Game -> IO ()
-cleanup game = do
-    putStrLn "Game over!"
-    putStrLn $ "The winner is " ++ winner^.name
-    where winner = maximumBy compareFunc (game^.playerInfo.players)
-          compareFunc = compare `on` (^.chips)
+cleanup = outputGameOver
 
 playRound' :: Game -> IO Game
 playRound' = playRound . nextPlayer . bigBlind . nextPlayer . smallBlind
@@ -54,11 +49,15 @@ playRound' = playRound . nextPlayer . bigBlind . nextPlayer . smallBlind
 playRound :: Game -> IO Game
 playRound game
     -- in showdown -> no more betting can happen
-    | isShowdown game = nextRound $ showdown game
-
+    | isShowdown game = do
+        let (newState, winnerMapping) = showdown game
+        outputWinners newState winnerMapping
+        nextRound newState
     -- only one player left -> they get the winnings, start next round
-    | numInPlay game == 1 = nextRound $ giveWinnings winner game
-
+    | numInPlay game == 1 = do
+        let newState = giveWinnings (winner, losers) game
+        outputWinner newState winner
+        nextRound newState
     -- max of one person isn't all in -> no more betting can happen -> deal
     -- more cards, but can't do anymore betting
     | numInPlay game - numAllIn game <= 1 = playRound =<< nextState game
@@ -88,21 +87,40 @@ playRound game
     -- cards and bets
     | otherwise = playRound =<< nextState game
 
-    where winner = victor (game^.playerInfo.players)
+    where (winner, losers) = victor (game^.playerInfo.players)
 
-showdown :: Game -> Game
-showdown game = foldl distributePot results (results^.bets.pots)
+showdown :: Game -> (Game, [(Pot, [Player])])
+showdown game = getWinnersAndDistribute results (results^.bets.pots) []
     where results = getHandValue game
 
+getWinnersAndDistribute :: Game -> [Pot] -> [(Pot, [Player])]
+                                -> (Game, [(Pot, [Player])])
+getWinnersAndDistribute game [] acc = (game, acc)
+getWinnersAndDistribute game (pot':pots') acc = go
+    where (newGame, winnerMapping) = distributePot game pot'
+          newAcc = winnerMapping : acc
+          go = getWinnersAndDistribute newGame pots' newAcc
+
 nextState :: Game -> IO Game
-nextState game = do
-    let newState = nextState' game
-    case newState^.state of
-        PreFlop -> revealFlop game
-        Flop -> revealTurn game
-        Turn -> revealRiver game
-        River -> return $ game & state .~ Showdown
-        _ -> error "Programming error in nextState"
+nextState game = case nextState' game^.state of
+    PreFlop -> do
+        newState <- revealFlop game
+        outputFlop newState
+        return newState
+
+    Flop -> do
+        newState <- revealTurn game
+        outputTurn newState
+        return newState
+
+    Turn -> do
+        newState <- revealRiver game
+        outputRiver newState
+        return newState
+
+    River -> return $ game & state .~ Showdown
+
+    _ -> error "Programming error in nextState"
 
 nextState' :: Game -> Game
 nextState' game = updatePot $ 
@@ -114,22 +132,28 @@ nextState' game = updatePot $
     where allPlayers = playerInfo.players.traversed
 
 nextRound :: Game -> IO Game
-nextRound = dealCards . nextRound'
+nextRound game = do
+    let (newState, maybeRemoved) = nextRound' game
+    outputPlayersRemoved newState maybeRemoved
+    dealCards newState
 
-nextRound' :: Game -> Game
-nextRound' game = newState & allPlayers.inPlay .~ True
-                           & allPlayers.bet .~ 0
-                           & allPlayers.madeInitialBet .~ False
-                           & allPlayers.hand .~ []
-                           & allPlayers.handValue .~ Nothing
-                           & allPlayers.canReRaise .~ True
-                           & playerInfo.dealer .~ advanceDealer newState
-                           & playerInfo.playerTurn .~ advancePlayerTurn newState
-                           & state .~ PreFlop
-                           & cardInfo .~ Cards [] fullDeck
-                           & roundDone .~ False
-                           & bets.pots .~ []
-                           & bets.currentBet .~ 0
-                           & bets.minimumRaise .~ newState^.bets.bigBlindSize
+nextRound' :: Game -> (Game, Maybe [Player])
+nextRound' game = 
+    let newState' = newState & allPlayers.inPlay .~ True
+                             & allPlayers.bet .~ 0
+                             & allPlayers.madeInitialBet .~ False
+                             & allPlayers.hand .~ []
+                             & allPlayers.handValue .~ Nothing
+                             & allPlayers.canReRaise .~ True
+                             & playerInfo.dealer .~ advanceDealer newState
+                             & playerInfo.playerTurn .~ advancePlayerTurn 
+                                                        newState
+                             & state .~ PreFlop
+                             & cardInfo .~ Cards [] fullDeck
+                             & roundDone .~ False
+                             & bets.pots .~ []
+                             & bets.currentBet .~ 0
+                             & bets.minimumRaise .~ newState^.bets.bigBlindSize
+    in (newState', maybeRemoved)
     where allPlayers = playerInfo.players.traversed
-          newState = removeOutPlayers game
+          (newState, maybeRemoved) = removeOutPlayers game

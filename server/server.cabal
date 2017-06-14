@@ -20,7 +20,7 @@ executable server
                        TestStates, Types, Showdown, Showdown.Utilities,
                        Showdown.Sort, Showdown.Value, Showdown.Best,
                        Input.Network.Input, Input.Terminal.Input,
-                       Input.Terminal.Messages, Output.Network.Output,
+                       Output.Terminal.InputMessages, Output.Network.Output,
                        Output.Terminal.Output
 
   other-extensions:    TemplateHaskell

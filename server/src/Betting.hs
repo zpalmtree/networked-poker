@@ -12,6 +12,7 @@ where
 import Types
 import PlayerUtilities
 import Input.Terminal.Input
+import Output.Terminal.Output
 
 import Control.Lens hiding (Fold)
 import Data.List
@@ -85,27 +86,36 @@ promptBet :: Game -> Bool -> IO Game
 promptBet game canCheck
     -- doesn't have enough chips to match the current bet
     -- must fold or go all in
-    | game^.bets.currentBet >= totalChips = handle foldAllIn
+    | game^.bets.currentBet >= totalChips = promptAndUpdate foldAllIn game
 
     -- can check, but doesn't have enough chips to make a minimum raise, so
     -- must go all in if they want to raise
-    | canCheck && cantRaise = handle checkAllIn
+    | canCheck && cantRaise = promptAndUpdate checkAllIn game
 
     -- matches current bet, so can check or raise
-    | canCheck = handle checkRaiseAllIn
+    | canCheck = promptAndUpdate checkRaiseAllIn game
 
     -- raise hasn't been matched, so can only fold or call
     -- this is due to a player going all in with a raise lower than the minimum
     -- bet, so technically the raise hasn't been matched. Player can't re-raise
     -- in this case.
-    | not (getCurrentPlayer game^.canReRaise) = handle foldCallAllIn
+    | not (getCurrentPlayer game^.canReRaise) = promptAndUpdate foldCallAllIn game
 
     -- otherise it's a standard betting optino of fold/call/raise
-    | otherwise = handle foldCallRaiseAllIn
+    | otherwise = promptAndUpdate foldCallRaiseAllIn game
 
     where totalChips = getCurrentPlayer game^.bet + getCurrentPlayer game^.chips
-          handle f = handleInput game <$> f game
           cantRaise = getCurrentPlayer game^.chips < game^.bets.minimumRaise
+
+promptAndUpdate :: (Game -> IO (Action Int)) -> Game -> IO Game
+promptAndUpdate f game = do
+    -- update players' GUI's on whose turn it is
+    outputPlayerTurn game
+    -- get the players actions
+    action <- f game
+    -- update the players' GUI's on what action they made
+    outputAction game action
+    return $ handleInput game action
 
 handleInput :: Game -> Action Int -> Game
 handleInput game action = case action of

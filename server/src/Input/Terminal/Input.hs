@@ -9,7 +9,7 @@ module Input.Terminal.Input
 where
 
 import Types
-import Input.Terminal.Messages
+import Output.Terminal.InputMessages
 import PlayerUtilities
 
 import Text.Printf

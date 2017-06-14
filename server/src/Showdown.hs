@@ -19,14 +19,14 @@ import Data.Function
 bestHand :: [Card] -> (Hand, [Card])
 bestHand cards'
     | isStraightFlush7Card cards' = (StraightFlush, bestStraightFlush cards')
-    | isFourOfAKind cards' = (FourOfAKind, bestFourOfAKind cards')
-    | isFullHouse cards' = (FullHouse, bestFullHouse cards')
-    | isFlush cards' = (Flush, bestFlush cards')
-    | isStraight7Card cards' = (Straight, bestStraight cards')
-    | isThreeOfAKind cards' = (ThreeOfAKind, bestThreeOfAKind cards')
-    | isTwoPair cards' = (TwoPair, bestTwoPair cards')
-    | isPair cards' = (Pair, bestPair cards')
-    | otherwise = (HighCard, bestHighCard cards')
+    | isFourOfAKind cards' =        (FourOfAKind,   bestFourOfAKind cards')
+    | isFullHouse cards' =          (FullHouse,     bestFullHouse cards')
+    | isFlush cards' =              (Flush,         bestFlush cards')
+    | isStraight7Card cards' =      (Straight,      bestStraight cards')
+    | isThreeOfAKind cards' =       (ThreeOfAKind,  bestThreeOfAKind cards')
+    | isTwoPair cards' =            (TwoPair,       bestTwoPair cards')
+    | isPair cards' =               (Pair,          bestPair cards')
+    | otherwise =                   (HighCard,      bestHighCard cards')
 
 getHandValue :: Game -> Game
 getHandValue game = game & playerInfo.players.traversed %~ getCardValues
@@ -49,14 +49,15 @@ getWinnersLosers p = span (((==) `on` (^.handValue)) $ head sorted') sorted'
 sortOnShowdown :: Player -> Player -> Ordering
 sortOnShowdown p1 p2 = compare (p1^.handValue) (p2^.handValue)
 
-distributePot :: Game -> Pot -> Game
-distributePot game sidePot = newGame
+distributePot :: Game -> Pot -> (Game, (Pot, [Player]))
+distributePot game sidePot = (newGame, winnerMapping)
     where people = filter isInPot (game^.playerInfo.players)
           isInPot p = p^.num `elem` sidePot^.playerIDs          
           (topHands, loserHands) = getWinnersLosers people
           (winners, _) = getWinners' topHands loserHands
           (spareRecipient, rest) = leftOfDealer game winners 1
           newGame = giveWinningsSplitPot game sidePot (spareRecipient, rest)
+          winnerMapping = (sidePot, winners)
 
 -- if any better than the head of list, filter them out, and retry. If none
 -- better, filter any that are equal, and return.

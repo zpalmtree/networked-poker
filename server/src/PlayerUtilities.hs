@@ -52,14 +52,19 @@ advance :: Int -> Game -> Int
 advance index' game = (index' + 1) `rem` numPlayers' game
 
 --reset the numbers to [0..length players] and remove players with no chips
-removeOutPlayers :: Game -> Game
+removeOutPlayers :: Game -> (Game, Maybe [Player])
 removeOutPlayers game
-    | newGame^.playerInfo.numPlayers <= 1 = game & gameFinished .~ True
-    | otherwise = newGame
+    | newGame^.playerInfo.numPlayers <= 1 = (game & gameFinished .~ True,
+                                             Just removed)
+    | oldNumPlayers == newNumPlayers = (game, Nothing)
+    | otherwise = (newGame, Just removed)
     where newPlayers = imap (num .~) $ 
                        filter (\x -> x^.chips > 0) (game^.playerInfo.players)
           newGame = game & playerInfo.players .~ newPlayers
                          & playerInfo.numPlayers .~ length newPlayers
+          oldNumPlayers = length $ game^.playerInfo.players
+          newNumPlayers = length $ newGame^.playerInfo.players
+          removed = filter (\x -> x^.chips <= 0) (game^.playerInfo.players)
 
 -- gets the player who's closest to left of dealer. This is used to give the
 -- spare chips to this player in the case of a split pot.

@@ -1,4 +1,4 @@
-module Input.Terminal.Messages
+module Output.Terminal.InputMessages
 (
     invalidRaiseAmount,
     raiseNotInteger,
