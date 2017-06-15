@@ -58,7 +58,7 @@ drawPlayerCards game = do
     return (game & cardInfo.deck .~ newDeck', [card1, card2])
 
 addCard :: [Card] -> Card -> [Card]
-addCard tableCards' card = card : tableCards'
+addCard tableCards' card = tableCards' ++ [card]
 
 revealFlop :: Game -> IO Game
 revealFlop game = (& state .~ Flop) <$> 

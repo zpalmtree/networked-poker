@@ -99,7 +99,8 @@ promptBet game canCheck
     -- this is due to a player going all in with a raise lower than the minimum
     -- bet, so technically the raise hasn't been matched. Player can't re-raise
     -- in this case.
-    | not (getCurrentPlayer game^.canReRaise) = promptAndUpdate foldCallAllIn game
+    | not (getCurrentPlayer game^.canReRaise) = promptAndUpdate foldCallAllIn 
+                                                game
 
     -- otherise it's a standard betting optino of fold/call/raise
     | otherwise = promptAndUpdate foldCallRaiseAllIn game
