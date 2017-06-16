@@ -7,19 +7,18 @@ module Output.Terminal.OutputMessages
     actionAllIn,
     playersTurn,
     flopCards,
-    turnCard,
-    riverCard,
-    playerCards,
+    turnMsg,
+    riverMsg,
+    fullSet,
+    card,
+    dealt,
+    hasCards,
     winner,
-    potWinners,
-    playerNum
+    multiWinnerMsg,
+    singleWinnerMsg,
+    playerMsg
 )
 where
-
-import Types
-
-import Text.Printf
-import Control.Lens
 
 actionFold :: String
 actionFold = "Player %d, %s, folded."
@@ -43,69 +42,38 @@ flopCards :: String
 flopCards = "The flop has been revealed, the cards are the %s, the %s, and \
             \the %s."
 
-turnCard :: [String] -> String
-turnCard = turnOrRiver True
+turnMsg :: String
+turnMsg = "The turn card has been revealed, it is the %s. "
 
-riverCard :: [String] -> String
-riverCard = turnOrRiver False
+riverMsg :: String
+riverMsg = "The river card has been revealed, it is the %s. "
 
-turnOrRiver :: Bool -> [String] -> String
-turnOrRiver turn xs = start ++ totalCards xs
-    where start = printf msg (last xs)
-          msg = if turn then turnMsg else riverMsg
-          turnMsg = "The turn card has been revealed, it is the %s. "
-          riverMsg = "The river card has been revealed, it is the %s. "
-
-totalCards :: [String] -> String
-totalCards xs = start ++ filler ++ end 
+fullSet :: String -> String
+fullSet middle = start ++ middle ++ end
     where start = "The full set of cards on the table are now "
-          filler = concatMap printCard (init xs)
-          end = printf "and the %s." (last xs)
+          end = "and the %s."
 
-printCard :: String -> String
-printCard = printf "the %s, "
+card :: String
+card = "the %s, "
 
-playerCards :: [Player] -> String
-playerCards players' = "The cards have been dealt. " ++ dealt
-    where dealt = concatMap printCards players'
+dealt :: String
+dealt = "The cards have been dealt. "
 
-{-# ANN printCards "HLint: ignore Use head" #-}
-printCards :: Player -> String
-printCards p = printf " Player %d, %s has the %s and the %s."
-                      (playerNum p) (p^.name) card1 card2
-    where card1 = show $ (p^.cards) !! 0
-          card2 = show $ (p^.cards) !! 1
+hasCards :: String
+hasCards = " Player %d, %s, has the %s and the %s."
 
 winner :: String
 winner = "Player %d, %s, won the hand, and gained %d chips!"
 
-potWinners :: (Pot, [Player]) -> String
-potWinners (pot', players')
-    | length players' == 1 = singleWinner pot' (head players')
-    | otherwise = multiWinners pot' players'
-
-multiWinners :: Pot -> [Player] -> String
-multiWinners pot' players' = printf (start ++ middle ++ end) (pot'^.pot)
+multiWinnerMsg :: String -> String
+multiWinnerMsg middle = start ++ middle ++ end
     where start = "The pot of %d chips was won by "
-          middle = printWinners players'
           end = " and they will share the winnings!"
 
-singleWinner :: Pot -> Player -> String
-singleWinner pot' p = printf msg (playerNum p) (p^.name) (pot'^.pot)
-    where msg = "The pot of %d chips was won by player %d, %s, and they \
-                \gained %d chips!"
+singleWinnerMsg :: String
+singleWinnerMsg = "The pot of %d chips was won by player %d, %s, and they \
+                  \gained %d chips!"
 
-printWinners :: [Player] -> String
-printWinners players' = start ++ end
-    where start = concatMap (printWinner True) (init players')
-          end = printWinner False (last players')
-
-
-printWinner :: Bool -> Player -> String
-printWinner final player = printf fixed (playerNum player) (player^.name)
+playerMsg :: Bool -> String
+playerMsg final = if final then msg else msg ++ ", "
     where msg = "player %d, %s"
-          fixed = if final then msg else msg ++ ", "
-
---0 indexed
-playerNum :: Player -> Int
-playerNum p = p^.num + 1
