@@ -55,9 +55,8 @@ playRound game
         nextRound newState
     -- only one player left -> they get the winnings, start next round
     | numInPlay game == 1 = do
-        let newState = giveWinnings (winner, losers) game
-        outputWinner newState winner
-        nextRound newState
+        outputWinner game winner
+        nextRound $ giveWinnings (winner, losers) game
     -- max of one person isn't all in -> no more betting can happen -> deal
     -- more cards, but can't do anymore betting
     | numInPlay game - numAllIn game <= 1 = playRound =<< nextState game

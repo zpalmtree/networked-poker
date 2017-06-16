@@ -21,7 +21,7 @@ executable server
                        Showdown.Sort, Showdown.Value, Showdown.Best,
                        Input.Network.Input, Input.Terminal.Input,
                        Output.Terminal.InputMessages, Output.Network.Output,
-                       Output.Terminal.Output
+                       Output.Terminal.Output, Output.Terminal.OutputMessages
 
   other-extensions:    TemplateHaskell
   build-depends:       base >=4.9 && <4.10, lens >=4.15 && <4.16, random == 1.1

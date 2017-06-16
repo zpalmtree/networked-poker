@@ -1,7 +1,9 @@
 # networked-poker
 A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against.
 
-Currently working on the server. The other two haven't been started yet. Game is now runnable. Need to add output so can be tested and debugged. No input is being taken from network yet.
+Currently working on the server. The other two haven't been started yet. Game is now runnable. Output is being added. No input is being taken from network yet.
+
+Need to add output of what hand winners have.
 
 ## Installation
 

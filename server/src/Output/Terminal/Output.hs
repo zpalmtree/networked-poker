@@ -22,24 +22,24 @@ import Control.Lens hiding (Fold)
 
 outputAction :: Game -> Action Int -> IO ()
 outputAction game action = case action of
-    Fold -> printf actionFold playerNum playerName
-    Check -> printf actionCheck playerNum playerName
-    Call -> printf actionCall playerNum playerName bet'
-    Raise a -> printf actionRaise playerNum playerName bet' (bet' + a)
-    AllIn -> printf actionAllIn playerNum playerName chips'
-    where playerNum = getCurrentPlayer game^.num + 1 -- 0 indexed
+    Fold -> putStrLn $ printf actionFold num' playerName
+    Check -> putStrLn $ printf actionCheck num' playerName
+    Call -> putStrLn $ printf actionCall num' playerName bet'
+    Raise a -> putStrLn $ printf actionRaise num' playerName bet' (bet' + a)
+    AllIn -> putStrLn $ printf actionAllIn num' playerName chips'
+    where num' = playerNum $ getCurrentPlayer game
           playerName = getCurrentPlayer game^.name
           bet' = game^.bets.currentBet
           chips' = getCurrentPlayer game^.chips + getCurrentPlayer game^.bet
 
 outputPlayerTurn :: Game -> IO ()
-outputPlayerTurn game = printf playersTurn playerNum playerName
-    where playerNum = getCurrentPlayer game^.num + 1
-          playerName = getCurrentPlayer game^.name
+outputPlayerTurn game = putStrLn $ printf playersTurn num' playerName
+    where playerName = getCurrentPlayer game^.name
+          num' = playerNum $ getCurrentPlayer game
 
 {-# ANN outputFlop "HLint: ignore Use head" #-}
 outputFlop :: Game -> IO ()
-outputFlop game = printf flopCards card1 card2 card3
+outputFlop game = putStrLn $ printf flopCards card1 card2 card3
     where cards' = game^.cardInfo.tableCards
           card1 = show $ cards' !! 0
           card2 = show $ cards' !! 1
@@ -54,13 +54,17 @@ outputRiver game = putStrLn . riverCard $ map show cards'
     where cards' = game^.cardInfo.tableCards
 
 outputPlayerCards :: Game -> IO ()
-outputPlayerCards = undefined
+outputPlayerCards game = putStrLn $ playerCards players'
+    where players' = game^..playerInfo.players.traversed
 
+--have to reimplement gatherchips because betting imports this module
 outputWinner :: Game -> Player -> IO ()
-outputWinner = undefined
+outputWinner game p = putStrLn $ printf winner (p^.num) (p^.name) chips'
+    where chips' = sum (game^..bets.pots.traversed.pot)
+                 + sum (game^..playerInfo.players.traversed.bet)
 
 outputWinners :: Game -> [(Pot, [Player])] -> IO ()
-outputWinners = undefined
+outputWinners _ = mapM_ (putStrLn . potWinners)
 
 outputGameOver :: Game -> IO ()
 outputGameOver = undefined

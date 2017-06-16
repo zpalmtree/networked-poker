@@ -8,11 +8,18 @@ module Output.Terminal.OutputMessages
     playersTurn,
     flopCards,
     turnCard,
-    riverCard
+    riverCard,
+    playerCards,
+    winner,
+    potWinners,
+    playerNum
 )
 where
 
+import Types
+
 import Text.Printf
+import Control.Lens
 
 actionFold :: String
 actionFold = "Player %d, %s, folded."
@@ -57,3 +64,48 @@ totalCards xs = start ++ filler ++ end
 
 printCard :: String -> String
 printCard = printf "the %s, "
+
+playerCards :: [Player] -> String
+playerCards players' = "The cards have been dealt. " ++ dealt
+    where dealt = concatMap printCards players'
+
+{-# ANN printCards "HLint: ignore Use head" #-}
+printCards :: Player -> String
+printCards p = printf " Player %d, %s has the %s and the %s."
+                      (playerNum p) (p^.name) card1 card2
+    where card1 = show $ (p^.cards) !! 0
+          card2 = show $ (p^.cards) !! 1
+
+winner :: String
+winner = "Player %d, %s, won the hand, and gained %d chips!"
+
+potWinners :: (Pot, [Player]) -> String
+potWinners (pot', players')
+    | length players' == 1 = singleWinner pot' (head players')
+    | otherwise = multiWinners pot' players'
+
+multiWinners :: Pot -> [Player] -> String
+multiWinners pot' players' = printf (start ++ middle ++ end) (pot'^.pot)
+    where start = "The pot of %d chips was won by "
+          middle = printWinners players'
+          end = " and they will share the winnings!"
+
+singleWinner :: Pot -> Player -> String
+singleWinner pot' p = printf msg (playerNum p) (p^.name) (pot'^.pot)
+    where msg = "The pot of %d chips was won by player %d, %s, and they \
+                \gained %d chips!"
+
+printWinners :: [Player] -> String
+printWinners players' = start ++ end
+    where start = concatMap (printWinner True) (init players')
+          end = printWinner False (last players')
+
+
+printWinner :: Bool -> Player -> String
+printWinner final player = printf fixed (playerNum player) (player^.name)
+    where msg = "player %d, %s"
+          fixed = if final then msg else msg ++ ", "
+
+--0 indexed
+playerNum :: Player -> Int
+playerNum p = p^.num + 1
