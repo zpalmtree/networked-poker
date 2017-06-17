@@ -16,7 +16,9 @@ module Output.Terminal.OutputMessages
     winner,
     multiWinnerMsg,
     singleWinnerMsg,
-    playerMsg
+    playerMsg,
+    totalWinner,
+    playerRemoved
 )
 where
 
@@ -75,5 +77,15 @@ singleWinnerMsg = "The pot of %d chips was won by player %d, %s, and they \
                   \gained %d chips!"
 
 playerMsg :: Bool -> String
-playerMsg final = if final then msg else msg ++ ", "
+playerMsg final
+    | final = msg
+    | otherwise = msg ++ ", "
     where msg = "player %d, %s"
+
+totalWinner :: String
+totalWinner = "Game over! The winner was player %d, %s, who ended the game \
+              \with %d chips!"
+
+playerRemoved :: String
+playerRemoved = "Thanks for playing player %d, %s, unfortunately you've run \
+                \out of chips! Come back soon!"

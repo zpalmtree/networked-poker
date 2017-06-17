@@ -18,6 +18,8 @@ import Output.Terminal.OutputMessages
 import PlayerUtilities
 
 import Text.Printf
+import Data.Function
+import Data.List
 import Control.Lens hiding (Fold)
 
 outputAction :: Game -> Action Int -> IO ()
@@ -59,7 +61,7 @@ outputPlayerCards game = putStrLn $ playerCards players'
 
 --have to reimplement gatherchips because betting imports this module
 outputWinner :: Game -> Player -> IO ()
-outputWinner game p = putStrLn $ printf winner (p^.num) (p^.name) chips'
+outputWinner game p = putStrLn $ printf winner (playerNum p) (p^.name) chips'
     where chips' = sum (game^..bets.pots.traversed.pot)
                  + sum (game^..playerInfo.players.traversed.bet)
 
@@ -67,10 +69,17 @@ outputWinners :: Game -> [(Pot, [Player])] -> IO ()
 outputWinners _ = mapM_ (putStrLn . potWinners)
 
 outputGameOver :: Game -> IO ()
-outputGameOver = undefined
+outputGameOver game = putStrLn msg
+    where winner' = maximumBy (compare `on` (^.chips)) players'
+          players' = game^.playerInfo.players
+          msg = printf totalWinner num' name' chips'
+          name' = winner'^.name
+          num' = playerNum winner'
+          chips' = winner'^.chips
 
 outputPlayersRemoved :: Game -> Maybe [Player] -> IO ()
-outputPlayersRemoved = undefined
+outputPlayersRemoved _ = mapM_ (mapM_ $ putStrLn . helper)
+    where helper p = printf playerRemoved (playerNum p) (p^.name)
 
 turnCard :: [String] -> String
 turnCard = turnOrRiver True
@@ -81,7 +90,8 @@ riverCard = turnOrRiver False
 turnOrRiver :: Bool -> [String] -> String
 turnOrRiver turn xs = start ++ totalCards xs
     where start = printf msg (last xs)
-          msg = if turn then turnMsg else riverMsg
+          msg | turn = turnMsg
+              | otherwise = riverMsg
 
 totalCards :: [String] -> String
 totalCards xs = printf (fullSet filler) (last xs)
