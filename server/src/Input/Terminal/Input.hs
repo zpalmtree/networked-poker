@@ -52,7 +52,7 @@ checkAllIn = getAction actionMapping inputCheckAllIn badCheckAllInInput
 getAction :: [(String, IO (Action Int))] -> String -> String -> Game 
                                          -> IO (Action Int)
 getAction actionMapping inputMsg badInputMsg game = do
-    printf inputMsg (player^.num) (player^.name) >> hFlush stdout
+    printf inputMsg (player^.num+1) (player^.name) >> hFlush stdout
     input <- map toLower <$> getLine
     fromMaybe badInput (lookup input actionMapping)
     where badInput = do
@@ -65,7 +65,7 @@ getAction actionMapping inputMsg badInputMsg game = do
 -- will be 500, not 600.
 getRaiseAmount :: Game -> IO (Action Int)
 getRaiseAmount game = do
-    printf inputRaise (player^.num) (player^.name) >> hFlush stdout
+    printf inputRaise (player^.num+1) (player^.name) >> hFlush stdout
     input <- maybeRead <$> getLine
     case input of
         Nothing -> putStrLn raiseNotInteger >> getRaiseAmount game
