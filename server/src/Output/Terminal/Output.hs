@@ -9,7 +9,8 @@ module Output.Terminal.Output
     outputWinner,
     outputWinners,
     outputGameOver,
-    outputPlayersRemoved
+    outputPlayersRemoved,
+    outputHandValues
 )
 where
 
@@ -20,6 +21,7 @@ import PlayerUtilities
 import Text.Printf
 import Data.Function
 import Data.List
+import Data.Maybe
 import Control.Lens hiding (Fold)
 
 outputAction :: Game -> Action Int -> IO ()
@@ -134,3 +136,14 @@ printWinner final player = printf (playerMsg final) (playerNum player)
 --0 indexed
 playerNum :: Player -> Int
 playerNum p = p^.num + 1
+
+outputHandValues :: Game -> IO ()
+outputHandValues game = mapM_ (putStrLn . printHand) inPlayers
+    where inPlayers = filter (^.inPlay) (game^.playerInfo.players)
+
+{-# ANN printHand "HLint: ignore Use head" #-}
+printHand :: Player -> String
+printHand p = printf playerHand (playerNum p) (p^.name) value' card1 card2
+    where value' = show . fromJust $ p^.handValue
+          card1 = show $ (p^.cards) !! 0
+          card2 = show $ (p^.cards) !! 1

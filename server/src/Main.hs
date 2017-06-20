@@ -51,6 +51,7 @@ playRound game
     -- in showdown -> no more betting can happen
     | isShowdown game = do
         let (newState, winnerMapping) = showdown game
+        outputHandValues newState
         outputWinners newState winnerMapping
         nextRound newState
     -- only one player left -> they get the winnings, start next round
