@@ -76,6 +76,4 @@ leftOfDealer game players' n
           near p = p^.num == (game^.playerInfo.dealer+n) `rem` numPlayers' game
 
 nextPlayer :: Game -> Game
-nextPlayer game = game & setCurrentPlayer game.madeInitialBet .~ True
-                       & playerInfo.playerTurn .~ advancePlayerTurn game
-                        
+nextPlayer game = game & playerInfo.playerTurn .~ advancePlayerTurn game

@@ -116,7 +116,8 @@ promptAndUpdate f game = do
     action <- f game
     -- update the players' GUI's on what action they made
     outputAction game action
-    return $ handleInput game action
+    let newState = handleInput game action
+    return $ newState & setCurrentPlayer newState.madeInitialBet .~ True
 
 handleInput :: Game -> Action Int -> Game
 handleInput game action = case action of
