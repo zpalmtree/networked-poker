@@ -75,7 +75,12 @@ getRaiseAmount game = do
     where maybeRead = fmap fst . listToMaybe . reads
           player = getCurrentPlayer game
 
+--raise' is the new bet, not the amount raised
 isValidRaise :: Int -> Game -> Bool
-isValidRaise raise' game = raiseSize >= game^.bets.minimumRaise
-                        && getCurrentPlayer game^.chips >= raiseSize
-    where raiseSize = raise' - game^.bets.currentBet
+isValidRaise raise' game = isAtLeastMinimumRaise && hasEnoughChips
+    where isAtLeastMinimumRaise = raise' >= currentBet' + minRaise
+          hasEnoughChips = chips' + bet' >= raise'
+          minRaise = game^.bets.minimumRaise
+          currentBet' = game^.bets.currentBet
+          chips' = getCurrentPlayer game^.chips
+          bet' = getCurrentPlayer game^.bet

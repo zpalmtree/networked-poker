@@ -132,8 +132,10 @@ fold game = game & setCurrentPlayer game . inPlay .~ False
 
 raise :: Int -> Game -> Game
 raise amount game
-    | amount == getCurrentPlayer game^.chips = goAllIn game
-    | otherwise = updateMinimumRaise (makeBet amount game) amount
+    | raise' == getCurrentPlayer game^.chips = goAllIn game
+    | otherwise = updateMinimumRaise (makeBet bet' game) raise'
+    where raise' = amount - game^.bets.currentBet
+          bet' = amount - getCurrentPlayer game^.bet
 
 call :: Game -> Game
 call game = makeBet (game^.bets.currentBet - getCurrentPlayer game^.bet) game

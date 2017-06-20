@@ -27,13 +27,18 @@ play = do
 
 gameLoop :: Game -> IO Game
 gameLoop game = do
-    newGame <- playRound' game
+    newGame <- nextRound =<< playRound' game
     if newGame^.gameFinished
         then return game
-        else gameLoop newGame
+        else do
+            outputRoundNumber newGame
+            gameLoop =<< dealCards newGame
 
 setup :: IO Game
-setup = dealCards setup'
+setup = do
+    let game = setup'
+    outputRoundNumber game
+    dealCards game
 
 setup' :: Game
 setup' = initialGame smallBlindSize' $ initialPlayers players'
@@ -53,11 +58,11 @@ playRound game
         let (newState, winnerMapping) = showdown game
         outputHandValues newState
         outputWinners newState winnerMapping
-        nextRound newState
+        return newState
     -- only one player left -> they get the winnings, start next round
     | numInPlay game == 1 = do
         outputWinner game winner
-        nextRound $ giveWinnings (winner, losers) game
+        return $ giveWinnings (winner, losers) game
     -- max of one person isn't all in -> no more betting can happen -> deal
     -- more cards, but can't do anymore betting
     | numInPlay game - numAllIn game <= 1 = playRound =<< nextState game
@@ -135,7 +140,7 @@ nextRound :: Game -> IO Game
 nextRound game = do
     let (newState, maybeRemoved) = nextRound' game
     outputPlayersRemoved newState maybeRemoved
-    dealCards newState
+    return newState
 
 nextRound' :: Game -> (Game, Maybe [Player])
 nextRound' game = 
@@ -154,6 +159,7 @@ nextRound' game =
                              & bets.pots .~ []
                              & bets.currentBet .~ 0
                              & bets.minimumRaise .~ newState^.bets.bigBlindSize
+                             & roundNumber +~ 1
     in (newState', maybeRemoved)
     where allPlayers = playerInfo.players.traversed
           (newState, maybeRemoved) = removeOutPlayers game

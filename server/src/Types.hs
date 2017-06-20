@@ -4,6 +4,7 @@ module Types where
 
 import Control.Lens
 
+--don't want to export all the individual functions...
 {-# ANN module "Hlint: ignore Use module export list" #-}
 
 data Game = Game {
@@ -12,7 +13,8 @@ data Game = Game {
     _cardInfo :: Cards,
     _roundDone :: Bool,
     _bets :: Bets,
-    _gameFinished :: Bool
+    _gameFinished :: Bool,
+    _roundNumber :: Int
 } deriving Show
 
 data Player = Player {

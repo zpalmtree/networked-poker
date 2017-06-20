@@ -45,19 +45,19 @@ badFoldCallRaiseAllInInput = "Bad input, please enter fold, call, raise, or \
                              \all in."
 
 inputRaise :: String
-inputRaise = "Player %d, %s, What do you want to raise to?: "
+inputRaise = "Player %d, %s, what do you want to raise to?: "
 
 inputFoldAllIn :: String
-inputFoldAllIn = "Player %d, %s, Fold, or all in?: "
+inputFoldAllIn = "Player %d, %s, fold, or all in?: "
 
 inputCheckAllIn :: String
-inputCheckAllIn = "Player %d, %s, Check, or all in?: "
+inputCheckAllIn = "Player %d, %s, check, or all in?: "
 
 inputFoldCallAllIn :: String
-inputFoldCallAllIn = "Player %d, %s, Fold, call, or all in?: "
+inputFoldCallAllIn = "Player %d, %s, fold, call, or all in?: "
 
 inputCheckRaiseAllIn :: String
-inputCheckRaiseAllIn = "Player %d, %s, Check, raise, or all in?: "
+inputCheckRaiseAllIn = "Player %d, %s, check, raise, or all in?: "
 
 inputFoldCallRaiseAllIn :: String
-inputFoldCallRaiseAllIn = "Player %d, %s, Fold, call, raise, or all in?: "
+inputFoldCallRaiseAllIn = "Player %d, %s, fold, call, raise, or all in?: "

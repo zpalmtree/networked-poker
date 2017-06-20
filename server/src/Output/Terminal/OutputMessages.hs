@@ -19,7 +19,8 @@ module Output.Terminal.OutputMessages
     playerMsg,
     totalWinner,
     playerRemoved,
-    playerHand
+    playerHand,
+    roundNumberMsg
 )
 where
 
@@ -93,3 +94,6 @@ playerRemoved = "Thanks for playing player %d, %s, unfortunately you've run \
 
 playerHand :: String
 playerHand = "Player %d, %s, has a %s, their cards are the %s and the %s."
+
+roundNumberMsg :: String
+roundNumberMsg = "\nRound number %d:\n"
