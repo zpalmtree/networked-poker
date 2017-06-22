@@ -32,7 +32,7 @@ dealCards' game newPlayers n
     | otherwise = do
         (newGame, newCards) <- drawPlayerCards game
         let newPlayer = player & cards .~ newCards
-        dealCards' newGame (newPlayer : newPlayers) (n+1)
+        dealCards' newGame (newPlayers ++ [newPlayer]) (n+1)
     where numPlayers' = game^.playerInfo.numPlayers
           player = game^.playerInfo.players ^?! ix n
 
