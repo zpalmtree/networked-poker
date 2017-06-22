@@ -109,25 +109,26 @@ getWinnersAndDistribute game (pot':pots') acc = go
           go = getWinnersAndDistribute newGame pots' newAcc
 
 nextState :: Game -> IO Game
-nextState game = case nextState' game^.state of
+nextState game = case newState^.state of
     PreFlop -> do
-        newState <- revealFlop game
-        outputFlop newState
-        return newState
+        newState' <- revealFlop newState
+        outputFlop newState'
+        return newState'
 
     Flop -> do
-        newState <- revealTurn game
-        outputTurn newState
-        return newState
+        newState' <- revealTurn newState
+        outputTurn newState'
+        return newState'
 
     Turn -> do
-        newState <- revealRiver game
-        outputRiver newState
-        return newState
+        newState' <- revealRiver newState
+        outputRiver newState'
+        return newState'
 
-    River -> return $ game & state .~ Showdown
+    River -> return $ newState & state .~ Showdown
 
     _ -> error "Programming error in nextState"
+    where newState = nextState' game
 
 nextState' :: Game -> Game
 nextState' game = updatePot $ 
