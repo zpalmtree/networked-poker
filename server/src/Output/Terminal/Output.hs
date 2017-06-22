@@ -11,7 +11,9 @@ module Output.Terminal.Output
     outputGameOver,
     outputPlayersRemoved,
     outputHandValues,
-    outputRoundNumber
+    outputRoundNumber,
+    outputSmallBlindMade,
+    outputBigBlindMade
 )
 where
 
@@ -91,3 +93,16 @@ outputHandValues game = mapM_ (putStrLn . printHand) inPlayers
 outputRoundNumber :: Game -> IO ()
 outputRoundNumber game = putStrLn $ printf roundNumberMsg num'
     where num' = game^.roundNumber
+
+outputSmallBlindMade :: Game -> IO ()
+outputSmallBlindMade game = outputBlindMade game smallBlind size
+    where size = game^.bets.smallBlindSize
+
+outputBigBlindMade :: Game -> IO ()
+outputBigBlindMade game = outputBlindMade game bigBlind size
+    where size = game^.bets.bigBlindSize
+
+outputBlindMade :: Game -> String -> Int -> IO ()
+outputBlindMade game f size = putStrLn $ printf f num' name' size
+    where num' = playerNum $ getCurrentPlayer game
+          name' = getCurrentPlayer game^.name

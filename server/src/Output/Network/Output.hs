@@ -9,7 +9,11 @@ module Output.Network.Output
     outputWinner,
     outputWinners,
     outputGameOver,
-    outputPlayersRemoved
+    outputPlayersRemoved,
+    outputHandValues,
+    outputRoundNumber,
+    outputSmallBlindMade,
+    outputBigBlindMade
 )
 where
 
@@ -44,3 +48,15 @@ outputGameOver = undefined
 
 outputPlayersRemoved :: Game -> Maybe [Player] -> IO ()
 outputPlayersRemoved = undefined
+
+outputHandValues :: Game -> IO ()
+outputHandValues = undefined
+
+outputRoundNumber :: Game -> IO ()
+outputRoundNumber = undefined
+
+outputSmallBlindMade :: Game -> IO ()
+outputSmallBlindMade = undefined
+
+outputBigBlindMade :: Game -> IO ()
+outputBigBlindMade = undefined

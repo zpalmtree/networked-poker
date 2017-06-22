@@ -27,11 +27,21 @@ makeBet amount game
 
           newBet = getCurrentPlayer newState^.bet
 
-smallBlind :: Game -> Game
-smallBlind game = makeBet (game^.bets.smallBlindSize) game
+smallBlind :: Game -> IO Game
+smallBlind game = do
+    outputSmallBlindMade game
+    return $ smallBlind' game
 
-bigBlind :: Game -> Game
-bigBlind game = makeBet (game^.bets.bigBlindSize) game
+bigBlind :: Game -> IO Game
+bigBlind game = do
+    outputBigBlindMade game
+    return $ bigBlind' game
+
+smallBlind' :: Game -> Game
+smallBlind' game = makeBet (game^.bets.smallBlindSize) game
+
+bigBlind' :: Game -> Game
+bigBlind' game = makeBet (game^.bets.bigBlindSize) game
 
 gatherChips :: Game -> Int
 gatherChips game = sum (game^..bets.pots.traversed.pot)

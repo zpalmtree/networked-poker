@@ -49,7 +49,9 @@ cleanup :: Game -> IO ()
 cleanup = outputGameOver
 
 playRound' :: Game -> IO Game
-playRound' = playRound . nextPlayer . bigBlind . nextPlayer . smallBlind
+playRound' game = do
+    newState <- nextPlayer <$> smallBlind game
+    playRound =<< nextPlayer <$> bigBlind newState
 
 playRound :: Game -> IO Game
 playRound game

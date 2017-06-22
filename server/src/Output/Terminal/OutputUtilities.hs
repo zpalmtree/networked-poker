@@ -14,6 +14,8 @@ import Output.Terminal.OutputMessages
 
 import Text.Printf
 import Data.Maybe
+import Data.Function
+import Data.List
 import Control.Lens hiding (Fold)
 
 turnCard :: [String] -> String
@@ -37,7 +39,8 @@ printCard = printf card
 
 playerCards :: [Player] -> String
 playerCards players' = dealt ++ dealtCards
-    where dealtCards = concatMap printCards players'
+    where dealtCards = concatMap printCards sorted
+          sorted = sortBy (compare `on` (^.num)) players'
 
 {-# ANN printCards "HLint: ignore Use head" #-}
 printCards :: Player -> String

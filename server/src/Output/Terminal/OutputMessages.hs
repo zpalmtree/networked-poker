@@ -20,7 +20,9 @@ module Output.Terminal.OutputMessages
     totalWinner,
     playerRemoved,
     playerHand,
-    roundNumberMsg
+    roundNumberMsg,
+    smallBlind,
+    bigBlind
 )
 where
 
@@ -61,7 +63,7 @@ card :: String
 card = "the %s, "
 
 dealt :: String
-dealt = "The cards have been dealt. "
+dealt = "The cards have been dealt."
 
 hasCards :: String
 hasCards = " Player %d, %s, has the %s and the %s."
@@ -97,3 +99,9 @@ playerHand = "Player %d, %s, has a %s, their cards are the %s and the %s."
 
 roundNumberMsg :: String
 roundNumberMsg = "\nRound number %d:\n"
+
+smallBlind :: String
+smallBlind = "Player %d, %s, posted a small blind of %d."
+
+bigBlind :: String
+bigBlind = "Player %d, %s, posted a big blind of %d."
