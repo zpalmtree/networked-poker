@@ -48,21 +48,19 @@ gatherChips game = sum (game^..bets.pots.traversed.pot)
                  + sum (game^..playerInfo.players.traversed.bet)
 
 updatePotSimple :: Game -> Game
-updatePotSimple game
-    | null $ game^.bets.pots = game & bets.pots .~ newPot
-    | otherwise = game & bets.pots .~ updatedPot
-    where allBets = playerInfo.players.traversed.bet
-          potSize = sum $ game^..allBets
+updatePotSimple game = game & playerInfo.players.traversed.bet .~ 0
+                            & bets.pots .~ fixedPot
+    where potSize = sum $ game^..playerInfo.players.traversed.bet
           inPlayers = filter (^.inPlay) (game^.playerInfo.players)
           ids = inPlayers^..traversed.num
           newPot = [Pot potSize ids]
-          oldPot = head $ game^.bets.pots
           updatedPot = [Pot (oldPot^.pot + potSize) ids]
+          oldPot = head $ game^.bets.pots
+          fixedPot = if null (game^.bets.pots) then newPot else updatedPot
 
 updatePot :: Game -> Game
 updatePot game
     | sum (game^..playerInfo.players.traversed.bet) == 0 = game
-    | null betters = game
     | length betters == 1 = refund game refundPlayer
     | not $ any (^.allIn) (game^.playerInfo.players) = updatePotSimple game
     | otherwise = updatePot $ addPot game sidePotSize
