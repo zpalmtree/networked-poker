@@ -61,13 +61,17 @@ playRound game
         outputHandValues newState
         outputWinners newState winnerMapping
         return newState
+
     -- only one player left -> they get the winnings, start next round
     | numInPlay game == 1 = do
         outputWinner game winner
         return $ giveWinnings (winner, losers) game
+
     -- max of one person isn't all in -> no more betting can happen -> deal
     -- more cards, but can't do anymore betting
-    | numInPlay game - numAllIn game <= 1 = playRound =<< nextState game
+    | getCurrentPlayer game^.bet == game^.bets.currentBet &&
+      numInPlay game - numAllIn game <= 1
+      = playRound =<< nextState game
 
     -- player isn't in play, go onto next player 
     | not $ getCurrentPlayer game^.inPlay = playRound $ nextPlayer game 
