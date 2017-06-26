@@ -81,17 +81,20 @@ playRound game
     -- they were big blind
     | not (getCurrentPlayer game^.madeInitialBet) 
        && (getCurrentPlayer game^.bet == game^.bets.currentBet) 
+       && not (getCurrentPlayer game^.allIn)
       = playRound . nextPlayer =<< promptBet game True
 
     -- player is in play, and hasn't made their intial bet, so prompt for bet
     -- isn't matched with current bet, so can't check
-    | not $ getCurrentPlayer game^.madeInitialBet 
+    | not (getCurrentPlayer game^.madeInitialBet) &&
+      not (getCurrentPlayer game^.allIn)
       = playRound . nextPlayer =<< promptBet game False
 
     -- player is in play, and has made initial bet, but isn't matched with
     -- current bet level -> has to call/fold/raise
     | getCurrentPlayer game^.madeInitialBet && 
-      getCurrentPlayer game^.bet < game^.bets.currentBet
+      getCurrentPlayer game^.bet < game^.bets.currentBet &&
+      not (getCurrentPlayer game^.allIn)
       = playRound . nextPlayer =<< promptBet game False
 
     -- else the player has already made their bet so move on to next load of 
@@ -156,6 +159,7 @@ nextRound' game =
                              & allPlayers.hand .~ []
                              & allPlayers.handValue .~ Nothing
                              & allPlayers.canReRaise .~ True
+                             & allPlayers.allIn .~ False
                              & playerInfo.dealer .~ advanceDealer newState
                              & playerInfo.playerTurn .~ advancePlayerTurn 
                                                         newState

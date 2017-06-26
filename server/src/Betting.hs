@@ -66,11 +66,12 @@ updatePot game
     | otherwise = updatePot $ addPot game sidePotSize
     where betters = filter (\p -> p^.bet > 0 && p^.inPlay)
                            (game^.playerInfo.players)
-          sidePotSize = minimum $ filter (^.allIn) betters^..traversed.bet
+          sidePotSize = minimum $ filter (^.inPlay) betters^..traversed.bet
           refundPlayer = head betters^.num
 
 refund :: Game -> Int -> Game
 refund game n = game & p.chips +~ game^.playerInfo.players ^?! ix n.bet
+                     & p.bet .~ 0
     where p = playerInfo.players.ix n
 
 addPot :: Game -> Int -> Game
@@ -148,18 +149,18 @@ raise amount game
 call :: Game -> Game
 call game = makeBet (game^.bets.currentBet - getCurrentPlayer game^.bet) game
 
--- if it's a raise and it's greater than the minimum bet, then let any previous
+-- if it's a raise and it's at least the minimum bet, then let any previous
 -- raisers re-raise, plus update minimum raise
 goAllIn :: Game -> Game
 goAllIn game
-    | bet' > game^.bets.currentBet && raise' > game^.bets.minimumRaise
+    | bet' > game^.bets.currentBet && 
+      raise' >= game^.bets.minimumRaise
       = updateMinimumRaise newGame raise'
     | otherwise = newGame
     where newGame = makeBet raise' game
                   & setCurrentPlayer game . allIn .~ True
           bet' = (getCurrentPlayer game^.chips) + (getCurrentPlayer game^.bet)
           raise' = getCurrentPlayer game^.chips
-
 
 giveWinnings :: (Player, [Player]) -> Game -> Game
 giveWinnings (winner, losers) game = game & playerInfo.players .~ newPlayers
