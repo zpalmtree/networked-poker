@@ -14,6 +14,8 @@ module Output.Terminal.InputMessages
     inputFoldCallAllIn,
     inputCheckRaiseAllIn,
     inputFoldCallRaiseAllIn,
+    lessThanMinimumRaise,
+    notEnoughChips
 )
 where
 
@@ -61,3 +63,10 @@ inputCheckRaiseAllIn = "Player %d, %s, check, raise, or all in?: "
 
 inputFoldCallRaiseAllIn :: String
 inputFoldCallRaiseAllIn = "Player %d, %s, fold, call, raise, or all in?: "
+
+lessThanMinimumRaise :: String
+lessThanMinimumRaise = "Bad input, you must raise to at least %d chips."
+
+notEnoughChips :: String
+notEnoughChips = "Bad input, you don't have enough chips to raise that much. \
+                 \You can raise to a maximum of %d chips."

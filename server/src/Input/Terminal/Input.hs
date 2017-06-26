@@ -69,18 +69,30 @@ getRaiseAmount game = do
     input <- maybeRead <$> getLine
     case input of
         Nothing -> putStrLn raiseNotInteger >> getRaiseAmount game
-        Just raise' -> if isValidRaise raise' game
-                        then return $ Raise raise'
-                        else putStrLn invalidRaiseAmount >> getRaiseAmount game
+        Just raise' -> handleRaise raise' game
     where maybeRead = fmap fst . listToMaybe . reads
           player = getCurrentPlayer game
 
---raise' is the new bet, not the amount raised
-isValidRaise :: Int -> Game -> Bool
-isValidRaise raise' game = isAtLeastMinimumRaise && hasEnoughChips
-    where isAtLeastMinimumRaise = raise' >= currentBet' + minRaise
-          hasEnoughChips = chips' + bet' >= raise'
-          minRaise = game^.bets.minimumRaise
+handleRaise :: Int -> Game -> IO (Action Int)
+handleRaise raise' game
+    | raise' < minRaiseAbsolute = putStrLn (lessThanMinimumRaise' game) >> def
+    | chips' + bet' < raise' = putStrLn (notEnoughChips' game) >> def
+    | otherwise = return $ Raise raise'
+    where minRaise = game^.bets.minimumRaise
           currentBet' = game^.bets.currentBet
           chips' = getCurrentPlayer game^.chips
           bet' = getCurrentPlayer game^.bet
+          minRaiseAbsolute = currentBet' + minRaise
+          def = getRaiseAmount game
+
+lessThanMinimumRaise' :: Game -> String
+lessThanMinimumRaise' game = printf lessThanMinimumRaise minRaiseAbsolute
+    where minRaiseAbsolute = currentBet' + minRaise
+          currentBet' = game^.bets.currentBet
+          minRaise = game^.bets.minimumRaise
+
+notEnoughChips' :: Game -> String
+notEnoughChips' game = printf notEnoughChips maxBet
+    where chips' = getCurrentPlayer game^.chips
+          bet' = getCurrentPlayer game^.bet
+          maxBet = chips' + bet'

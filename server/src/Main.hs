@@ -107,10 +107,9 @@ showdown game = getWinnersAndDistribute results (results^.bets.pots) []
 getWinnersAndDistribute :: Game -> [Pot] -> [(Pot, [Player])]
                                 -> (Game, [(Pot, [Player])])
 getWinnersAndDistribute game [] acc = (game, acc)
-getWinnersAndDistribute game (pot':pots') acc = go
+getWinnersAndDistribute game (pot':pots') acc = recurse
     where (newGame, winnerMapping) = distributePot game pot'
-          newAcc = winnerMapping : acc
-          go = getWinnersAndDistribute newGame pots' newAcc
+          recurse = getWinnersAndDistribute newGame pots' (winnerMapping : acc)
 
 nextState :: Game -> IO Game
 nextState game = case newState^.state of
