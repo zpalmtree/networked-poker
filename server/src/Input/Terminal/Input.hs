@@ -26,12 +26,13 @@ checkRaiseAllIn game = getAction actionMapping inputCheckRaiseAllIn
                            ("raise",    getRaiseAmount game)]
 
 foldCallRaiseAllIn :: Game -> IO (Action Int)
-foldCallRaiseAllIn game = getAction actionMapping inputFoldCallRaiseAllIn 
+foldCallRaiseAllIn game = getAction actionMapping msg
                                     badFoldCallRaiseAllInInput game
     where actionMapping = [("fold",     return Fold),
                            ("call",     return Call),
                            ("all in",   return AllIn),
                            ("raise",    getRaiseAmount game)]
+          msg = inputFoldCallRaiseAllIn (game^.bets.currentBet)
 
 foldAllIn :: Game -> IO (Action Int)
 foldAllIn = getAction actionMapping inputFoldAllIn badFoldAllInInput
@@ -39,10 +40,11 @@ foldAllIn = getAction actionMapping inputFoldAllIn badFoldAllInInput
                            ("all in",   return AllIn)]
 
 foldCallAllIn :: Game -> IO (Action Int)
-foldCallAllIn = getAction actionMapping inputFoldCallAllIn badFoldCallAllInInput
+foldCallAllIn game = getAction actionMapping msg badFoldCallAllInInput game
     where actionMapping = [("fold",     return Fold),
                            ("call",     return Call),
                            ("all in",   return AllIn)]
+          msg = inputFoldCallAllIn (game^.bets.currentBet)
 
 checkAllIn :: Game -> IO (Action Int)
 checkAllIn = getAction actionMapping inputCheckAllIn badCheckAllInInput
@@ -52,7 +54,8 @@ checkAllIn = getAction actionMapping inputCheckAllIn badCheckAllInInput
 getAction :: [(String, IO (Action Int))] -> String -> String -> Game 
                                          -> IO (Action Int)
 getAction actionMapping inputMsg badInputMsg game = do
-    printf inputMsg (player^.num+1) (player^.name) >> hFlush stdout
+    printf inputMsg (player^.num+1) (player^.name) (player^.bet) (player^.chips)
+    hFlush stdout
     input <- map toLower <$> getLine
     fromMaybe badInput (lookup input actionMapping)
     where badInput = do
@@ -65,7 +68,9 @@ getAction actionMapping inputMsg badInputMsg game = do
 -- will be 500, not 600.
 getRaiseAmount :: Game -> IO (Action Int)
 getRaiseAmount game = do
-    printf inputRaise (player^.num+1) (player^.name) >> hFlush stdout
+    printf inputRaise (player^.num+1) (player^.name) (player^.bet) 
+                      (player^.chips)
+    hFlush stdout
     input <- maybeRead <$> getLine
     case input of
         Nothing -> putStrLn raiseNotInteger >> getRaiseAmount game
