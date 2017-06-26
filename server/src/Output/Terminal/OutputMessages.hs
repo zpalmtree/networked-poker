@@ -77,8 +77,7 @@ multiWinnerMsg middle = start ++ middle ++ end
           end = " and they will share the winnings!"
 
 singleWinnerMsg :: String
-singleWinnerMsg = "The pot of %d chips was won by player %d, %s, and they \
-                  \gained %d chips!"
+singleWinnerMsg = "Player %d, %s, won the pot of %d chips!"
 
 playerMsg :: Bool -> String
 playerMsg final
