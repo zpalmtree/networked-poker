@@ -22,9 +22,9 @@ import Control.Lens
 
 dealCards :: Game -> IO Game
 dealCards game = do
-    newState <- dealCards' game [] 0
-    outputPlayerCards newState
-    return newState
+    newGame <- dealCards' game [] 0
+    outputPlayerCards newGame
+    return newGame
 
 dealCards' :: Game -> [Player] -> Int -> IO Game
 dealCards' game newPlayers n

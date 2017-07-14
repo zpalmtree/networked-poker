@@ -50,17 +50,17 @@ cleanup = outputGameOver
 
 playRound' :: Game -> IO Game
 playRound' game = do
-    newState <- nextPlayer <$> smallBlind game
-    playRound =<< nextPlayer <$> bigBlind newState
+    newGame <- nextPlayer <$> smallBlind game
+    playRound =<< nextPlayer <$> bigBlind newGame
 
 playRound :: Game -> IO Game
 playRound game
     -- in showdown -> no more betting can happen
     | isShowdown game = do
-        let (newState, winnerMapping) = showdown game
-        outputHandValues newState
-        outputWinners newState winnerMapping
-        return newState
+        let (newGame, winnerMapping) = showdown game
+        outputHandValues newGame
+        outputWinners newGame winnerMapping
+        return newGame
 
     -- only one player left -> they get the winnings, start next round
     | numInPlay game == 1 = do
@@ -115,26 +115,26 @@ getWinnersAndDistribute game (pot':pots') acc = recurse
           recurse = getWinnersAndDistribute newGame pots' (winnerMapping : acc)
 
 nextState :: Game -> IO Game
-nextState game = case newState^.state of
+nextState game = case newGame^.state of
     PreFlop -> do
-        newState' <- revealFlop newState
-        outputFlop newState'
-        return newState'
+        newGame' <- revealFlop newGame
+        outputFlop newGame'
+        return newGame'
 
     Flop -> do
-        newState' <- revealTurn newState
-        outputTurn newState'
-        return newState'
+        newGame' <- revealTurn newGame
+        outputTurn newGame'
+        return newGame'
 
     Turn -> do
-        newState' <- revealRiver newState
-        outputRiver newState'
-        return newState'
+        newGame' <- revealRiver newGame
+        outputRiver newGame'
+        return newGame'
 
-    River -> return $ newState & state .~ Showdown
+    River -> return $ newGame & state .~ Showdown
 
     _ -> error "Programming error in nextState"
-    where newState = nextState' game
+    where newGame = nextState' game
 
 nextState' :: Game -> Game
 nextState' game = updatePot $ 
@@ -147,29 +147,29 @@ nextState' game = updatePot $
 
 nextRound :: Game -> IO Game
 nextRound game = do
-    let (newState, maybeRemoved) = nextRound' game
-    outputPlayersRemoved newState maybeRemoved
-    return newState
+    let (newGame, maybeRemoved) = nextRound' game
+    outputPlayersRemoved newGame maybeRemoved
+    return newGame
 
 nextRound' :: Game -> (Game, Maybe [Player])
 nextRound' game = 
-    let newState' = newState & allPlayers.inPlay .~ True
+    let newGame' = newGame & allPlayers.inPlay .~ True
                              & allPlayers.bet .~ 0
                              & allPlayers.madeInitialBet .~ False
                              & allPlayers.hand .~ []
                              & allPlayers.handInfo .~ Nothing
                              & allPlayers.canReRaise .~ True
                              & allPlayers.allIn .~ False
-                             & playerInfo.dealer .~ advanceDealer newState
+                             & playerInfo.dealer .~ advanceDealer newGame
                              & playerInfo.playerTurn .~ advancePlayerTurn 
-                                                        newState
+                                                        newGame
                              & state .~ PreFlop
                              & cardInfo .~ Cards [] fullDeck
                              & roundDone .~ False
                              & bets.pots .~ []
                              & bets.currentBet .~ 0
-                             & bets.minimumRaise .~ newState^.bets.bigBlindSize
+                             & bets.minimumRaise .~ newGame^.bets.bigBlindSize
                              & roundNumber +~ 1
-    in (newState', maybeRemoved)
+    in (newGame', maybeRemoved)
     where allPlayers = playerInfo.players.traversed
-          (newState, maybeRemoved) = removeOutPlayers game
+          (newGame, maybeRemoved) = removeOutPlayers game

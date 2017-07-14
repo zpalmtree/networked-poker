@@ -20,12 +20,12 @@ import Data.Function
 
 makeBet :: Int -> Game -> Game
 makeBet amount game
-    | newBet > newState^.bets.currentBet = newState & bets.currentBet .~ newBet
-    | otherwise = newState
-    where newState = game & setCurrentPlayer game . chips -~ amount
+    | newBet > newGame^.bets.currentBet = newGame & bets.currentBet .~ newBet
+    | otherwise = newGame
+    where newGame = game & setCurrentPlayer game . chips -~ amount
                           & setCurrentPlayer game . bet +~ amount
 
-          newBet = getCurrentPlayer newState^.bet
+          newBet = getCurrentPlayer newGame^.bet
 
 smallBlind :: Game -> IO Game
 smallBlind game = do
@@ -125,8 +125,8 @@ promptAndUpdate f game = do
     action <- f game
     -- update the players' GUI's on what action they made
     outputAction game action
-    let newState = handleInput game action
-    return $ newState & setCurrentPlayer newState.madeInitialBet .~ True
+    let newGame = handleInput game action
+    return $ newGame & setCurrentPlayer newGame.madeInitialBet .~ True
 
 handleInput :: Game -> Action Int -> Game
 handleInput game action = case action of
