@@ -18,7 +18,7 @@ executable server
   main-is:             Main.hs
   other-modules:       Betting, CardUtilities, PlayerUtilities, StateUtilities,
                        TestStates, Types, Showdown, Showdown.Utilities,
-                       Showdown.Sort, Showdown.Value, Showdown.Best,
+                       Showdown.Ord, Showdown.Value, Showdown.Best,
                        Input.Network.Input, Input.Terminal.Input,
                        Output.Terminal.InputMessages, Output.Network.Output,
                        Output.Terminal.Output, Output.Terminal.OutputMessages,

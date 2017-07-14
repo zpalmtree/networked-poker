@@ -49,7 +49,7 @@ sorted = sortBy (compare `on` getValue)
 getValue :: Card -> Value
 getValue (Card v _) = v
 
-getHand :: (Hand, [Card]) -> Hand
+getHand :: (Hand a b, [Card]) -> Hand a b
 getHand (h, _) = h
 
 cardValue :: Value -> Int

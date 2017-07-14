@@ -14,37 +14,71 @@ where
 
 import Types
 import Showdown.Utilities
-import Showdown.Sort
+import Showdown.Ord
 import Showdown.Value
 
 import Data.List
 
-bestStraightFlush :: [Card] -> [Card]
-bestStraightFlush = bestX sortStraight isStraightFlush5Card
+bestStraightFlush :: [Card] -> HandInfo
+bestStraightFlush cards' = HandInfo value' topHand
+    where topHand = bestX ordStraight isStraightFlush5Card cards'
+          value' = uncurry StraightFlush (straightValue topHand)
 
-bestFourOfAKind :: [Card] -> [Card]
-bestFourOfAKind = bestX sortXOfAKind isFourOfAKind
+bestFourOfAKind :: [Card] -> HandInfo
+bestFourOfAKind cards' = HandInfo value' topHand
+    where topHand = bestX ordXOfAKind isFourOfAKind cards'
+          value' = FourOfAKind $ xOfAKindValue topHand
 
-bestFullHouse :: [Card] -> [Card]
-bestFullHouse = bestX sortXOfAKind isFullHouse
+bestFullHouse :: [Card] -> HandInfo
+bestFullHouse cards' = HandInfo value' topHand
+    where topHand = bestX ordXOfAKind isFullHouse cards'
+          value' = uncurry FullHouse $ multiPairValue topHand
 
-bestFlush :: [Card] -> [Card]
-bestFlush = bestX sortOnValue isFlush
+bestFlush :: [Card] -> HandInfo
+bestFlush cards' = HandInfo value' topHand
+    where topHand = bestX ordOnValue isFlush cards'
+          value' = Flush . maximum $ map getValue topHand
 
-bestStraight :: [Card] -> [Card]
-bestStraight = bestX sortStraight isStraight5Card
+bestStraight :: [Card] -> HandInfo
+bestStraight cards' = HandInfo value' topHand
+    where topHand = bestX ordStraight isStraight5Card cards'
+          value' = uncurry Straight $ straightValue topHand
 
-bestThreeOfAKind :: [Card] -> [Card]
-bestThreeOfAKind = bestX sortXOfAKind isThreeOfAKind
+bestThreeOfAKind :: [Card] -> HandInfo
+bestThreeOfAKind cards' = HandInfo value' topHand
+    where topHand = bestX ordXOfAKind isThreeOfAKind cards'
+          value' = ThreeOfAKind $ xOfAKindValue topHand
 
-bestTwoPair :: [Card] -> [Card]
-bestTwoPair = bestX sortXOfAKind isTwoPair
+bestTwoPair :: [Card] -> HandInfo
+bestTwoPair cards' = HandInfo value' topHand
+    where topHand = bestX ordXOfAKind isTwoPair cards'
+          value' = uncurry TwoPair $ multiPairValue topHand
 
-bestPair :: [Card] -> [Card]
-bestPair = bestX sortXOfAKind isPair
+bestPair :: [Card] -> HandInfo
+bestPair cards' = HandInfo value' topHand
+    where topHand = bestX ordXOfAKind isPair cards'
+          value' = Pair $ xOfAKindValue topHand
 
-bestHighCard :: [Card] -> [Card]
-bestHighCard = bestX sortOnValue (const True)
+bestHighCard :: [Card] -> HandInfo
+bestHighCard cards' = HandInfo value' topHand
+    where topHand = bestX ordOnValue (const True) cards'
+          value' = HighCard . maximum $ map getValue topHand
+
+{-# ANN multiPairValue "Hlint: ignore Use head" #-}
+multiPairValue :: [Card] -> (Value, Value)
+multiPairValue topHand = (head $ values !! 0, head $ values !! 1)
+    where values = sortBy (flip ordOnLength) . group . sort 
+                 $ map getValue topHand
+
+straightValue :: [Card] -> (Value, Value)
+straightValue topHand
+    | map (cardValueAceLow . getValue) topHand == [1..5] = (Ace, Five)
+    | otherwise = (minimum values, maximum values)
+    where values = map getValue topHand
+
+xOfAKindValue :: [Card] -> Value
+xOfAKindValue topHand = head . maximumBy ordOnLength $ group values
+    where values = sort $ map getValue topHand
 
 bestX :: ([Card] -> [Card] -> Ordering) -> ([Card] -> Bool) -> [Card] -> [Card]
 bestX sortFunc isFunc = maximumBy sortFunc . filter isFunc . handSubsets

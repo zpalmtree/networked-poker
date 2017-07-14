@@ -157,7 +157,7 @@ nextRound' game =
                              & allPlayers.bet .~ 0
                              & allPlayers.madeInitialBet .~ False
                              & allPlayers.hand .~ []
-                             & allPlayers.handValue .~ Nothing
+                             & allPlayers.handInfo .~ Nothing
                              & allPlayers.canReRaise .~ True
                              & allPlayers.allIn .~ False
                              & playerInfo.dealer .~ advanceDealer newState

@@ -73,6 +73,6 @@ playerNum p = p^.num + 1
 {-# ANN printHand "HLint: ignore Use head" #-}
 printHand :: Player -> String
 printHand p = printf playerHand (playerNum p) (p^.name) value' card1 card2
-    where value' = show . fromJust $ p^.handValue
+    where value' = show $ fromJust (p^.handInfo)^.handValue
           card1 = show $ (p^.cards) !! 0
           card2 = show $ (p^.cards) !! 1

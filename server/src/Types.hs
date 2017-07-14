@@ -3,6 +3,8 @@
 module Types where
 
 import Control.Lens
+import Data.Char
+import Text.Printf
 
 --don't want to export all the individual functions...
 {-# ANN module "Hlint: ignore Use module export list" #-}
@@ -27,7 +29,7 @@ data Player = Player {
     _bet :: Int,
     _madeInitialBet :: Bool,
     _hand :: [Card],
-    _handValue :: Maybe Hand,
+    _handInfo :: Maybe HandInfo,
     _canReRaise :: Bool
 } deriving Show
 
@@ -66,8 +68,35 @@ data Pot = Pot {
 
 data Action a = Fold | Check | Call | Raise a | AllIn deriving Show
 
-data Hand = HighCard | Pair | TwoPair | ThreeOfAKind | Straight | Flush |
-            FullHouse | FourOfAKind | StraightFlush deriving (Show, Eq, Ord)
+data Hand a b = HighCard a 
+              | Pair a 
+              | TwoPair a b
+              | ThreeOfAKind a
+              | Straight a b 
+              | Flush a
+              | FullHouse a b 
+              | FourOfAKind a
+              | StraightFlush a b
+              deriving (Eq, Ord)
+
+instance (PrintfArg a, PrintfArg b) => Show (Hand a b) where
+    show (HighCard a) = printf "high card %V" a
+    show (Pair a) = printf "pair of %Vs" a
+    show (TwoPair a b) = printf "two pair, %Vs and %Vs" a b
+    show (ThreeOfAKind a) = printf "three of a kind, %Vs" a
+    show (Straight a b) = printf "straight, %V to %V" a b
+    show (Flush a) = printf "flush, %V high" a
+    -- a's over b's == 3 a's, 2 b's
+    show (FullHouse a b) = printf "full house, %Vs over %Vs" a b
+    show (FourOfAKind a) = printf "four of a kind, %Vs" a
+    show (StraightFlush a b) = printf "straight flush, %V to %V" a b
+
+instance PrintfArg Value where
+    formatArg x fmt
+        | fmtChar (vFmt 'V' fmt) == 'V' 
+            = formatString (map toLower $ show x) 
+              (fmt { fmtChar = 's', fmtPrecision = Nothing })
+        | otherwise = errorBadFormat $ fmtChar fmt
 
 data State = PreFlop | Flop | Turn | River | Showdown deriving Show
 
@@ -76,6 +105,11 @@ data Suit = Heart | Spade | Club | Diamond deriving (Show, Bounded, Enum, Eq)
 data Value = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten |
              Jack | Queen | King | Ace deriving (Show, Bounded, Enum, Eq, Ord)
 
+data HandInfo = HandInfo {
+    _handValue :: Hand Value Value,
+    _bestHand :: [Card]
+} deriving Show
+
 makeLenses ''Game
 makeLenses ''Player
 makeLenses ''Players
@@ -83,3 +117,4 @@ makeLenses ''Cards
 makeLenses ''Bets
 makeLenses ''Card
 makeLenses ''Pot
+makeLenses ''HandInfo
