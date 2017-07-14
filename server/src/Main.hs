@@ -29,7 +29,7 @@ gameLoop :: Game -> IO Game
 gameLoop game = do
     newGame <- nextRound =<< playRound' game
     if newGame^.gameFinished
-        then return game
+        then return newGame
         else do
             outputRoundNumber newGame
             gameLoop =<< dealCards newGame
