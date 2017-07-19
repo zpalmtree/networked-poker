@@ -11,6 +11,7 @@ where
 import Types
 import Output.Terminal.InputMessages
 import PlayerUtilities
+import Lenses (bets, currentBet, num, name, bet, chips, minimumRaise)
 
 import Text.Printf
 import Data.Char
@@ -74,15 +75,15 @@ getRaiseAmount game = do
     input <- maybeRead <$> getLine
     case input of
         Nothing -> putStrLn raiseNotInteger >> getRaiseAmount game
-        Just raise' -> handleRaise raise' game
+        Just raise -> handleRaise raise game
     where maybeRead = fmap fst . listToMaybe . reads
           player = getCurrentPlayer game
 
 handleRaise :: Int -> Game -> IO (Action Int)
-handleRaise raise' game
-    | raise' < minRaiseAbsolute = putStrLn (lessThanMinimumRaise' game) >> def
-    | chips' + bet' < raise' = putStrLn (notEnoughChips' game) >> def
-    | otherwise = return $ Raise raise'
+handleRaise raise game
+    | raise < minRaiseAbsolute = putStrLn (lessThanMinimumRaise' game) >> def
+    | chips' + bet' < raise = putStrLn (notEnoughChips' game) >> def
+    | otherwise = return $ Raise raise
     where minRaise = game^.bets.minimumRaise
           currentBet' = game^.bets.currentBet
           chips' = getCurrentPlayer game^.chips

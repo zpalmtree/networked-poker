@@ -12,6 +12,10 @@ import PlayerUtilities
 import CardUtilities
 import StateUtilities
 import Showdown
+import Lenses (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet,
+               allIn, playerInfo, players, pots, state, canReRaise, playerTurn,
+               minimumRaise, bigBlindSize, hand, handInfo, dealer, cardInfo,
+               roundDone, roundNumber)
 
 #ifdef DEBUG
 import Output.Terminal.Output
@@ -92,8 +96,8 @@ showdown game = getWinnersAndDistribute results (results^.bets.pots) []
 getWinnersAndDistribute :: Game -> [Pot] -> [(Pot, [Player])]
                                 -> (Game, [(Pot, [Player])])
 getWinnersAndDistribute game [] acc = (game, acc)
-getWinnersAndDistribute game (pot':pots') acc = recurse
-    where (newGame, winnerMapping) = distributePot game pot'
+getWinnersAndDistribute game (pot:pots') acc = recurse
+    where (newGame, winnerMapping) = distributePot game pot
           recurse = getWinnersAndDistribute newGame pots' (winnerMapping : acc)
 
 nextState :: Game -> IO Game
@@ -136,22 +140,21 @@ nextRound game = do
 nextRound' :: Game -> (Game, Maybe [Player])
 nextRound' game = 
     let newGame' = newGame & allPlayers.inPlay .~ True
-                             & allPlayers.bet .~ 0
-                             & allPlayers.madeInitialBet .~ False
-                             & allPlayers.hand .~ []
-                             & allPlayers.handInfo .~ Nothing
-                             & allPlayers.canReRaise .~ True
-                             & allPlayers.allIn .~ False
-                             & playerInfo.dealer .~ advanceDealer newGame
-                             & playerInfo.playerTurn .~ advancePlayerTurn 
-                                                        newGame
-                             & state .~ PreFlop
-                             & cardInfo .~ Cards [] fullDeck
-                             & roundDone .~ False
-                             & bets.pots .~ []
-                             & bets.currentBet .~ 0
-                             & bets.minimumRaise .~ newGame^.bets.bigBlindSize
-                             & roundNumber +~ 1
+                           & allPlayers.bet .~ 0
+                           & allPlayers.madeInitialBet .~ False
+                           & allPlayers.hand .~ []
+                           & allPlayers.handInfo .~ Nothing
+                           & allPlayers.canReRaise .~ True
+                           & allPlayers.allIn .~ False
+                           & playerInfo.dealer .~ advanceDealer newGame
+                           & playerInfo.playerTurn .~ advancePlayerTurn newGame
+                           & state .~ PreFlop
+                           & cardInfo .~ Cards [] fullDeck
+                           & roundDone .~ False
+                           & bets.pots .~ []
+                           & bets.currentBet .~ 0
+                           & bets.minimumRaise .~ newGame^.bets.bigBlindSize
+                           & roundNumber +~ 1
     in (newGame', maybeRemoved)
     where allPlayers = playerInfo.players.traversed
           (newGame, maybeRemoved) = removeOutPlayers game

@@ -5,6 +5,7 @@ module StateUtilities
 where
 
 import Types
+import Lenses (state)
 
 import Control.Lens
 

@@ -14,6 +14,8 @@ module PlayerUtilities
 where
 
 import Types
+import Lenses (inPlay, playerInfo, players, allIn, numPlayers, playerTurn,
+               dealer, gameFinished, num, chips)
 
 import Control.Lens
 import Data.List

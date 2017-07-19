@@ -17,6 +17,8 @@ module CardUtilities
 where
 
 import Types
+import Lenses (playerInfo, cards, numPlayers, players, cardInfo, deck,
+               tableCards, state)
 
 #ifdef DEBUG
 import Output.Terminal.Output
@@ -84,20 +86,20 @@ deleteNth n xs
     | otherwise = take (n-1) xs ++ drop n xs
 
 fullDeck :: [Card]
-fullDeck = [Card value' suit' | value' <- [minBound :: Value .. maxBound],
-                                suit' <- [minBound :: Suit .. maxBound]]
+fullDeck = [Card value suit | value <- [minBound :: Value .. maxBound],
+                              suit <- [minBound :: Suit .. maxBound]]
 
 hearts :: [Card]
-hearts = [Card value' Heart | value' <- [minBound :: Value .. maxBound]]
+hearts = [Card value Heart | value <- [minBound :: Value .. maxBound]]
 
 clubs :: [Card]
-clubs = [Card value' Club | value' <- [minBound :: Value .. maxBound]]
+clubs = [Card value Club | value <- [minBound :: Value .. maxBound]]
 
 diamonds :: [Card]
-diamonds = [Card value' Diamond | value' <- [minBound :: Value .. maxBound]]
+diamonds = [Card value Diamond | value <- [minBound :: Value .. maxBound]]
 
 spades :: [Card]
-spades = [Card value' Spade | value' <- [minBound :: Value .. maxBound]]
+spades = [Card value Spade | value <- [minBound :: Value .. maxBound]]
 
 getSevenCards :: IO [Card]
 getSevenCards = getSevenCards' 7 fullDeck

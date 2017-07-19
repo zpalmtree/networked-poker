@@ -10,6 +10,8 @@ import Showdown.Value
 import Showdown.Best
 import Showdown.Ord
 import PlayerUtilities
+import Lenses (playerInfo, players, cardInfo, handInfo, tableCards, cards, num,
+               playerIDs, chips, pot)
 
 import Control.Lens
 import Data.Maybe
@@ -37,9 +39,9 @@ getValue cards' p = p & handInfo .~ Just info
           info = topHand allCards
 
 getWinnersLosers :: [Player] -> ([Player], [Player])
-getWinnersLosers p = span equalToWinner sorted'
-    where sorted' = sortBy (flip sortHandValue) p
-          winnerHand = fromJust $ head sorted'^.handInfo
+getWinnersLosers p = span equalToWinner sorted
+    where sorted = sortBy (flip sortHandValue) p
+          winnerHand = fromJust $ head sorted^.handInfo
           equalToWinner x = ordHand winnerHand (fromJust (x^.handInfo)) == EQ
 
 sortHandValue :: Player -> Player -> Ordering

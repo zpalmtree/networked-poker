@@ -13,6 +13,9 @@ where
 
 import Types
 import PlayerUtilities
+import Lenses (bets, currentBet, chips, bet, smallBlindSize, bigBlindSize,
+               pots, pot, playerInfo, players, inPlay, num, allIn, minimumRaise,
+               canReRaise, madeInitialBet)
 
 #ifdef DEBUG
 import Input.Terminal.Input

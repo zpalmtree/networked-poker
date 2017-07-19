@@ -1,13 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Types where
 
-import Control.Lens
 import Data.Char
 import Text.Printf
-
---don't want to export all the individual functions...
-{-# ANN module "Hlint: ignore Use module export list" #-}
 
 data Game = Game {
     _playerInfo :: Players,
@@ -109,12 +103,3 @@ data HandInfo = HandInfo {
     _handValue :: Hand Value Value,
     _bestHand :: [Card]
 } deriving Show
-
-makeLenses ''Game
-makeLenses ''Player
-makeLenses ''Players
-makeLenses ''Cards
-makeLenses ''Bets
-makeLenses ''Card
-makeLenses ''Pot
-makeLenses ''HandInfo

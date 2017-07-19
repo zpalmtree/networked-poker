@@ -23,7 +23,7 @@ executable server
   build-depends: base >= 4.9 && <4.10, lens, random
   other-modules: Betting, CardUtilities, PlayerUtilities, StateUtilities,
                  TestStates, Types, Showdown, Showdown.Utilities,
-                 Showdown.Ord, Showdown.Value, Showdown.Best, Game
+                 Showdown.Ord, Showdown.Value, Showdown.Best, Game, Lenses
 
   if !flag(debug)
     build-depends: network

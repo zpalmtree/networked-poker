@@ -21,6 +21,9 @@ import Types
 import Output.Terminal.OutputMessages
 import Output.Terminal.OutputUtilities
 import PlayerUtilities
+import Lenses (name, bets, currentBet, chips, bet, name, cardInfo, tableCards,
+               playerInfo, players, pots, pot, inPlay, roundNumber,
+               smallBlindSize, bigBlindSize)
 
 import Text.Printf
 import Data.Function
@@ -29,36 +32,36 @@ import Control.Lens hiding (Fold)
 
 outputAction :: Game -> Action Int -> IO ()
 outputAction game action = case action of
-    Fold -> putStrLn $ printf actionFold num' playerName
-    Check -> putStrLn $ printf actionCheck num' playerName
-    Call -> putStrLn $ printf actionCall num' playerName bet'
-    Raise a -> putStrLn $ printf actionRaise num' playerName bet' a
-    AllIn -> putStrLn $ printf actionAllIn num' playerName chips'
-    where num' = playerNum $ getCurrentPlayer game
+    Fold -> putStrLn $ printf actionFold num playerName
+    Check -> putStrLn $ printf actionCheck num playerName
+    Call -> putStrLn $ printf actionCall num playerName bet'
+    Raise a -> putStrLn $ printf actionRaise num playerName bet' a
+    AllIn -> putStrLn $ printf actionAllIn num playerName chips'
+    where num = playerNum $ getCurrentPlayer game
           playerName = getCurrentPlayer game^.name
           bet' = game^.bets.currentBet
           chips' = getCurrentPlayer game^.chips + getCurrentPlayer game^.bet
 
 outputPlayerTurn :: Game -> IO ()
-outputPlayerTurn game = putStrLn $ printf playersTurn num' playerName
+outputPlayerTurn game = putStrLn $ printf playersTurn num playerName
     where playerName = getCurrentPlayer game^.name
-          num' = playerNum $ getCurrentPlayer game
+          num = playerNum $ getCurrentPlayer game
 
 {-# ANN outputFlop "HLint: ignore Use head" #-}
 outputFlop :: Game -> IO ()
 outputFlop game = putStrLn $ printf flopCards card1 card2 card3
-    where cards' = game^.cardInfo.tableCards
-          card1 = show $ cards' !! 0
-          card2 = show $ cards' !! 1
-          card3 = show $ cards' !! 2
+    where cards = game^.cardInfo.tableCards
+          card1 = show $ cards !! 0
+          card2 = show $ cards !! 1
+          card3 = show $ cards !! 2
 
 outputTurn :: Game -> IO ()
-outputTurn game = putStrLn . turnCard $ map show cards'
-    where cards' = game^.cardInfo.tableCards
+outputTurn game = putStrLn . turnCard $ map show cards
+    where cards = game^.cardInfo.tableCards
 
 outputRiver :: Game -> IO ()
-outputRiver game = putStrLn . riverCard $ map show cards'
-    where cards' = game^.cardInfo.tableCards
+outputRiver game = putStrLn . riverCard $ map show cards
+    where cards = game^.cardInfo.tableCards
 
 outputPlayerCards :: Game -> IO ()
 outputPlayerCards game = putStrLn $ playerCards players'
@@ -77,9 +80,9 @@ outputGameOver :: Game -> IO ()
 outputGameOver game = putStrLn msg
     where winner' = maximumBy (compare `on` (^.chips)) players'
           players' = game^.playerInfo.players
-          msg = printf totalWinner num' name' chips'
+          msg = printf totalWinner num name' chips'
           name' = winner'^.name
-          num' = playerNum winner'
+          num = playerNum winner'
           chips' = winner'^.chips
 
 outputPlayersRemoved :: Game -> Maybe [Player] -> IO ()
@@ -91,8 +94,8 @@ outputHandValues game = mapM_ (putStrLn . printHand) inPlayers
     where inPlayers = filter (^.inPlay) (game^.playerInfo.players)
 
 outputRoundNumber :: Game -> IO ()
-outputRoundNumber game = putStrLn $ printf roundNumberMsg num'
-    where num' = game^.roundNumber
+outputRoundNumber game = putStrLn $ printf roundNumberMsg num
+    where num = game^.roundNumber
 
 outputSmallBlindMade :: Game -> IO ()
 outputSmallBlindMade game = outputBlindMade game smallBlind size
@@ -103,6 +106,6 @@ outputBigBlindMade game = outputBlindMade game bigBlind size
     where size = game^.bets.bigBlindSize
 
 outputBlindMade :: Game -> String -> Int -> IO ()
-outputBlindMade game f size = putStrLn $ printf f num' name' size
-    where num' = playerNum $ getCurrentPlayer game
+outputBlindMade game f size = putStrLn $ printf f num name' size
+    where num = playerNum $ getCurrentPlayer game
           name' = getCurrentPlayer game^.name

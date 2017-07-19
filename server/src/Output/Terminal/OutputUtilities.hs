@@ -11,6 +11,7 @@ where
 
 import Types
 import Output.Terminal.OutputMessages
+import Lenses (name, cards, pot, num, handInfo, handValue)
 
 import Text.Printf
 import Data.Maybe
@@ -36,8 +37,8 @@ printCard :: String -> String
 printCard = printf card
 
 playerCards :: [Player] -> String
-playerCards players' = dealt ++ dealtCards
-    where dealtCards = concatMap printCards players'
+playerCards players = dealt ++ dealtCards
+    where dealtCards = concatMap printCards players
 
 {-# ANN printCards "HLint: ignore Use head" #-}
 printCards :: Player -> String
@@ -58,9 +59,9 @@ singleWinner :: Pot -> Player -> String
 singleWinner pot' p = printf singleWinnerMsg (playerNum p) (p^.name) (pot'^.pot)
 
 printWinners :: [Player] -> String
-printWinners players' = start ++ end
-    where start = concatMap (printWinner True) (init players')
-          end = printWinner False (last players')
+printWinners players = start ++ end
+    where start = concatMap (printWinner True) (init players)
+          end = printWinner False (last players)
 
 printWinner :: Bool -> Player -> String
 printWinner final player = printf (playerMsg final) (playerNum player) 
@@ -72,7 +73,7 @@ playerNum p = p^.num + 1
 
 {-# ANN printHand "HLint: ignore Use head" #-}
 printHand :: Player -> String
-printHand p = printf playerHand (playerNum p) (p^.name) value' card1 card2
-    where value' = show $ fromJust (p^.handInfo)^.handValue
+printHand p = printf playerHand (playerNum p) (p^.name) value card1 card2
+    where value = show $ fromJust (p^.handInfo)^.handValue
           card1 = show $ (p^.cards) !! 0
           card2 = show $ (p^.cards) !! 1
