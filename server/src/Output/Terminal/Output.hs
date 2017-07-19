@@ -19,15 +19,15 @@ where
 
 import Types
 import Output.Terminal.OutputMessages
-import Output.Terminal.OutputUtilities
-import PlayerUtilities
+import Output.Terminal.OutputUtilities (playerNum, turnCard, riverCard, 
+                                        playerCards, potWinners, printHand)
+import PlayerUtilities (getCurrentPlayer)
 import Lenses (name, bets, currentBet, chips, bet, name, cardInfo, tableCards,
                playerInfo, players, pots, pot, inPlay, roundNumber,
                smallBlindSize, bigBlindSize)
-
-import Text.Printf
-import Data.Function
-import Data.List
+import Text.Printf (printf)
+import Data.Function (on)
+import Data.List (maximumBy)
 import Control.Lens hiding (Fold)
 
 outputAction :: Game -> Action Int -> IO ()

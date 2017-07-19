@@ -21,9 +21,9 @@ executable server
   default-language:    Haskell2010
   default-extensions: CPP
   build-depends: base >= 4.9 && <4.10, lens, random
-  other-modules: Betting, CardUtilities, PlayerUtilities, StateUtilities,
-                 TestStates, Types, Showdown, Showdown.Utilities,
-                 Showdown.Ord, Showdown.Value, Showdown.Best, Game, Lenses
+  other-modules: Betting, CardUtilities, PlayerUtilities, TestStates, Types,
+                 Showdown, Showdown.Utilities, Showdown.Ord, Showdown.Value, 
+                 Showdown.Best, Game, Lenses
 
   if !flag(debug)
     build-depends: network

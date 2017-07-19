@@ -5,17 +5,20 @@ module Showdown
 )
 where
 
-import Types
-import Showdown.Value
-import Showdown.Best
-import Showdown.Ord
-import PlayerUtilities
+import Types (Card, HandInfo, Game, Player, Pot)
+import Showdown.Value (isStraightFlush7Card, isFourOfAKind, isFullHouse,
+                       isFlush, isStraight7Card, isThreeOfAKind, isTwoPair,
+                       isPair)
+import Showdown.Best (bestStraightFlush, bestFourOfAKind, bestFullHouse,
+                      bestFlush, bestStraight, bestThreeOfAKind, bestTwoPair,
+                      bestPair, bestHighCard)
+import Showdown.Ord (ordHand)
+import PlayerUtilities (leftOfDealer)
 import Lenses (playerInfo, players, cardInfo, handInfo, tableCards, cards, num,
                playerIDs, chips, pot)
-
 import Control.Lens
-import Data.Maybe
-import Data.List
+import Data.Maybe (fromJust)
+import Data.List (sortBy)
 
 topHand :: [Card] -> HandInfo
 topHand cards'

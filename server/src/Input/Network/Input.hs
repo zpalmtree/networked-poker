@@ -8,7 +8,7 @@ module Input.Network.Input
 )
 where
 
-import Types
+import Types (Game, Action)
 
 checkRaiseAllIn :: Game -> IO (Action Int)
 checkRaiseAllIn = undefined

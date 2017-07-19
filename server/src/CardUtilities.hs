@@ -16,17 +16,15 @@ module CardUtilities
 )
 where
 
-import Types
+import Types (Game, Player, Card(..), Value, Suit(..), State(..))
 import Lenses (playerInfo, cards, numPlayers, players, cardInfo, deck,
                tableCards, state)
-
 #ifdef DEBUG
-import Output.Terminal.Output
+import Output.Terminal.Output (outputPlayerCards)
 #else
-import Output.Network.Output
+import Output.Network.Output (outputPlayerCards)
 #endif
-
-import System.Random
+import System.Random (getStdRandom, randomR)
 import Control.Lens
 
 dealCards :: Game -> IO Game

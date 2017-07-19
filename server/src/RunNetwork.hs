@@ -4,20 +4,22 @@ module RunNetwork
 )
 where
 
-import Game
-import Types
+import Game (gameLoop)
 
-import Network.Socket
-import Control.Concurrent
-import Control.Monad
+import Network.Socket (Socket, getAddrInfo, socket, addrFamily, addrProtocol,
+                       addrSocketType, bind, addrAddress, listen, accept)
+import Control.Concurrent (forkIO)
+import Control.Monad (void, forever)
 
 run :: IO ()
 run = do
     addr:_ <- getAddrInfo Nothing (Just "127.0.0.1") (Just "5000")
     sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
     bind sock (addrAddress addr)
-    listen sock 5
-    forever $ listenForConnections sock
+    listen sock 5 -- maximum number of queued connections, apparently set at 5
+                  -- for most OS's. Need to look into. Queued connections
+                  -- should be accepted very fast? Loop is very simple.
+    forever $ listenForConnections sock -- quit server with ctrl+c
 
 listenForConnections :: Socket -> IO ()
 listenForConnections sock = do

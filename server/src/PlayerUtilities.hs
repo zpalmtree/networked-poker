@@ -13,12 +13,11 @@ module PlayerUtilities
 )
 where
 
-import Types
+import Types (Game, Player)
 import Lenses (inPlay, playerInfo, players, allIn, numPlayers, playerTurn,
                dealer, gameFinished, num, chips)
-
 import Control.Lens
-import Data.List
+import Data.List (partition)
 
 numInPlay :: Game -> Int
 numInPlay game = length $ filter (^.inPlay) (game^.playerInfo.players)

@@ -12,12 +12,13 @@ module Showdown.Best
 )
 where
 
-import Types
-import Showdown.Utilities
-import Showdown.Ord
-import Showdown.Value
-
-import Data.List
+import Types (Card, HandInfo(..), Value(..), Hand(..))
+import Showdown.Utilities (getValue, cardValueAceLow, handSubsets)
+import Showdown.Ord (ordStraight, ordXOfAKind, ordOnValue, ordOnLength)
+import Showdown.Value (isStraightFlush5Card, isFourOfAKind, isFullHouse,
+                       isFlush, isStraight5Card, isThreeOfAKind, isTwoPair,
+                       isPair)
+import Data.List (sortBy, group, sort, maximumBy)
 
 bestStraightFlush :: [Card] -> HandInfo
 bestStraightFlush cards' = HandInfo value' topHand

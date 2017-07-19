@@ -6,23 +6,26 @@ module Game
 )
 where
 
-import Types
-import Betting
-import PlayerUtilities
-import CardUtilities
-import StateUtilities
-import Showdown
+import Types (Game, Pot, Player, State(..), Cards(..))
+import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
+import PlayerUtilities (nextPlayer, numInPlay, getCurrentPlayer, numAllIn,
+                        victor, advanceDealer, advancePlayerTurn,
+                        removeOutPlayers)
+import CardUtilities (dealCards, revealFlop, revealTurn, revealRiver, fullDeck)
+import Showdown (getHandValue, distributePot)
 import Lenses (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet,
                allIn, playerInfo, players, pots, state, canReRaise, playerTurn,
                minimumRaise, bigBlindSize, hand, handInfo, dealer, cardInfo,
                roundDone, roundNumber)
-
 #ifdef DEBUG
-import Output.Terminal.Output
+import Output.Terminal.Output (outputRoundNumber, outputHandValues, 
+                               outputWinners, outputWinner, outputFlop,
+                               outputTurn, outputRiver, outputPlayersRemoved)
 #else
-import Output.Network.Output
+import Output.Network.Output (outputRoundNumber, outputHandValues, 
+                              outputWinners, outputWinner, outputFlop,
+                              outputTurn, outputRiver, outputPlayersRemoved)
 #endif
-
 import Control.Lens
 
 gameLoop :: Game -> IO Game
@@ -42,7 +45,7 @@ playRound' game = do
 playRound :: Game -> IO Game
 playRound game
     -- in showdown -> no more betting can happen
-    | isShowdown game = do
+    | isShowdown = do
         let (newGame, winnerMapping) = showdown game
         outputHandValues newGame
         outputWinners newGame winnerMapping
@@ -88,6 +91,9 @@ playRound game
     | otherwise = playRound =<< nextState game
 
     where (winner, losers) = victor (game^.playerInfo.players)
+          isShowdown = case game^.state of
+                        Showdown -> True
+                        _ -> False
 
 showdown :: Game -> (Game, [(Pot, [Player])])
 showdown game = getWinnersAndDistribute results (results^.bets.pots) []

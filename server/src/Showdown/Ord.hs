@@ -8,10 +8,9 @@ module Showdown.Ord
 )
 where
 
-import Types
-import Showdown.Utilities
-
-import Data.List
+import Types (Card, HandInfo(..), Hand(..))
+import Showdown.Utilities (getValue, cardValue, cardValueAceLow)
+import Data.List (sort, group, sortBy)
 
 ordOnValue :: [Card] -> [Card] -> Ordering
 ordOnValue c1 c2 = compare (values c1) (values c2)
@@ -19,7 +18,7 @@ ordOnValue c1 c2 = compare (values c1) (values c2)
 
 ordXOfAKind :: [Card] -> [Card] -> Ordering
 ordXOfAKind xOfAKind1 xOfAKind2 = compare (sortOnLength xOfAKind1) 
-                                           (sortOnLength xOfAKind2)
+                                          (sortOnLength xOfAKind2)
     where sortOnLength x = sortBy (flip ordOnLength) $ grouped x
           grouped c = group . sort $ map (cardValue . getValue) c
 

@@ -3,7 +3,6 @@
 module Lenses where
 
 import Control.Lens
-
 import Types
 
 --don't want to export all the individual functions...

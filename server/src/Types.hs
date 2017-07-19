@@ -1,7 +1,8 @@
 module Types where
 
-import Data.Char
-import Text.Printf
+import Data.Char (toLower)
+import Text.Printf (printf, PrintfArg(..), fmtPrecision, fmtChar, vFmt, 
+                    formatString, errorBadFormat)
 
 data Game = Game {
     _playerInfo :: Players,

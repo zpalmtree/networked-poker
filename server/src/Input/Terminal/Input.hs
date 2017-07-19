@@ -8,15 +8,14 @@ module Input.Terminal.Input
 )
 where
 
-import Types
+import Types (Game, Action(..))
 import Output.Terminal.InputMessages
-import PlayerUtilities
+import PlayerUtilities (getCurrentPlayer)
 import Lenses (bets, currentBet, num, name, bet, chips, minimumRaise)
-
-import Text.Printf
-import Data.Char
-import Data.Maybe
-import System.IO
+import Text.Printf (printf)
+import Data.Char (toLower)
+import Data.Maybe (fromMaybe, listToMaybe)
+import System.IO (hFlush, stdout)
 import Control.Lens hiding (Fold)
 
 checkRaiseAllIn :: Game -> IO (Action Int)

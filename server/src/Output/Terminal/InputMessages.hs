@@ -19,7 +19,7 @@ module Output.Terminal.InputMessages
 )
 where
 
-import Text.Printf
+import Text.Printf (printf)
 
 invalidRaiseAmount :: String
 invalidRaiseAmount = "Bad input, a raise must be as large as the previous " ++

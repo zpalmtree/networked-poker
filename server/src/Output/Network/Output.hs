@@ -17,7 +17,7 @@ module Output.Network.Output
 )
 where
 
-import Types
+import Types (Game, Action, Player, Pot)
 
 outputAction :: Game -> Action Int -> IO ()
 outputAction = undefined

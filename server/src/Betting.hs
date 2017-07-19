@@ -11,23 +11,25 @@ module Betting
 )
 where
 
-import Types
-import PlayerUtilities
+import Types (Game, Action(..), Player, Pot(..))
+import PlayerUtilities (getCurrentPlayer, setCurrentPlayer)
 import Lenses (bets, currentBet, chips, bet, smallBlindSize, bigBlindSize,
                pots, pot, playerInfo, players, inPlay, num, allIn, minimumRaise,
                canReRaise, madeInitialBet)
-
 #ifdef DEBUG
-import Input.Terminal.Input
-import Output.Terminal.Output
+import Input.Terminal.Input (foldAllIn, checkAllIn, checkRaiseAllIn,
+                             foldCallAllIn, foldCallRaiseAllIn)
+import Output.Terminal.Output (outputSmallBlindMade, outputBigBlindMade,
+                               outputPlayerTurn, outputAction)
 #else
-import Input.Network.Input
-import Output.Network.Output
+import Input.Network.Input (foldAllIn, checkAllIn, checkRaiseAllIn,
+                            foldCallAllIn, foldCallRaiseAllIn)
+import Output.Network.Output (outputSmallBlindMade, outputBigBlindMade,
+                              outputPlayerTurn, outputAction)
 #endif
-
 import Control.Lens hiding (Fold)
-import Data.List
-import Data.Function
+import Data.List (partition, sortBy)
+import Data.Function (on)
 
 makeBet :: Int -> Game -> Game
 makeBet amount game

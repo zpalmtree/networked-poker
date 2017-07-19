@@ -4,11 +4,12 @@ module RunLocal
 )
 where
 
-import Types
-import Game
-import TestStates
-import Output.Terminal.Output
-import CardUtilities
+import Types (Game)
+import Game (gameLoop)
+import TestStates (testPlayer1, testPlayer2, testPlayer3, testPlayer4,
+                   initialGame, initialPlayers)
+import Output.Terminal.Output (outputRoundNumber, outputGameOver)
+import CardUtilities (dealCards)
 
 run :: IO ()
 run = play

@@ -13,8 +13,8 @@ module TestStates
 )
 where
 
-import Types
-import CardUtilities
+import Types (Game(..), Bets(..), Cards(..), Player(..), Players(..), State(..))
+import CardUtilities (fullDeck)
 
 testBets :: Bets
 testBets = Bets [] 0 10 20 20
