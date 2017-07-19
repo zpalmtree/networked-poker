@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module CardUtilities
 (
     drawCard,
@@ -15,7 +17,12 @@ module CardUtilities
 where
 
 import Types
+
+#ifdef DEBUG
 import Output.Terminal.Output
+#else
+import Output.Network.Output
+#endif
 
 import System.Random
 import Control.Lens

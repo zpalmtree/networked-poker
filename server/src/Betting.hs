@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Betting
 (
     updatePot,
@@ -11,8 +13,14 @@ where
 
 import Types
 import PlayerUtilities
+
+#ifdef DEBUG
 import Input.Terminal.Input
 import Output.Terminal.Output
+#else
+import Input.Network.Input
+import Output.Network.Output
+#endif
 
 import Control.Lens hiding (Fold)
 import Data.List

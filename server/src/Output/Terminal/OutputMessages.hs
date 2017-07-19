@@ -86,12 +86,12 @@ playerMsg final
     where msg = "player %d, %s"
 
 totalWinner :: String
-totalWinner = "Game over! The winner was player %d, %s, who ended the game \
-              \with %d chips!"
+totalWinner = "Game over! The winner was player %d, %s, who ended the game " ++
+              "with %d chips!"
 
 playerRemoved :: String
-playerRemoved = "Thanks for playing player %d, %s, unfortunately you've run \
-                \out of chips! Come back soon!"
+playerRemoved = "Thanks for playing player %d, %s, unfortunately you've run " ++
+                "out of chips! Come back soon!"
 
 playerHand :: String
 playerHand = "Player %d, %s, has a %s, their cards are the %s and the %s."

@@ -1,9 +1,7 @@
 # networked-poker
 A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against.
 
-Currently working on the server. The other two haven't been started yet. Game is now runnable, and should now be testable. No input is being taken from network yet.
-
-From a very quick initial test, there's quite a few bugs. Time to iron them out!
+Currently working on the server. The other two haven't been started yet. 
 
 ## Installation
 
@@ -27,6 +25,12 @@ You need stack installed.
 `stack setup`
 
 `stack install`
+
+If you want to try the networked server, run instead
+
+`stack install --flag server:debug`
+
+It is currently non functional.
 
 Then either add ~/.local/bin to your path and run the executable of your choice:
 
