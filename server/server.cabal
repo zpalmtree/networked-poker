@@ -12,7 +12,7 @@ cabal-version:       >=1.10
 
 flag debug
   Description:         Enable local play rather than network
-  Default:             True
+  Default:             False
 
 executable server
   main-is:             Main.hs
@@ -26,7 +26,7 @@ executable server
                  Showdown.Best, Game, Lenses
 
   if !flag(debug)
-    build-depends: network
+    build-depends: network, bytestring, aeson
     other-modules: Input.Network.Input, Output.Network.Output, RunNetwork,
                    Output.Terminal.Output, Output.Terminal.OutputMessages,
                    Output.Terminal.OutputUtilities
