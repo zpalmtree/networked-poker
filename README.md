@@ -20,9 +20,7 @@ You need stack installed.
 
 `cd networked-poker`
 
-#### Setup stack and compile
-
-`stack setup`
+#### Compile and install
 
 `stack install`
 
