@@ -12,7 +12,7 @@ data Game = Game {
     _bets :: Bets,
     _gameFinished :: Bool,
     _roundNumber :: Int
-} deriving Show
+} deriving (Show, Eq)
 
 data Player = Player {
     _name :: String,
@@ -26,19 +26,19 @@ data Player = Player {
     _hand :: [Card],
     _handInfo :: Maybe HandInfo,
     _canReRaise :: Bool
-} deriving Show
+} deriving (Show, Eq)
 
 data Players = Players {
     _numPlayers :: Int,
     _players :: [Player],
     _dealer :: Int,
     _playerTurn :: Int
-} deriving Show
+} deriving (Show, Eq)
 
 data Cards = Cards {
     _tableCards :: [Card],
     _deck :: [Card]
-} deriving Show
+} deriving (Show, Eq)
 
 data Bets = Bets {
     _pots :: [Pot],
@@ -46,7 +46,7 @@ data Bets = Bets {
     _smallBlindSize :: Int,
     _bigBlindSize :: Int,
     _minimumRaise :: Int
-} deriving Show
+} deriving (Show, Eq)
 
 data Card = Card {
     _value :: Value,
@@ -59,9 +59,9 @@ instance Show Card where
 data Pot = Pot {
     _pot :: Int,
     _playerIDs :: [Int]
-} deriving Show
+} deriving (Show, Eq)
 
-data Action a = Fold | Check | Call | Raise a | AllIn deriving Show
+data Action a = Fold | Check | Call | Raise a | AllIn deriving (Show, Eq)
 
 data Hand a b = HighCard a 
               | Pair a 
@@ -93,7 +93,7 @@ instance PrintfArg Value where
               (fmt { fmtChar = 's', fmtPrecision = Nothing })
         | otherwise = errorBadFormat $ fmtChar fmt
 
-data State = PreFlop | Flop | Turn | River | Showdown deriving Show
+data State = PreFlop | Flop | Turn | River | Showdown deriving (Show, Eq)
 
 data Suit = Heart | Spade | Club | Diamond deriving (Show, Bounded, Enum, Eq)
 
@@ -103,4 +103,4 @@ data Value = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten |
 data HandInfo = HandInfo {
     _handValue :: Hand Value Value,
     _bestHand :: [Card]
-} deriving Show
+} deriving (Show, Eq)
