@@ -5,5 +5,5 @@ packages:
 - client
 - server
 extra-deps: []
-resolver: lts-9.2
+resolver: lts-9.5
 install-ghc: true
