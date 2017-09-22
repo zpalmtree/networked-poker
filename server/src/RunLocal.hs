@@ -7,7 +7,7 @@ where
 import Types (Game)
 import Game (gameLoop)
 import TestStates (testPlayer1, testPlayer2, testPlayer3, testPlayer4,
-                   initialGame, initialPlayers)
+                   initialGame, initialPlayers, initialPlayerQueue)
 import Output.Terminal.Output (outputRoundNumber, outputGameOver)
 import CardUtilities (dealCards)
 
@@ -27,7 +27,7 @@ setup = do
     dealCards game
 
 setup' :: Game
-setup' = initialGame smallBlindSize' $ initialPlayers players'
+setup' = initialGame smallBlindSize' (initialPlayers players') (initialPlayerQueue players')
     where players' = [testPlayer1, testPlayer2, testPlayer3, testPlayer4]
           smallBlindSize' = 10
 

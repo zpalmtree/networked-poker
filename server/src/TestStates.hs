@@ -1,19 +1,18 @@
 module TestStates
 (
-    testBets,
-    testCards,
-    testGame,
     testPlayer1,
     testPlayer2,
     testPlayer3,
     testPlayer4,
-    testPlayers,
+    testGame,
     initialPlayers,
-    initialGame
+    initialGame,
+    initialPlayerQueue
 )
 where
 
-import Types (Game(..), Bets(..), Cards(..), Player(..), Players(..), State(..))
+import Types (Game(..), Bets(..), Cards(..), Player(..), Players(..), State(..), PlayerQueue)
+import Queue (makePlayerQueue)
 import CardUtilities (fullDeck)
 
 testBets :: Bets
@@ -23,7 +22,10 @@ testCards :: Cards
 testCards = Cards [] fullDeck
 
 testGame :: Game
-testGame = Game testPlayers PreFlop testCards False testBets False 1
+testGame = Game testPlayerQueue testPlayers PreFlop testCards False testBets False 1
+
+testPlayerQueue :: PlayerQueue
+testPlayerQueue = makePlayerQueue [testPlayer1, testPlayer2, testPlayer3, testPlayer4] 0
 
 testPlayer1 :: Player
 testPlayer1 = Player "test" 0 1000 [] True False 0 False [] Nothing True
@@ -38,13 +40,16 @@ testPlayer4 :: Player
 testPlayer4 = Player "test4" 3 1000 [] True False 0 False [] Nothing True
 
 testPlayers :: Players
-testPlayers = Players 4 [testPlayer1, testPlayer2, testPlayer3, testPlayer4] 0 1
+testPlayers = initialPlayers [testPlayer1, testPlayer2, testPlayer3, testPlayer4]
 
 initialPlayers :: [Player] -> Players
 initialPlayers players' = Players (length players') players' 0 1
 
-initialGame :: Int -> Players -> Game
-initialGame smallBlind players' = Game players' PreFlop cards' False bets' 
+initialPlayerQueue :: [Player] -> PlayerQueue
+initialPlayerQueue p = makePlayerQueue p 0
+
+initialGame :: Int -> Players -> PlayerQueue -> Game
+initialGame smallBlind players' playerQueue = Game playerQueue players' PreFlop cards' False bets' 
                                   False 1
     where cards' = Cards [] fullDeck
           bets' = Bets [] 0 smallBlind bigBlind bigBlind

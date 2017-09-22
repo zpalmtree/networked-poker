@@ -23,7 +23,7 @@ import Output.Terminal.OutputUtilities (playerNum, turnCard, riverCard,
                                         playerCards, potWinners, printHand)
 import PlayerUtilities (getCurrentPlayer)
 import Lenses (name, bets, currentBet, chips, bet, name, cardInfo, tableCards,
-               playerInfo, players, pots, pot, inPlay, roundNumber,
+               playerInfo, depreciatedPlayers, pots, pot, inPlay, roundNumber,
                smallBlindSize, bigBlindSize)
 import Text.Printf (printf)
 import Data.Function (on)
@@ -65,13 +65,13 @@ outputRiver game = putStrLn . riverCard $ map show cards
 
 outputPlayerCards :: Game -> IO ()
 outputPlayerCards game = putStrLn $ playerCards players'
-    where players' = game^..playerInfo.players.traversed
+    where players' = game^..playerInfo.depreciatedPlayers.traversed
 
 --have to reimplement gatherchips because betting imports this module
 outputWinner :: Game -> Player -> IO ()
 outputWinner game p = putStrLn $ printf winner (playerNum p) (p^.name) chips'
     where chips' = sum (game^..bets.pots.traversed.pot)
-                 + sum (game^..playerInfo.players.traversed.bet)
+                 + sum (game^..playerInfo.depreciatedPlayers.traversed.bet)
 
 outputWinners :: Game -> [(Pot, [Player])] -> IO ()
 outputWinners _ = mapM_ (putStrLn . potWinners)
@@ -79,7 +79,7 @@ outputWinners _ = mapM_ (putStrLn . potWinners)
 outputGameOver :: Game -> IO ()
 outputGameOver game = putStrLn msg
     where winner' = maximumBy (compare `on` (^.chips)) players'
-          players' = game^.playerInfo.players
+          players' = game^.playerInfo.depreciatedPlayers
           msg = printf totalWinner num name' chips'
           name' = winner'^.name
           num = playerNum winner'
@@ -91,7 +91,7 @@ outputPlayersRemoved _ = mapM_ (mapM_ $ putStrLn . helper)
 
 outputHandValues :: Game -> IO ()
 outputHandValues game = mapM_ (putStrLn . printHand) inPlayers
-    where inPlayers = filter (^.inPlay) (game^.playerInfo.players)
+    where inPlayers = filter (^.inPlay) (game^.playerInfo.depreciatedPlayers)
 
 outputRoundNumber :: Game -> IO ()
 outputRoundNumber game = putStrLn $ printf roundNumberMsg num

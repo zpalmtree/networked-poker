@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DeriveFunctor #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Queue
 (
@@ -15,25 +15,16 @@ module Queue
 )
 where
 
-import Control.Lens ((^.), (&), (%~), (.~), makeLenses)
+import Control.Lens (makeLenses, (^.), (&), (%~), (.~))
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
 
-import Types (Player)
+import Types (Player, Queue(..), PQ(..), PlayerQueue)
 import Lenses (chips)
 
-data Queue = Queue {
-    _players :: [Player],
-    _dealer :: Int
-}
-
+--don't want people using the queue data type directly, so just create lenses
+--in here
 makeLenses ''Queue
-
-newtype PQ a = PQ { 
-    getQueue :: a
-} deriving (Functor)
-
-type PlayerQueue = PQ Queue
 
 makePlayerQueue :: [Player] -> Int -> PlayerQueue
 makePlayerQueue p d

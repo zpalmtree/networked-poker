@@ -14,7 +14,7 @@ import Showdown.Best (bestStraightFlush, bestFourOfAKind, bestFullHouse,
                       bestPair, bestHighCard)
 import Showdown.Ord (ordHand)
 import PlayerUtilities (leftOfDealer)
-import Lenses (playerInfo, players, cardInfo, handInfo, tableCards, cards, num,
+import Lenses (playerInfo, depreciatedPlayers, cardInfo, handInfo, tableCards, cards, num,
                playerIDs, chips, pot)
 import Control.Lens
 import Data.Maybe (fromJust)
@@ -33,7 +33,7 @@ topHand cards'
     | otherwise = bestHighCard cards'
 
 getHandValue :: Game -> Game
-getHandValue game = game & playerInfo.players.traversed %~ getCardValues
+getHandValue game = game & playerInfo.depreciatedPlayers.traversed %~ getCardValues
     where getCardValues = getValue $ game^.cardInfo.tableCards
 
 getValue :: [Card] -> Player -> Player
@@ -54,7 +54,7 @@ sortHandValue p1 p2 = ordHand hand1 hand2
 
 distributePot :: Game -> Pot -> (Game, (Pot, [Player]))
 distributePot game sidePot = (newGame, winnerMapping)
-    where people = filter isInPot (game^.playerInfo.players)
+    where people = filter isInPot (game^.playerInfo.depreciatedPlayers)
           isInPot p = p^.num `elem` sidePot^.playerIDs          
           (winners, _) = getWinnersLosers people
           (spareRecipient, rest) = leftOfDealer game winners 1
@@ -65,8 +65,8 @@ giveWinningsSplitPot :: Game -> Pot -> (Player, [Player]) -> Game
 giveWinningsSplitPot game sidePot (spare, rest) = newGame
     where newPlayers = map (addChips ids (spare^.num) sidePot) p
           ids = map (^.num) rest
-          p = game^.playerInfo.players
-          newGame = game & playerInfo.players .~ newPlayers
+          p = game^.playerInfo.depreciatedPlayers
+          newGame = game & playerInfo.depreciatedPlayers .~ newPlayers
 
 addChips :: [Int] -> Int -> Pot -> Player -> Player
 addChips ids spareId sidePot p
