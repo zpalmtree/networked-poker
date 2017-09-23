@@ -11,6 +11,10 @@ module Betting
 )
 where
 
+import Control.Lens hiding (Fold)
+import Data.List (partition, sortBy)
+import Data.Function (on)
+
 import Types (Game, Action(..), Player, Pot(..))
 import PlayerUtilities (getCurrentPlayer, setCurrentPlayer)
 import Lenses (bets, currentBet, chips, bet, smallBlindSize, bigBlindSize,
@@ -27,10 +31,6 @@ import Input.Network.Input (foldAllIn, checkAllIn, checkRaiseAllIn,
 import Output.Network.Output (outputSmallBlindMade, outputBigBlindMade,
                               outputPlayerTurn, outputAction)
 #endif
-import Control.Lens hiding (Fold)
-import Data.List (partition, sortBy)
-import Data.Function (on)
-
 makeBet :: Int -> Game -> Game
 makeBet amount game
     | newBet > newGame^.bets.currentBet = newGame & bets.currentBet .~ newBet
@@ -73,14 +73,15 @@ updatePotSimple game = game & playerInfo.depreciatedPlayers.traversed.bet .~ 0
 
 updatePot :: Game -> Game
 updatePot game
+    | sum (game^..playerInfo.depreciatedPlayers.traversed.bet) < 0 = error "Negative bets!"
     | sum (game^..playerInfo.depreciatedPlayers.traversed.bet) == 0 = game
-    | length betters == 1 = refund game refundPlayer
+    | length potEligible == 1 = refund game refundPlayer
     | not $ any (^.allIn) (game^.playerInfo.depreciatedPlayers) = updatePotSimple game
     | otherwise = updatePot $ addPot game sidePotSize
-    where betters = filter (\p -> p^.bet > 0 && p^.inPlay)
-                           (game^.playerInfo.depreciatedPlayers)
-          sidePotSize = minimum $ filter (^.inPlay) betters^..traversed.bet
-          refundPlayer = head betters^.num
+    where potEligible = filter (\p -> p^.bet > 0 && p^.inPlay)
+                               (game^.playerInfo.depreciatedPlayers)
+          sidePotSize = minimum $ potEligible^..traversed.bet
+          refundPlayer = head potEligible^.num
 
 refund :: Game -> Int -> Game
 refund game n = game & p.chips +~ game^.playerInfo.depreciatedPlayers ^?! ix n.bet
@@ -90,12 +91,24 @@ refund game n = game & p.chips +~ game^.playerInfo.depreciatedPlayers ^?! ix n.b
 addPot :: Game -> Int -> Game
 addPot game betSize = game & bets.pots %~ (newPot :)
                            & playerInfo.depreciatedPlayers .~ newPlayers
-    where (betters, rest) = partition (\p -> p^.bet > 0 && p^.inPlay) 
-                                      (game^.playerInfo.depreciatedPlayers)
-          potSize = length betters * betSize
-          newBetters = betters & traversed.bet -~ betSize
-          newPot = Pot potSize (betters^..traversed.num)
-          newPlayers = sortBy (compare `on` (^.num)) (newBetters ++ rest)
+
+    where (potEligible, rest) = partition (\p -> p^.inPlay && p^.bet > 0) 
+                                          (game^.playerInfo.depreciatedPlayers)
+
+          potSize = spareChips + length potEligible * betSize
+          newBetters = potEligible & traversed.bet -~ betSize
+          newPot = Pot potSize (potEligible^..traversed.num)
+          newPlayers = sortBy (compare `on` (^.num)) (newBetters ++ newRest)
+          (newRest, spareChips) = takeOutPlayersPot rest betSize [] 0
+
+takeOutPlayersPot :: [Player] -> Int -> [Player] -> Int -> ([Player], Int)
+takeOutPlayersPot [] _ players' n = (players', n)
+takeOutPlayersPot (p:ps) betSize acc n
+    | p^.bet >= betSize = takeOutPlayersPot ps betSize (newP : acc) 
+                                                       (n + betSize)
+    | otherwise = takeOutPlayersPot ps betSize (newP2 : acc) (n + p^.bet)
+    where newP = p & bet -~ betSize
+          newP2 = p & bet .~ 0
 
 updateMinimumRaise :: Game -> Int -> Game
 updateMinimumRaise game raise' = game & bets.minimumRaise .~ raise'
