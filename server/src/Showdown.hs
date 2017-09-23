@@ -17,9 +17,9 @@ import Showdown.Best (bestStraightFlush, bestFourOfAKind, bestFullHouse,
                       bestFlush, bestStraight, bestThreeOfAKind, bestTwoPair,
                       bestPair, bestHighCard)
 import Showdown.Ord (ordHand)
-import PlayerUtilities (leftOfDealer)
-import Lenses (playerInfo, depreciatedPlayers, cardInfo, handInfo, tableCards, cards, num,
-               playerIDs, chips, pot)
+import Utilities.Player (leftOfDealer)
+import Lenses (playerInfo, depreciatedPlayers, cardInfo, handInfo, tableCards, 
+               cards, num, playerIDs, chips, pot)
 
 topHand :: [Card] -> HandInfo
 topHand cards'

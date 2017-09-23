@@ -1,4 +1,4 @@
-module Output.Terminal.OutputUtilities
+module Utilities.Terminal.Output
 (
     playerNum,
     turnCard,

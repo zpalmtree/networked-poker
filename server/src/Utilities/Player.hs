@@ -1,4 +1,4 @@
-module PlayerUtilities
+module Utilities.Player
 (
     leftOfDealer,
     setCurrentPlayer,

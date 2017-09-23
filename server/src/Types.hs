@@ -1,7 +1,6 @@
-{-# LANGUAGE DeriveFunctor #-}
-
 module Types where
 
+import Control.Monad.Trans.State (StateT(..), State)
 import Data.Char (toLower)
 import Text.Printf (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt, 
                     formatString, errorBadFormat)
@@ -11,7 +10,7 @@ import Text.Printf (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt,
 data Game = Game {
     _playerQueue :: PlayerQueue,
     _playerInfo :: Players,
-    _state :: State,
+    _stage :: Stage,
     _cardInfo :: Cards,
     _roundDone :: Bool,
     _bets :: Bets,
@@ -68,12 +67,12 @@ data Pot = Pot {
     _playerIDs :: [Int]
 } deriving (Show)
 
-data Queue = Queue {
+data PlayerQueue = PlayerQueue {
     _players :: [Player],
     _dealer :: Int
 } deriving (Show)
 
-data State = PreFlop 
+data Stage = PreFlop 
            | Flop 
            | Turn 
            | River 
@@ -119,15 +118,11 @@ data Hand a b = HighCard a
               | StraightFlush a b
               deriving (Eq, Ord)
 
--- NEWTYPES
-
-newtype PQ a = PQ {
-    getQueue :: a
-} deriving (Show, Eq, Functor)
-
 -- TYPES
 
-type PlayerQueue = PQ Queue
+type GameStateT a = StateT Game IO a
+
+type GameState a = State Game a
 
 -- INSTANCES
 

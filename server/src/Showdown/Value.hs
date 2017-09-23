@@ -17,7 +17,7 @@ import Data.List (sortBy)
 
 import Types (Card)
 
-import Showdown.Utilities (handSubsets, numOfEachValue, numOfSuit, sizeOfHand,
+import Utilities.Showdown (handSubsets, numOfEachValue, numOfSuit, sizeOfHand,
                            sorted, consecutive, cardValues)
 
 isStraightFlush7Card :: [Card] -> Bool

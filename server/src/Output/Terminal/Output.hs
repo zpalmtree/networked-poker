@@ -24,10 +24,10 @@ import Control.Lens hiding (Fold)
 
 import Types
 import Output.Terminal.OutputMessages
-import Output.Terminal.OutputUtilities (playerNum, turnCard, riverCard, 
-                                        playerCards, potWinners, printHand)
+import Utilities.Terminal.Output (playerNum, turnCard, riverCard, playerCards, 
+                                  potWinners, printHand)
 
-import PlayerUtilities (getCurrentPlayer)
+import Utilities.Player (getCurrentPlayer)
 
 import Lenses (name, bets, currentBet, chips, bet, name, cardInfo, tableCards,
                playerInfo, depreciatedPlayers, pots, pot, inPlay, roundNumber,

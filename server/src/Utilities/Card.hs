@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 
-module CardUtilities
+module Utilities.Card
 (
     drawCard,
     hearts,
@@ -16,9 +16,9 @@ module CardUtilities
 )
 where
 
-import Types (Game, Player, Card(..), Value, Suit(..), State(..))
+import Types (Game, Player, Card(..), Value, Suit(..), Stage(..))
 import Lenses (playerInfo, cards, depreciatedNumPlayers, depreciatedPlayers, cardInfo, deck,
-               tableCards, state)
+               tableCards, stage)
 #ifdef DEBUG
 import Output.Terminal.Output (outputPlayerCards)
 #else
@@ -68,14 +68,14 @@ addCard :: [Card] -> Card -> [Card]
 addCard tableCards' card = tableCards' ++ [card]
 
 revealFlop :: Game -> IO Game
-revealFlop game = (& state .~ Flop) <$> 
+revealFlop game = (& stage .~ Flop) <$> 
                   (drawCard =<< drawCard =<< drawCard game)
 
 revealTurn :: Game -> IO Game
-revealTurn game = (& state .~ Turn) <$> drawCard game
+revealTurn game = (& stage .~ Turn) <$> drawCard game
 
 revealRiver :: Game -> IO Game
-revealRiver game = (& state .~ River) <$> drawCard game
+revealRiver game = (& stage .~ River) <$> drawCard game
 
 deleteNth :: Int -> [a] -> [a]
 deleteNth n xs

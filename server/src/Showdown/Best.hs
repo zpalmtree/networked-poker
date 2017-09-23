@@ -15,7 +15,7 @@ where
 import Data.List (sortBy, group, sort, maximumBy)
 
 import Types (Card, HandInfo(..), Value(..), Hand(..))
-import Showdown.Utilities (getValue, cardValueAceLow, handSubsets)
+import Utilities.Showdown (getValue, cardValueAceLow, handSubsets)
 import Showdown.Ord (ordStraight, ordXOfAKind, ordOnValue, ordOnLength)
 
 import Showdown.Value (isStraightFlush5Card, isFourOfAKind, isFullHouse,

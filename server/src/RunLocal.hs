@@ -4,32 +4,38 @@ module RunLocal
 )
 where
 
+import Control.Monad.Trans.State (StateT, evalStateT)
+import Control.Monad.Trans.Class ()
+
 import Types (Game)
 import Game (gameLoop)
+
 import TestStates (testPlayer1, testPlayer2, testPlayer3, testPlayer4,
                    initialGame, initialPlayers, initialPlayerQueue)
+
 import Output.Terminal.Output (outputRoundNumber, outputGameOver)
 import CardUtilities (dealCards)
 
 run :: IO ()
-run = play
+run = evalStateT play initialState
 
-play :: IO ()
+play :: StateT Game IO ()
 play = do
-    initial <- setup
-    final <- gameLoop initial
-    cleanup final
+    setup
 
-setup :: IO Game
+    gameLoop
+
+    cleanup
+
+setup :: StateT Game IO ()
 setup = do
-    let game = setup'
-    outputRoundNumber game
-    dealCards game
+    outputRoundNumber
+    dealCards
 
-setup' :: Game
-setup' = initialGame smallBlindSize' (initialPlayers players') (initialPlayerQueue players')
+initialState :: Game
+initialState = initialGame smallBlindSize' (initialPlayers players') (initialPlayerQueue players')
     where players' = [testPlayer1, testPlayer2, testPlayer3, testPlayer4]
           smallBlindSize' = 10
 
-cleanup :: Game -> IO ()
+cleanup :: StateT Game IO ()
 cleanup = outputGameOver

@@ -16,7 +16,7 @@ import Control.Lens hiding (Fold)
 
 import Types (Game, Action(..))
 import Output.Terminal.InputMessages
-import PlayerUtilities (getCurrentPlayer)
+import Utilities.Player (getCurrentPlayer)
 import Lenses (bets, currentBet, num, name, bet, chips, minimumRaise)
 
 checkRaiseAllIn :: Game -> IO (Action Int)
