@@ -1,13 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 
---hurr durr unused function go away
+--remember to explicitly export later...
 module RunNetwork where
 
-import Types
-import Game (gameLoop)
 import Network.Socket (Socket, getAddrInfo, socket, addrFamily, addrProtocol,
                        addrSocketType, bind, addrAddress, listen, accept,
                        SockAddr, isReadable)
+
 import Data.ByteString.Char8 (unpack)
 import Network.Socket.ByteString (recv)
 import Control.Concurrent (forkIO)
@@ -15,6 +14,9 @@ import Control.Monad (void, forever)
 import Text.Printf (printf)
 import GHC.Generics (Generic)
 import Data.Aeson
+
+import Types
+import Game (gameLoop)
 
 run :: IO ()
 run = do

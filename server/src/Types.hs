@@ -1,10 +1,15 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Types where
 
 import Data.Char (toLower)
-import Text.Printf (printf, PrintfArg(..), fmtPrecision, fmtChar, vFmt, 
+import Text.Printf (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt, 
                     formatString, errorBadFormat)
 
+-- DATA TYPES
+
 data Game = Game {
+    _playerQueue :: PlayerQueue,
     _playerInfo :: Players,
     _state :: State,
     _cardInfo :: Cards,
@@ -12,7 +17,7 @@ data Game = Game {
     _bets :: Bets,
     _gameFinished :: Bool,
     _roundNumber :: Int
-} deriving Show
+} deriving (Show)
 
 data Player = Player {
     _name :: String,
@@ -26,19 +31,19 @@ data Player = Player {
     _hand :: [Card],
     _handInfo :: Maybe HandInfo,
     _canReRaise :: Bool
-} deriving Show
+} deriving (Eq, Show)
 
 data Players = Players {
-    _numPlayers :: Int,
-    _players :: [Player],
-    _dealer :: Int,
-    _playerTurn :: Int
-} deriving Show
+    _depreciatedNumPlayers :: Int,
+    _depreciatedPlayers :: [Player],
+    _depreciatedDealer :: Int,
+    _depreciatedPlayerTurn :: Int
+} deriving (Show)
 
 data Cards = Cards {
     _tableCards :: [Card],
     _deck :: [Card]
-} deriving Show
+} deriving (Show)
 
 data Bets = Bets {
     _pots :: [Pot],
@@ -46,22 +51,62 @@ data Bets = Bets {
     _smallBlindSize :: Int,
     _bigBlindSize :: Int,
     _minimumRaise :: Int
-} deriving Show
+} deriving (Show)
 
 data Card = Card {
     _value :: Value,
     _suit :: Suit
-} deriving Eq
+} deriving (Eq)
 
-instance Show Card where
-    show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"
+data HandInfo = HandInfo {
+    _handValue :: Hand Value Value,
+    _bestHand :: [Card]
+} deriving (Eq, Show)
 
 data Pot = Pot {
     _pot :: Int,
     _playerIDs :: [Int]
-} deriving Show
+} deriving (Show)
 
-data Action a = Fold | Check | Call | Raise a | AllIn deriving Show
+data Queue = Queue {
+    _players :: [Player],
+    _dealer :: Int
+} deriving (Show)
+
+data State = PreFlop 
+           | Flop 
+           | Turn 
+           | River 
+           | Showdown 
+           deriving (Show)
+
+data Suit = Heart 
+          | Spade 
+          | Club 
+          | Diamond 
+          deriving (Show, Bounded, Enum, Eq)
+
+data Value = Two 
+           | Three 
+           | Four 
+           | Five 
+           | Six 
+           | Seven 
+           | Eight 
+           | Nine 
+           | Ten 
+           | Jack 
+           | Queen 
+           | King 
+           | Ace 
+           deriving (Show, Bounded, Enum, Eq, Ord)
+
+data Action a = Fold 
+              | Check 
+              | Call 
+              | Raise a 
+              | AllIn 
+              deriving (Show)
 
 data Hand a b = HighCard a 
               | Pair a 
@@ -73,6 +118,18 @@ data Hand a b = HighCard a
               | FourOfAKind a
               | StraightFlush a b
               deriving (Eq, Ord)
+
+-- NEWTYPES
+
+newtype PQ a = PQ {
+    getQueue :: a
+} deriving (Show, Eq, Functor)
+
+-- TYPES
+
+type PlayerQueue = PQ Queue
+
+-- INSTANCES
 
 instance (PrintfArg a, PrintfArg b) => Show (Hand a b) where
     show (HighCard a) = printf "high card %V" a
@@ -93,14 +150,5 @@ instance PrintfArg Value where
               (fmt { fmtChar = 's', fmtPrecision = Nothing })
         | otherwise = errorBadFormat $ fmtChar fmt
 
-data State = PreFlop | Flop | Turn | River | Showdown deriving Show
-
-data Suit = Heart | Spade | Club | Diamond deriving (Show, Bounded, Enum, Eq)
-
-data Value = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten |
-             Jack | Queen | King | Ace deriving (Show, Bounded, Enum, Eq, Ord)
-
-data HandInfo = HandInfo {
-    _handValue :: Hand Value Value,
-    _bestHand :: [Card]
-} deriving Show
+instance Show Card where
+    show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"

@@ -2,11 +2,9 @@
 
 module Lenses where
 
-import Control.Lens
-import Types
+import Control.Lens (makeLenses)
 
---don't want to export all the individual functions...
-{-# ANN module "Hlint: ignore Use module export list" #-}
+import Types (Game, Player, Players, Cards, Bets, Card, HandInfo, Pot)
 
 makeLenses ''Game
 makeLenses ''Player
@@ -14,5 +12,5 @@ makeLenses ''Players
 makeLenses ''Cards
 makeLenses ''Bets
 makeLenses ''Card
-makeLenses ''Pot
 makeLenses ''HandInfo
+makeLenses ''Pot

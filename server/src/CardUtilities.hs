@@ -17,7 +17,7 @@ module CardUtilities
 where
 
 import Types (Game, Player, Card(..), Value, Suit(..), State(..))
-import Lenses (playerInfo, cards, numPlayers, players, cardInfo, deck,
+import Lenses (playerInfo, cards, depreciatedNumPlayers, depreciatedPlayers, cardInfo, deck,
                tableCards, state)
 #ifdef DEBUG
 import Output.Terminal.Output (outputPlayerCards)
@@ -35,13 +35,13 @@ dealCards game = do
 
 dealCards' :: Game -> [Player] -> Int -> IO Game
 dealCards' game newPlayers n
-    | n == numPlayers' = return $ game & playerInfo.players .~ newPlayers
+    | n == depreciatedNumPlayers' = return $ game & playerInfo.depreciatedPlayers .~ newPlayers
     | otherwise = do
         (newGame, newCards) <- drawPlayerCards game
         let newPlayer = player & cards .~ newCards
         dealCards' newGame (newPlayers ++ [newPlayer]) (n+1)
-    where numPlayers' = game^.playerInfo.numPlayers
-          player = game^.playerInfo.players ^?! ix n
+    where depreciatedNumPlayers' = game^.playerInfo.depreciatedNumPlayers
+          player = game^.playerInfo.depreciatedPlayers ^?! ix n
 
 getRandomCard :: [Card] -> IO ([Card], Card)
 getRandomCard [] = error "Can't take a card from empty deck"

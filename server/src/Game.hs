@@ -6,6 +6,8 @@ module Game
 )
 where
 
+import Control.Lens
+
 import Types (Game, Pot, Player, State(..), Cards(..))
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
 import PlayerUtilities (nextPlayer, numInPlay, getCurrentPlayer, numAllIn,
@@ -14,8 +16,8 @@ import PlayerUtilities (nextPlayer, numInPlay, getCurrentPlayer, numAllIn,
 import CardUtilities (dealCards, revealFlop, revealTurn, revealRiver, fullDeck)
 import Showdown (getHandValue, distributePot)
 import Lenses (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet,
-               allIn, playerInfo, players, pots, state, canReRaise, playerTurn,
-               minimumRaise, bigBlindSize, hand, handInfo, dealer, cardInfo,
+               allIn, playerInfo, depreciatedPlayers, pots, state, canReRaise, depreciatedPlayerTurn,
+               minimumRaise, bigBlindSize, hand, handInfo, depreciatedDealer, cardInfo,
                roundDone, roundNumber)
 #ifdef DEBUG
 import Output.Terminal.Output (outputRoundNumber, outputHandValues, 
@@ -26,7 +28,6 @@ import Output.Network.Output (outputRoundNumber, outputHandValues,
                               outputWinners, outputWinner, outputFlop,
                               outputTurn, outputRiver, outputPlayersRemoved)
 #endif
-import Control.Lens
 
 gameLoop :: Game -> IO Game
 gameLoop game = do
@@ -90,7 +91,7 @@ playRound game
     -- cards and bets
     | otherwise = playRound =<< nextState game
 
-    where (winner, losers) = victor (game^.playerInfo.players)
+    where (winner, losers) = victor (game^.playerInfo.depreciatedPlayers)
           isShowdown = case game^.state of
                         Showdown -> True
                         _ -> False
@@ -132,10 +133,10 @@ nextState' :: Game -> Game
 nextState' game = updatePot $ 
     game & allPlayers.madeInitialBet .~ False
          & allPlayers.canReRaise .~ True
-         & playerInfo.playerTurn .~ advanceDealer game
+         & playerInfo.depreciatedPlayerTurn .~ advanceDealer game
          & bets.currentBet .~ 0
          & bets.minimumRaise .~ game^.bets.bigBlindSize
-    where allPlayers = playerInfo.players.traversed
+    where allPlayers = playerInfo.depreciatedPlayers.traversed
 
 nextRound :: Game -> IO Game
 nextRound game = do
@@ -152,8 +153,8 @@ nextRound' game =
                            & allPlayers.handInfo .~ Nothing
                            & allPlayers.canReRaise .~ True
                            & allPlayers.allIn .~ False
-                           & playerInfo.dealer .~ advanceDealer newGame
-                           & playerInfo.playerTurn .~ advancePlayerTurn newGame
+                           & playerInfo.depreciatedDealer .~ advanceDealer newGame
+                           & playerInfo.depreciatedPlayerTurn .~ advancePlayerTurn newGame
                            & state .~ PreFlop
                            & cardInfo .~ Cards [] fullDeck
                            & roundDone .~ False
@@ -162,5 +163,5 @@ nextRound' game =
                            & bets.minimumRaise .~ newGame^.bets.bigBlindSize
                            & roundNumber +~ 1
     in (newGame', maybeRemoved)
-    where allPlayers = playerInfo.players.traversed
+    where allPlayers = playerInfo.depreciatedPlayers.traversed
           (newGame, maybeRemoved) = removeOutPlayers game

@@ -9,12 +9,13 @@ module Output.Terminal.OutputUtilities
 )
 where
 
-import Types (Player, Pot)
-import Output.Terminal.OutputMessages
-import Lenses (name, cards, pot, num, handInfo, handValue)
 import Text.Printf (printf)
 import Data.Maybe (fromJust)
 import Control.Lens hiding (Fold)
+
+import Types (Player, Pot)
+import Output.Terminal.OutputMessages
+import Lenses (name, cards, pot, num, handInfo, handValue)
 
 turnCard :: [String] -> String
 turnCard = turnOrRiver True
