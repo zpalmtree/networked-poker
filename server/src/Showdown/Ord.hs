@@ -8,9 +8,10 @@ module Showdown.Ord
 )
 where
 
+import Data.List (sort, group, sortBy)
+
 import Types (Card, HandInfo(..), Hand(..))
 import Showdown.Utilities (getValue, cardValue, cardValueAceLow)
-import Data.List (sort, group, sortBy)
 
 ordOnValue :: [Card] -> [Card] -> Ordering
 ordOnValue c1 c2 = compare (values c1) (values c2)

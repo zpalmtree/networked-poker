@@ -5,6 +5,10 @@ module Showdown
 )
 where
 
+import Control.Lens
+import Data.Maybe (fromJust)
+import Data.List (sortBy)
+
 import Types (Card, HandInfo, Game, Player, Pot)
 import Showdown.Value (isStraightFlush7Card, isFourOfAKind, isFullHouse,
                        isFlush, isStraight7Card, isThreeOfAKind, isTwoPair,
@@ -16,9 +20,6 @@ import Showdown.Ord (ordHand)
 import PlayerUtilities (leftOfDealer)
 import Lenses (playerInfo, depreciatedPlayers, cardInfo, handInfo, tableCards, cards, num,
                playerIDs, chips, pot)
-import Control.Lens
-import Data.Maybe (fromJust)
-import Data.List (sortBy)
 
 topHand :: [Card] -> HandInfo
 topHand cards'

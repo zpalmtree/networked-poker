@@ -52,7 +52,7 @@ advancePlayerTurn game = advance (currentPlayerIndex game) game
 advance :: Int -> Game -> Int
 advance index' game = (index' + 1) `rem` depreciatedNumPlayers' game
 
---reset the numbers to [0..length depreciatedPlayers] and remove depreciatedPlayers with no chips
+--reset the numbers to [0..length depreciatedPlayers] and remove players with no chips
 removeOutPlayers :: Game -> (Game, Maybe [Player])
 removeOutPlayers game
     | newGame^.playerInfo.depreciatedNumPlayers <= 1 = (game & gameFinished .~ True,
@@ -67,10 +67,11 @@ removeOutPlayers game
           newNumdepreciatedPlayers = length $ newGame^.playerInfo.depreciatedPlayers
           removed = filter (\x -> x^.chips <= 0) (game^.playerInfo.depreciatedPlayers)
 
--- gets the player who's closest to left of depreciatedDealer. This is used to give the
+-- gets the player who's closest to left of dealer. This is used to give the
 -- spare chips to this player in the case of a split pot.
 leftOfDealer :: Game -> [Player] -> Int -> (Player, [Player])
 leftOfDealer game depreciatedPlayers' n
+    | null depreciatedPlayers' = error "Empty list passed to leftOfDealer!"
     | not . null $ fst nearest = (head $ fst nearest, snd nearest)
     | otherwise = leftOfDealer game depreciatedPlayers' (n+1)
     where nearest = partition near depreciatedPlayers'

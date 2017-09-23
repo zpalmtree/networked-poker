@@ -6,6 +6,8 @@ module Game
 )
 where
 
+import Control.Lens
+
 import Types (Game, Pot, Player, State(..), Cards(..))
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
 import PlayerUtilities (nextPlayer, numInPlay, getCurrentPlayer, numAllIn,
@@ -26,7 +28,6 @@ import Output.Network.Output (outputRoundNumber, outputHandValues,
                               outputWinners, outputWinner, outputFlop,
                               outputTurn, outputRiver, outputPlayersRemoved)
 #endif
-import Control.Lens
 
 gameLoop :: Game -> IO Game
 gameLoop game = do

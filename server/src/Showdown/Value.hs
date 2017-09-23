@@ -13,10 +13,12 @@ module Showdown.Value
 )
 where
 
+import Data.List (sortBy)
+
 import Types (Card)
+
 import Showdown.Utilities (handSubsets, numOfEachValue, numOfSuit, sizeOfHand,
                            sorted, consecutive, cardValues)
-import Data.List (sortBy)
 
 isStraightFlush7Card :: [Card] -> Bool
 isStraightFlush7Card cards' = any isStraightFlush5Card $ handSubsets cards'

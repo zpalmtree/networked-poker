@@ -14,10 +14,11 @@ module Showdown.Utilities
 )
 where
 
-import Types (Card(..), Value(..), Hand)
-import CardUtilities (hearts, clubs, diamonds, spades)
 import Data.List (sort, sortBy, group)
 import Data.Function (on)
+
+import Types (Card(..), Value(..), Hand)
+import CardUtilities (hearts, clubs, diamonds, spades)
 
 cardValues :: [Card] -> Bool -> [Int]
 cardValues c aceHigh
