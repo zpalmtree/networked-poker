@@ -132,21 +132,6 @@ addPot betSize = do
 
 potEligible p = p^.inPlay && p^.bet > 0
         
-{-
-addPot :: Game -> Int -> Game
-addPot game betSize = game & bets.pots %~ (newPot :)
-                           & playerInfo.depreciatedPlayers .~ newPlayers
-
-    where (potEligible, rest) = partition (\p -> p^.inPlay && p^.bet > 0) 
-                                          (game^.playerInfo.depreciatedPlayers)
-
-          potSize = spareChips + length potEligible * betSize
-          newBetters = potEligible & traversed.bet -~ betSize
-          newPot = Pot potSize (potEligible^..traversed.num)
-          newPlayers = sortBy (compare `on` (^.num)) (newBetters ++ newRest)
-          (newRest, spareChips) = takeOutPlayersPot rest betSize [] 0
--}
-
 takeOutPlayersPot :: Int -> GameState Int
 takeOutPlayersPot betSize = do
     result <- zoom nonEligible $ do

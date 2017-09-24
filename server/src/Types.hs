@@ -9,7 +9,6 @@ import Text.Printf (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt,
 
 data Game = Game {
     _playerQueue :: PlayerQueue,
-    _playerInfo :: Players,
     _stage :: Stage,
     _cardInfo :: Cards,
     _roundDone :: Bool,
@@ -31,13 +30,6 @@ data Player = Player {
     _handInfo :: Maybe HandInfo,
     _canReRaise :: Bool
 } deriving (Eq, Show)
-
-data Players = Players {
-    _depreciatedNumPlayers :: Int,
-    _depreciatedPlayers :: [Player],
-    _depreciatedDealer :: Int,
-    _depreciatedPlayerTurn :: Int
-} deriving (Show)
 
 data Cards = Cards {
     _tableCards :: [Card],
@@ -123,6 +115,8 @@ data Hand a b = HighCard a
 type GameStateT a = StateT Game IO a
 
 type GameState a = State Game a
+
+type PlayerID = Int
 
 -- INSTANCES
 

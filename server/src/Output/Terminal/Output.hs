@@ -20,95 +20,137 @@ where
 import Text.Printf (printf)
 import Data.Function (on)
 import Data.List (maximumBy)
-import Control.Lens hiding (Fold)
+import Control.Lens ((^.), (^..), traversed)
+import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
 
-import Types
-import Output.Terminal.OutputMessages
-import Utilities.Terminal.Output (playerNum, turnCard, riverCard, playerCards, 
-                                  potWinners, printHand)
-
+import Types (GameStateT, Action(..), Player, Pot)
 import Utilities.Player (getCurrentPlayer)
+import Utilities.Types (fromPure)
 
-import Lenses (name, bets, currentBet, chips, bet, name, cardInfo, tableCards,
-               playerInfo, depreciatedPlayers, pots, pot, inPlay, roundNumber,
-               smallBlindSize, bigBlindSize)
+import Output.Terminal.OutputMessages
+    (actionFold, actionCheck, actionCall, actionRaise, actionAllIn,
+     playersTurn, winner, flopCards, totalWinner, playerRemoved, 
+     roundNumberMsg, smallBlind, bigBlind)
 
-outputAction :: Game -> Action Int -> IO ()
-outputAction game action = case action of
-    Fold -> putStrLn $ printf actionFold num playerName
-    Check -> putStrLn $ printf actionCheck num playerName
-    Call -> putStrLn $ printf actionCall num playerName bet'
-    Raise a -> putStrLn $ printf actionRaise num playerName bet' a
-    AllIn -> putStrLn $ printf actionAllIn num playerName chips'
-    where num = playerNum $ getCurrentPlayer game
-          playerName = getCurrentPlayer game^.name
-          bet' = game^.bets.currentBet
-          chips' = getCurrentPlayer game^.chips + getCurrentPlayer game^.bet
+import Utilities.Terminal.Output
+    (playerNum, turnCard, riverCard, playerCards, potWinners, printHand)
 
-outputPlayerTurn :: Game -> IO ()
-outputPlayerTurn game = putStrLn $ printf playersTurn num playerName
-    where playerName = getCurrentPlayer game^.name
-          num = playerNum $ getCurrentPlayer game
+import Lenses
+    (name, bets, currentBet, chips, bet, name, cardInfo, tableCards, pots, 
+     pot, inPlay, roundNumber, smallBlindSize, bigBlindSize, playerQueue, 
+     players)
+
+outputAction :: Action Int -> GameStateT ()
+outputAction action = do
+    s <- get
+
+    player <- fromPure getCurrentPlayer
+
+    let num = playerNum player
+        playerName = player^.name
+        bet' = s^.bets.currentBet
+        chips' = player^.chips + player^.bet
+
+    case action of
+        Fold -> lift . putStrLn $ printf actionFold num playerName
+        Check -> lift . putStrLn $ printf actionCheck num playerName
+        Call -> lift . putStrLn $ printf actionCall num playerName bet'
+        Raise n -> lift . putStrLn $ printf actionRaise num playerName bet' n
+        AllIn -> lift . putStrLn $ printf actionAllIn num playerName chips'
+
+outputPlayerTurn :: GameStateT ()
+outputPlayerTurn = do
+    player <- fromPure getCurrentPlayer
+
+    let playerName = player^.name
+        num = playerNum player
+
+    lift . putStrLn $ printf playersTurn num playerName
 
 {-# ANN outputFlop "HLint: ignore Use head" #-}
-outputFlop :: Game -> IO ()
-outputFlop game = putStrLn $ printf flopCards card1 card2 card3
-    where cards = game^.cardInfo.tableCards
-          card1 = show $ cards !! 0
-          card2 = show $ cards !! 1
-          card3 = show $ cards !! 2
+outputFlop :: GameStateT ()
+outputFlop = do
+    s <- get
 
-outputTurn :: Game -> IO ()
-outputTurn game = putStrLn . turnCard $ map show cards
-    where cards = game^.cardInfo.tableCards
+    let cards = s^.cardInfo.tableCards
+        card1 = show $ cards !! 0
+        card2 = show $ cards !! 1
+        card3 = show $ cards !! 2
 
-outputRiver :: Game -> IO ()
-outputRiver game = putStrLn . riverCard $ map show cards
-    where cards = game^.cardInfo.tableCards
+    lift . putStrLn $ printf flopCards card1 card2 card3
 
-outputPlayerCards :: Game -> IO ()
-outputPlayerCards game = putStrLn $ playerCards players'
-    where players' = game^..playerInfo.depreciatedPlayers.traversed
+outputTurn :: GameStateT ()
+outputTurn = outputCardMsg turnCard
 
---have to reimplement gatherchips because betting imports this module
-outputWinner :: Game -> Player -> IO ()
-outputWinner game p = putStrLn $ printf winner (playerNum p) (p^.name) chips'
-    where chips' = sum (game^..bets.pots.traversed.pot)
-                 + sum (game^..playerInfo.depreciatedPlayers.traversed.bet)
+outputRiver :: GameStateT ()
+outputRiver = outputCardMsg riverCard
 
-outputWinners :: Game -> [(Pot, [Player])] -> IO ()
-outputWinners _ = mapM_ (putStrLn . potWinners)
+outputCardMsg :: ([String] -> String) -> GameStateT ()
+outputCardMsg msg = do
+    s <- get
 
-outputGameOver :: Game -> IO ()
-outputGameOver game = putStrLn msg
-    where winner' = maximumBy (compare `on` (^.chips)) players'
-          players' = game^.playerInfo.depreciatedPlayers
-          msg = printf totalWinner num name' chips'
-          name' = winner'^.name
-          num = playerNum winner'
-          chips' = winner'^.chips
+    lift . putStrLn . msg $ map show (s^.cardInfo.tableCards)
 
-outputPlayersRemoved :: Game -> Maybe [Player] -> IO ()
-outputPlayersRemoved _ = mapM_ (mapM_ $ putStrLn . helper)
+outputPlayerCards :: GameStateT ()
+outputPlayerCards = do
+    s <- get
+
+    lift . putStrLn $ playerCards (s^.playerQueue.players)
+
+outputWinner :: Player -> GameStateT ()
+outputWinner p = do
+    s <- get
+    
+    let chips' = sum (s^..bets.pots.traversed.pot)
+               + sum (s^..playerQueue.players.traversed.bet)
+
+    lift . putStrLn $ printf winner (playerNum p) (p^.name) chips'
+
+outputWinners :: [(Pot, [Player])] -> GameStateT ()
+outputWinners = mapM_ (lift . putStrLn . potWinners)
+
+outputGameOver :: GameStateT ()
+outputGameOver = do
+    s <- get
+    
+    let players' = s^.playerQueue.players
+        winner' = maximumBy (compare `on` (^.chips)) players'
+        name' = winner'^.name
+        num = playerNum winner'
+        chips' = winner'^.chips
+
+    lift . putStrLn $ printf totalWinner num name' chips'
+
+outputPlayersRemoved :: Maybe [Player] -> GameStateT ()
+outputPlayersRemoved = mapM_ (mapM_ (lift . putStrLn . helper))
     where helper p = printf playerRemoved (playerNum p) (p^.name)
 
-outputHandValues :: Game -> IO ()
-outputHandValues game = mapM_ (putStrLn . printHand) inPlayers
-    where inPlayers = filter (^.inPlay) (game^.playerInfo.depreciatedPlayers)
+outputHandValues :: GameStateT ()
+outputHandValues = do
+    s <- get
+    
+    let inPlayers = filter (^.inPlay) (s^.playerQueue.players)
 
-outputRoundNumber :: Game -> IO ()
-outputRoundNumber game = putStrLn $ printf roundNumberMsg num
-    where num = game^.roundNumber
+    mapM_ (lift . putStrLn . printHand) inPlayers
 
-outputSmallBlindMade :: Game -> IO ()
-outputSmallBlindMade game = outputBlindMade game smallBlind size
-    where size = game^.bets.smallBlindSize
+outputRoundNumber :: GameStateT ()
+outputRoundNumber = do
+    s <- get
+    lift . putStrLn $ printf roundNumberMsg (s^.roundNumber)
 
-outputBigBlindMade :: Game -> IO ()
-outputBigBlindMade game = outputBlindMade game bigBlind size
-    where size = game^.bets.bigBlindSize
+outputSmallBlindMade :: GameStateT ()
+outputSmallBlindMade = do
+    s <- get
+    outputBlindMade smallBlind (s^.bets.smallBlindSize)
 
-outputBlindMade :: Game -> String -> Int -> IO ()
-outputBlindMade game f size = putStrLn $ printf f num name' size
-    where num = playerNum $ getCurrentPlayer game
-          name' = getCurrentPlayer game^.name
+outputBigBlindMade :: GameStateT ()
+outputBigBlindMade = do
+    s <- get
+    outputBlindMade bigBlind (s^.bets.bigBlindSize)
+
+outputBlindMade :: String -> Int -> GameStateT ()
+outputBlindMade f size = do
+    player <- fromPure getCurrentPlayer
+
+    lift . putStrLn $ printf f (playerNum player) (player^.name) size

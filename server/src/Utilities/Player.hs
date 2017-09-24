@@ -1,71 +1,125 @@
 module Utilities.Player
 (
-    leftOfDealer,
-    setCurrentPlayer,
-    getCurrentPlayer,
     numInPlay,
     numAllIn,
+    numPlayers,
+    getCurrentPlayer,
+    victorID,
     nextPlayer,
-    victor,
-    advanceDealer,
-    advancePlayerTurn,
-    removeOutPlayers
+    nextDealer,
+    removeOutPlayers,
+    leftOfDealer
 )
 where
 
-import Types (Game, Player)
-import Lenses (inPlay, playerInfo, depreciatedPlayers, allIn, depreciatedNumPlayers, depreciatedPlayerTurn,
-               depreciatedDealer, gameFinished, num, chips)
-import Control.Lens
-import Data.List (partition)
+import Control.Lens (Getting, (^.), (^?!), (%=), (.=), _head)
+import Control.Monad.Trans.State (get)
+import Data.List (elemIndex)
+import Data.Maybe (fromMaybe)
+import Control.Monad (when)
 
-numInPlay :: Game -> Int
-numInPlay game = length $ filter (^.inPlay) (game^.playerInfo.depreciatedPlayers)
+import Types (Player, GameState, PlayerID)
 
-numAllIn :: Game -> Int
-numAllIn game = length $ filter (^.allIn) (game^.playerInfo.depreciatedPlayers)
+import Lenses (inPlay, allIn, gameFinished, dealer, num, chips, players,
+               playerQueue)
 
-depreciatedNumPlayers' :: Game -> Int
-depreciatedNumPlayers' game = game^.playerInfo.depreciatedNumPlayers
+numInPlay :: GameState Int
+numInPlay = numX inPlay
 
-currentPlayerIndex :: Game -> Int
-currentPlayerIndex game = game^.playerInfo.depreciatedPlayerTurn
+numAllIn :: GameState Int
+numAllIn = numX allIn
 
-getCurrentPlayer :: Game -> Player
-getCurrentPlayer game = game^.playerInfo.depreciatedPlayers ^?! 
-                        ix (currentPlayerIndex game)
+numX :: Getting Bool Player Bool -> GameState Int
+numX lens = do
+    s <- get
 
-setCurrentPlayer :: (Applicative f) => Game -> (Player -> f Player) -> Game
-                                            -> f Game
-setCurrentPlayer game = playerInfo.depreciatedPlayers.ix (currentPlayerIndex game)
+    return . length $ filter (^.lens) (s^.playerQueue.players)
 
-victor :: [Player] -> (Player, [Player])
-victor depreciatedPlayers' = let (winners, losers) = partition (^.inPlay) depreciatedPlayers'
-                  in  (head winners, losers)
+numPlayers :: GameState Int
+numPlayers = do
+    s <- get
 
-advanceDealer :: Game -> Int
-advanceDealer game = advance (game^.playerInfo.depreciatedDealer) game
+    return . length $ s^.playerQueue.players
 
-advancePlayerTurn :: Game -> Int
-advancePlayerTurn game = advance (currentPlayerIndex game) game
+getCurrentPlayer :: GameState Player
+getCurrentPlayer = do
+    s <- get
 
-advance :: Int -> Game -> Int
-advance index' game = (index' + 1) `rem` depreciatedNumPlayers' game
+    return $ s^.playerQueue.players ^?! _head
 
---reset the numbers to [0..length depreciatedPlayers] and remove players with no chips
-removeOutPlayers :: Game -> (Game, Maybe [Player])
-removeOutPlayers game
-    | newGame^.playerInfo.depreciatedNumPlayers <= 1 = (game & gameFinished .~ True,
-                                             Just removed)
-    | oldNumdepreciatedPlayers == newNumdepreciatedPlayers = (game, Nothing)
-    | otherwise = (newGame, Just removed)
-    where newdepreciatedPlayers = imap (num .~) $ 
-                       filter (\x -> x^.chips > 0) (game^.playerInfo.depreciatedPlayers)
-          newGame = game & playerInfo.depreciatedPlayers .~ newdepreciatedPlayers
-                         & playerInfo.depreciatedNumPlayers .~ length newdepreciatedPlayers
-          oldNumdepreciatedPlayers = length $ game^.playerInfo.depreciatedPlayers
-          newNumdepreciatedPlayers = length $ newGame^.playerInfo.depreciatedPlayers
-          removed = filter (\x -> x^.chips <= 0) (game^.playerInfo.depreciatedPlayers)
+victorID :: GameState PlayerID
+victorID = do
+    s <- get
+
+    return $ head (filter (^.inPlay) (s^.playerQueue.players))^.num
+
+nextDealer :: GameState ()
+nextDealer = do
+    numPlayers' <- numPlayers
+
+    playerQueue.dealer %= advance numPlayers'
+    where advance n numPlayers' = n + 1 `rem` numPlayers'
+
+nextPlayer :: GameState ()
+nextPlayer = playerQueue.players %= shift
+    where shift x = last x : init x
+
+removeOutPlayers :: GameState (Maybe [Player])
+removeOutPlayers = do
+    s <- get
+
+    let removed = filter (\x -> x^.chips <= 0) (s^.playerQueue.players)
+
+    if null removed
+        then return Nothing
+        else do
+            playerQueue.players %= remove
+            oldPlayers <- flatten (s^.playerQueue.players)
+            updateDealer oldPlayers
+
+            numPlayers' <- numPlayers
+
+            when (numPlayers' <= 1) $ gameFinished .= True
+
+            return (Just removed)
+
+    where remove = filter (\x -> x^.chips > 0)
+
+updateDealer :: [Player] -> GameState ()
+updateDealer old = do
+    new <- get
+
+    playerQueue.dealer .= find old (new^.playerQueue.players)
+
+find :: Eq a => [a] -> [a] -> Int
+find [] _ = 0
+find (x:xs) new = fromMaybe (find xs new) (elemIndex x new)
+
+flatten :: [a] -> GameState [a]
+flatten = flatten' 0
+
+flatten' :: Monad m => Int -> [a] -> m [a]
+flatten' offset p = let (end, beginning) = splitAt offset p
+                    in  return $ beginning ++ end
+
+flattenWithOffset :: Int -> GameState [Player]
+flattenWithOffset n = do
+    s <- get
+
+    let pos = s^.playerQueue.dealer + n
+
+    numPlayers' <- numPlayers
+    flatten' (pos `rem` numPlayers') (s^.playerQueue.players)
+
+leftOfDealer :: [Player] -> GameState PlayerID
+leftOfDealer subset = do
+    s <- get
+
+    flat <- flattenWithOffset 1
+
+    return $ (subset !! find flat (s^.playerQueue.players))^.num
+
+{-
 
 -- gets the player who's closest to left of dealer. This is used to give the
 -- spare chips to this player in the case of a split pot.
@@ -79,3 +133,4 @@ leftOfDealer game depreciatedPlayers' n
 
 nextPlayer :: Game -> Game
 nextPlayer game = game & playerInfo.depreciatedPlayerTurn .~ advancePlayerTurn game
+-}

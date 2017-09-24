@@ -90,6 +90,7 @@ makeChoice s
 
     -- only one player left -> they get the winnings, start next round
     | s^.numInPlay == 1 = do
+        winner <- victorID
         outputWinner winner
         giveWinnings (winner, losers)
 
@@ -138,8 +139,7 @@ makeChoice s
         nextState
         playRound
 
-    where (winner, losers) = victor (s^.playerInfo.depreciatedPlayers)
-          isShowdown = case s^.stage of
+    where isShowdown = case s^.stage of
                         Showdown -> True
                         _ -> False
 
@@ -193,7 +193,7 @@ playRound game
     -- cards and bets
     | otherwise = playRound =<< nextState game
 
-    where (winner, losers) = victor (game^.playerInfo.depreciatedPlayers)
+    where winner = victorID
           isShowdown = case game^.state of
                         Showdown -> True
                         _ -> False
