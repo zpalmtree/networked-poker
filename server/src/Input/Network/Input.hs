@@ -8,19 +8,19 @@ module Input.Network.Input
 )
 where
 
-import Types (Game, Action)
+import Types (GameStateT, Action)
 
-checkRaiseAllIn :: Game -> IO (Action Int)
+checkRaiseAllIn :: GameStateT (Action Int)
 checkRaiseAllIn = undefined
 
-checkAllIn :: Game -> IO (Action Int)
+checkAllIn :: GameStateT (Action Int)
 checkAllIn = undefined
 
-foldCallRaiseAllIn :: Game -> IO (Action Int)
+foldCallRaiseAllIn :: GameStateT (Action Int)
 foldCallRaiseAllIn = undefined
 
-foldAllIn :: Game -> IO (Action Int)
+foldAllIn :: GameStateT (Action Int)
 foldAllIn = undefined
 
-foldCallAllIn :: Game -> IO (Action Int)
+foldCallAllIn :: GameStateT (Action Int)
 foldCallAllIn = undefined
