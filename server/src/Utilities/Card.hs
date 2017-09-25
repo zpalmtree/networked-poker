@@ -2,7 +2,7 @@
 
 module Utilities.Card
 (
-    drawCard,
+    dealCards,
     hearts,
     clubs,
     diamonds,
@@ -11,77 +11,77 @@ module Utilities.Card
     revealFlop,
     revealTurn,
     revealRiver,
-    getSevenCards,
-    dealCards
 )
 where
 
-import Types (Game, Player, Card(..), Value, Suit(..), Stage(..))
-import Lenses (playerInfo, cards, depreciatedNumPlayers, depreciatedPlayers, cardInfo, deck,
-               tableCards, stage)
+import System.Random (getStdRandom, randomR)
+import Control.Lens ((^.), (.=), (<~), (%=), traversed)
+import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad (when, replicateM_)
+
+import Types (Card(..), Value, Suit(..), Stage(..), GameStateT)
+
+import Lenses 
+    (cards, cardInfo, deck, tableCards, stage, playerQueue, players)
+
 #ifdef DEBUG
 import Output.Terminal.Output (outputPlayerCards)
 #else
 import Output.Network.Output (outputPlayerCards)
 #endif
-import System.Random (getStdRandom, randomR)
-import Control.Lens
 
-dealCards :: Game -> IO Game
-dealCards game = do
-    newGame <- dealCards' game [] 0
-    outputPlayerCards newGame
-    return newGame
 
-dealCards' :: Game -> [Player] -> Int -> IO Game
-dealCards' game newPlayers n
-    | n == depreciatedNumPlayers' = return $ game & playerInfo.depreciatedPlayers .~ newPlayers
-    | otherwise = do
-        (newGame, newCards) <- drawPlayerCards game
-        let newPlayer = player & cards .~ newCards
-        dealCards' newGame (newPlayers ++ [newPlayer]) (n+1)
-    where depreciatedNumPlayers' = game^.playerInfo.depreciatedNumPlayers
-          player = game^.playerInfo.depreciatedPlayers ^?! ix n
+-- does this actually update the state??
+dealCards :: GameStateT ()
+dealCards = do
+    playerQueue.players.traversed.cards <~ drawPlayerCards
+    outputPlayerCards
 
-getRandomCard :: [Card] -> IO ([Card], Card)
-getRandomCard [] = error "Can't take a card from empty deck"
-getRandomCard deck' = do
-   cardNum <- getStdRandom $ randomR (0, length deck' - 1)
-   let card = deck' !! cardNum
-   let fixedDeck = deleteNth (cardNum + 1) deck'
-   return (fixedDeck, card)
+drawPlayerCards :: GameStateT [Card]
+drawPlayerCards = do
+    a <- getRandomCard
+    b <- getRandomCard
+    return [a, b]
 
-drawCard :: Game -> IO Game
-drawCard game = do
-    (newDeck, card) <- getRandomCard (game^.cardInfo.deck)
-    return $ game & cardInfo.deck .~ newDeck
-                  & cardInfo.tableCards .~ addCard tableCards' card
-    where tableCards' = game^.cardInfo.tableCards
+getRandomCard :: GameStateT Card
+getRandomCard = do
+    s <- get
 
-drawPlayerCards :: Game -> IO (Game, [Card])
-drawPlayerCards game = do
-    (newDeck, card1) <- getRandomCard (game^.cardInfo.deck)
-    (newDeck', card2) <- getRandomCard newDeck
-    return (game & cardInfo.deck .~ newDeck', [card1, card2])
+    let deck' = s^.cardInfo.deck
 
-addCard :: [Card] -> Card -> [Card]
-addCard tableCards' card = tableCards' ++ [card]
+    when (null deck') $ error "Can't take a card from an empty deck!"
 
-revealFlop :: Game -> IO Game
-revealFlop game = (& stage .~ Flop) <$> 
-                  (drawCard =<< drawCard =<< drawCard game)
+    cardNum <- lift . getStdRandom $ randomR (0, length deck' - 1)
+    deleteNth cardNum
 
-revealTurn :: Game -> IO Game
-revealTurn game = (& stage .~ Turn) <$> drawCard game
+    return $ deck' !! cardNum
 
-revealRiver :: Game -> IO Game
-revealRiver game = (& stage .~ River) <$> drawCard game
+drawCard :: GameStateT ()
+drawCard = do
+    card <- getRandomCard
+    cardInfo.tableCards %= (\cards' -> cards' ++ [card])
 
-deleteNth :: Int -> [a] -> [a]
-deleteNth n xs
-    | n < 0 = error "Can't remove negative index"
-    | n == 0 = init xs
-    | otherwise = take (n-1) xs ++ drop n xs
+revealFlop :: GameStateT ()
+revealFlop = do
+    replicateM_ 3 drawCard
+    stage .= Flop
+
+revealTurn :: GameStateT ()
+revealTurn = do
+    drawCard
+    stage .= Turn
+
+revealRiver :: GameStateT ()
+revealRiver = do
+    drawCard
+    stage .= River
+
+deleteNth :: Int -> GameStateT ()
+deleteNth n = do
+    when (n < 0) $ error "Can't remove negative deck index!"
+
+    cardInfo.deck %= (\xs -> take n xs ++ drop (n+1) xs)
 
 fullDeck :: [Card]
 fullDeck = [Card value suit | value <- [minBound :: Value .. maxBound],
@@ -98,13 +98,3 @@ diamonds = [Card value Diamond | value <- [minBound :: Value .. maxBound]]
 
 spades :: [Card]
 spades = [Card value Spade | value <- [minBound :: Value .. maxBound]]
-
-getSevenCards :: IO [Card]
-getSevenCards = getSevenCards' 7 fullDeck
-
-getSevenCards' :: Int -> [Card] -> IO [Card]
-getSevenCards' 0 _ = return []
-getSevenCards' n deck' = do
-   (newDeck, card) <- getRandomCard deck'
-   rest <- getSevenCards' (n-1) newDeck
-   return $ card : rest
