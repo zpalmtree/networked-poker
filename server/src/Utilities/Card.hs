@@ -15,12 +15,14 @@ module Utilities.Card
 where
 
 import System.Random (getStdRandom, randomR)
-import Control.Lens ((^.), (.=), (<~), (%=), traversed)
+import Control.Lens ((^.), (.=), (%=), ix)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (when, replicateM_)
 
 import Types (Card(..), Value, Suit(..), Stage(..), GameStateT)
+import Utilities.Player (numPlayers)
+import Utilities.Types (fromPure)
 
 import Lenses 
     (cards, cardInfo, deck, tableCards, stage, playerQueue, players)
@@ -31,12 +33,17 @@ import Output.Terminal.Output (outputPlayerCards)
 import Output.Network.Output (outputPlayerCards)
 #endif
 
-
--- does this actually update the state??
 dealCards :: GameStateT ()
 dealCards = do
-    playerQueue.players.traversed.cards <~ drawPlayerCards
+    updateCards =<< fromPure numPlayers
     outputPlayerCards
+
+updateCards :: Int -> GameStateT ()
+updateCards 0 = return ()
+updateCards n = do
+    cards' <- drawPlayerCards
+    playerQueue.players.ix (n-1).cards .= cards'
+    updateCards (n-1)
 
 drawPlayerCards :: GameStateT [Card]
 drawPlayerCards = do

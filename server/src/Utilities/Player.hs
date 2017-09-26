@@ -118,19 +118,3 @@ leftOfDealer subset = do
     flat <- flattenWithOffset 1
 
     return $ (subset !! find flat (s^.playerQueue.players))^.num
-
-{-
-
--- gets the player who's closest to left of dealer. This is used to give the
--- spare chips to this player in the case of a split pot.
-leftOfDealer :: Game -> [Player] -> Int -> (Player, [Player])
-leftOfDealer game depreciatedPlayers' n
-    | null depreciatedPlayers' = error "Empty list passed to leftOfDealer!"
-    | not . null $ fst nearest = (head $ fst nearest, snd nearest)
-    | otherwise = leftOfDealer game depreciatedPlayers' (n+1)
-    where nearest = partition near depreciatedPlayers'
-          near p = p^.num == (game^.playerInfo.depreciatedDealer+n) `rem` depreciatedNumPlayers' game
-
-nextPlayer :: Game -> Game
-nextPlayer game = game & playerInfo.depreciatedPlayerTurn .~ advancePlayerTurn game
--}
