@@ -18,9 +18,11 @@ import Control.Monad.Trans.Class (lift)
 
 import Types (Game, Action(..), GameState, GameStateT)
 import Output.Terminal.InputMessages
-import Utilities.Player (getCurrentPlayer)
 import Utilities.Types (fromPure)
 import Lenses (bets, currentBet, num, name, bet, chips, minimumRaise)
+
+import Utilities.Player 
+    (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayerT)
 
 --prelude pls go
 foldMap' :: (String, GameStateT (Action a))
@@ -68,50 +70,43 @@ checkAllIn :: GameStateT (Action Int)
 checkAllIn = getAction aMap inputCheckAllIn badCheckAllInInput
     where aMap = [checkMap, allInMap]
 
---tbqh fromMaybe is hard to read
-{-# ANN getAction "HLint: ignore Use fromMaybe" #-}
-getAction :: [(String, GameStateT a)] -> String -> String -> GameStateT a
-getAction actionMap inputMsg badInputMsg = do
-    s <- get
-    
-    let player = getCurrentPlayer s
+getAndHandleInput :: String -> (String -> a) -> (a -> GameStateT b) -> 
+                     GameStateT b
+getAndHandleInput inputMsg transformF caseFunc = do
+    player <- getCurrentPlayerT
 
     input <- lift $ do
         printf inputMsg (player^.num+1) (player^.name) (player^.bet)
                         (player^.chips)
 
         hFlush stdout
-        map toLower <$> getLine
+        transformF <$> getLine
 
-    case lookup input actionMap of
-        Nothing -> do
-            lift $ putStrLn badInputMsg
-            getAction actionMap inputMsg badInputMsg
-        Just action -> action
+    caseFunc input
+
+{-# ANN getAction "HLint: ignore Use fromMaybe" #-}
+getAction :: [(String, GameStateT a)] -> String -> String -> GameStateT a
+getAction actionMap inputMsg badInputMsg = 
+    getAndHandleInput inputMsg (map toLower) caseFunc
+
+    where caseFunc x = case lookup x actionMap of
+                        Nothing -> do
+                            lift $ putStrLn badInputMsg
+                            getAction actionMap inputMsg badInputMsg
+                        Just action -> action
 
 -- Note: raise amount is new bet value, not current bet + raise.
 -- So, "I want to raise to 500" means if the current bet is 100, the new bet
 -- will be 500, not 600.
 getRaiseAmount :: GameStateT (Action Int)
-getRaiseAmount = do
-    s <- get
+getRaiseAmount = getAndHandleInput inputRaise maybeRead caseFunc
+    where caseFunc x = case x of
+                        Nothing -> do
+                            lift $ putStrLn raiseNotInteger
+                            getRaiseAmount
+                        Just raise -> handleRaise raise
 
-    let player = getCurrentPlayer s
-
-    input <- lift $ do
-        printf inputRaise (player^.num+1) (player^.name) (player^.bet)
-                          (player^.chips)
-
-        hFlush stdout
-        maybeRead <$> getLine
-
-    case input of
-        Nothing -> do
-            lift $ putStrLn raiseNotInteger
-            getRaiseAmount
-        Just raise -> handleRaise raise
-
-    where maybeRead = fmap fst . listToMaybe . reads
+          maybeRead = fmap fst . listToMaybe . reads
 
 handleRaise :: Int -> GameStateT (Action Int)
 handleRaise raise = do
@@ -131,8 +126,8 @@ handleRaise' s raise
 
           minRaise = s^.bets.minimumRaise
           currentBet' = s^.bets.currentBet
-          chips' = getCurrentPlayer s^.chips
-          bet' = getCurrentPlayer s^.bet
+          chips' = getCurrentPlayerPure s^.chips
+          bet' = getCurrentPlayerPure s^.bet
           minRaiseAbsolute = currentBet' + minRaise
 
 lessThanMinimumRaise' :: GameState String
@@ -146,9 +141,6 @@ lessThanMinimumRaise' = do
 
 notEnoughChips' :: GameState String
 notEnoughChips' = do
-    s <- get
+    player <- getCurrentPlayer
 
-    let chips' = getCurrentPlayer s^.chips
-        bet' = getCurrentPlayer s^.bet
-
-    return . printf notEnoughChips $ chips' + bet'
+    return . printf notEnoughChips $ player^.chips + player^.bet

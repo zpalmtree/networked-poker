@@ -15,14 +15,13 @@ module Utilities.Card
 where
 
 import System.Random (getStdRandom, randomR)
-import Control.Lens ((^.), (.=), (%=), ix)
+import Control.Lens ((^.), (.=), (%=), (<~), ix)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad (when, replicateM_)
+import Control.Monad (when, replicateM_, replicateM)
 
 import Types (Card(..), Value, Suit(..), Stage(..), GameStateT)
-import Utilities.Player (numPlayers)
-import Utilities.Types (fromPure)
+import Utilities.Player (numPlayersT)
 
 import Lenses 
     (cards, cardInfo, deck, tableCards, stage, playerQueue, players)
@@ -35,21 +34,17 @@ import Output.Network.Output (outputPlayerCards)
 
 dealCards :: GameStateT ()
 dealCards = do
-    updateCards =<< fromPure numPlayers
+    updateCards =<< numPlayersT
     outputPlayerCards
 
 updateCards :: Int -> GameStateT ()
 updateCards 0 = return ()
 updateCards n = do
-    cards' <- drawPlayerCards
-    playerQueue.players.ix (n-1).cards .= cards'
+    playerQueue.players.ix (n-1).cards <~ drawPlayerCards
     updateCards (n-1)
 
 drawPlayerCards :: GameStateT [Card]
-drawPlayerCards = do
-    a <- getRandomCard
-    b <- getRandomCard
-    return [a, b]
+drawPlayerCards = replicateM 2 getRandomCard
 
 getRandomCard :: GameStateT Card
 getRandomCard = do

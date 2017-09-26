@@ -25,8 +25,7 @@ import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 
 import Types (GameStateT, Action(..), Player, Pot)
-import Utilities.Player (getCurrentPlayer)
-import Utilities.Types (fromPure)
+import Utilities.Player (getCurrentPlayerT)
 
 import Output.Terminal.OutputMessages
     (actionFold, actionCheck, actionCall, actionRaise, actionAllIn,
@@ -45,7 +44,7 @@ outputAction :: Action Int -> GameStateT ()
 outputAction action = do
     s <- get
 
-    player <- fromPure getCurrentPlayer
+    player <- getCurrentPlayerT
 
     let num = playerNum player
         playerName = player^.name
@@ -61,7 +60,7 @@ outputAction action = do
 
 outputPlayerTurn :: GameStateT ()
 outputPlayerTurn = do
-    player <- fromPure getCurrentPlayer
+    player <- getCurrentPlayerT
 
     let playerName = player^.name
         num = playerNum player
@@ -151,6 +150,6 @@ outputBigBlindMade = do
 
 outputBlindMade :: String -> Int -> GameStateT ()
 outputBlindMade f size = do
-    player <- fromPure getCurrentPlayer
+    player <- getCurrentPlayerT
 
     lift . putStrLn $ printf f (playerNum player) (player^.name) size

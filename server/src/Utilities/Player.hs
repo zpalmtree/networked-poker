@@ -3,7 +3,10 @@ module Utilities.Player
     numInPlay,
     numAllIn,
     numPlayers,
+    numPlayersT,
+    getCurrentPlayerPure,
     getCurrentPlayer,
+    getCurrentPlayerT,
     victorID,
     nextPlayer,
     nextDealer,
@@ -18,7 +21,8 @@ import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
 import Control.Monad (when)
 
-import Types (Player, GameState, PlayerID)
+import Utilities.Types (fromPure)
+import Types (Player, GameState, GameStateT, PlayerID, Game)
 
 import Lenses (inPlay, allIn, gameFinished, dealer, num, chips, players,
                playerQueue)
@@ -41,11 +45,20 @@ numPlayers = do
 
     return . length $ s^.playerQueue.players
 
+numPlayersT :: GameStateT Int
+numPlayersT = fromPure numPlayers
+
+getCurrentPlayerPure :: Game -> Player
+getCurrentPlayerPure s = s^.playerQueue.players ^?! _head
+
 getCurrentPlayer :: GameState Player
 getCurrentPlayer = do
     s <- get
 
     return $ s^.playerQueue.players ^?! _head
+
+getCurrentPlayerT :: GameStateT Player
+getCurrentPlayerT = fromPure getCurrentPlayer
 
 victorID :: GameState PlayerID
 victorID = do
