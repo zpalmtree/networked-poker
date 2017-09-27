@@ -9,17 +9,23 @@ import Control.Lens
 import Data.Maybe (fromJust)
 import Data.List (sortBy)
 
-import Types (Card, HandInfo, Game, Player, Pot)
-import Showdown.Value (isStraightFlush7Card, isFourOfAKind, isFullHouse,
-                       isFlush, isStraight7Card, isThreeOfAKind, isTwoPair,
-                       isPair)
-import Showdown.Best (bestStraightFlush, bestFourOfAKind, bestFullHouse,
-                      bestFlush, bestStraight, bestThreeOfAKind, bestTwoPair,
-                      bestPair, bestHighCard)
+import Types (GameState, Card, HandInfo, Player, Pot)
 import Showdown.Ord (ordHand)
 import Utilities.Player (leftOfDealer)
-import Lenses (playerQueue, players, cardInfo, handInfo, tableCards, 
-               cards, num, playerIDs, chips, pot)
+import Control.Monad.Trans.State (get)
+import Control.Monad (when)
+
+import Showdown.Value 
+    (isStraightFlush7Card, isFourOfAKind, isFullHouse, isFlush, 
+     isStraight7Card, isThreeOfAKind, isTwoPair, isPair)
+
+import Showdown.Best 
+    (bestStraightFlush, bestFourOfAKind, bestFullHouse, bestFlush, 
+     bestStraight, bestThreeOfAKind, bestTwoPair, bestPair, bestHighCard)
+
+import Lenses 
+    (playerQueue, players, cardInfo, handInfo, tableCards, cards, num, 
+     playerIDs, chips, pot)
 
 topHand :: [Card] -> HandInfo
 topHand cards'
@@ -33,17 +39,18 @@ topHand cards'
     | isPair cards' = bestPair cards'
     | otherwise = bestHighCard cards'
 
-getHandValue :: Game -> Game
-getHandValue game = game & playerInfo.depreciatedPlayers.traversed %~ getCardValues
-    where getCardValues = getValue $ game^.cardInfo.tableCards
+getHandValue :: GameState ()
+getHandValue = do
+    s <- get
+    let cards' = s^.cardInfo.tableCards
 
-getValue :: [Card] -> Player -> Player
-getValue cards' p = p & handInfo .~ Just info
-    where allCards = cards' ++ p^.cards
-          info = topHand allCards
+    zoom (playerQueue.players.traversed) $ do
+        p <- get
+        let allCards = cards' ++ p^.cards
+        handInfo .= Just (topHand allCards)
 
-getWinnersLosers :: [Player] -> ([Player], [Player])
-getWinnersLosers p = span equalToWinner sorted
+getWinners :: [Player] -> [Player]
+getWinners p = filter equalToWinner sorted
     where sorted = sortBy (flip sortHandValue) p
           winnerHand = fromJust $ head sorted^.handInfo
           equalToWinner x = ordHand winnerHand (fromJust (x^.handInfo)) == EQ
@@ -53,27 +60,25 @@ sortHandValue p1 p2 = ordHand hand1 hand2
     where hand1 = fromJust $ p1^.handInfo
           hand2 = fromJust $ p2^.handInfo
 
-distributePot :: Game -> Pot -> (Game, (Pot, [Player]))
-distributePot game sidePot = (newGame, winnerMapping)
-    where people = filter isInPot (game^.playerInfo.depreciatedPlayers)
-          isInPot p = p^.num `elem` sidePot^.playerIDs          
-          (winners, _) = getWinnersLosers people
-          (spareRecipient, rest) = leftOfDealer game winners 1
-          newGame = giveWinningsSplitPot game sidePot (spareRecipient, rest)
-          winnerMapping = (sidePot, winners)
+distributePot :: Pot -> GameState (Pot, [Player])
+distributePot sidePot = do
+    s <- get
 
-giveWinningsSplitPot :: Game -> Pot -> (Player, [Player]) -> Game
-giveWinningsSplitPot game sidePot (spare, rest) = newGame
-    where newPlayers = map (addChips ids (spare^.num) sidePot) p
-          ids = map (^.num) rest
-          p = game^.playerInfo.depreciatedPlayers
-          newGame = game & playerInfo.depreciatedPlayers .~ newPlayers
+    let inPot = filter (\p -> p^.num `elem` sidePot^.playerIDs) 
+                       (s^.playerQueue.players)
+        winners = getWinners $ inPot
+        chipsPerPerson = sidePot^.pot `div` length winners
+        spareChips = sidePot^.pot `rem` length winners
+        allPlayers = playerQueue.players.traversed
+        isWinner p = p^.num `elem` winners^..traversed.num
 
-addChips :: [Int] -> Int -> Pot -> Player -> Player
-addChips ids spareId sidePot p
-    | p^.num == spareId = p & chips +~ chipsPerPerson + spareChips
-    | p^.num `elem` ids = p & chips +~ chipsPerPerson
-    | otherwise = p
-    where chips' = sidePot^.pot
-          chipsPerPerson = chips' `div` (length ids + 1)
-          spareChips = chips' `rem` (length ids + 1)
+    spareID <- leftOfDealer winners
+
+    zoom (allPlayers.(filtered isWinner)) $ do
+        p <- get
+
+        chips += chipsPerPerson
+
+        when (p^.num == spareID) $ chips += spareChips
+
+    return (sidePot, winners)
