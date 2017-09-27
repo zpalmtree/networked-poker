@@ -11,11 +11,15 @@ where
 
 import Text.Printf (printf)
 import Data.Maybe (fromJust)
-import Control.Lens hiding (Fold)
+import Control.Lens ((^.))
+import Safe (at, headNote, initNote, lastNote)
 
 import Types (Player, Pot)
-import Output.Terminal.OutputMessages
 import Lenses (name, cards, pot, num, handInfo, handValue)
+
+import Output.Terminal.OutputMessages
+    (turnMsg, riverMsg, fullSet, card, dealt, hasCards, multiWinnerMsg,
+     singleWinnerMsg, playerMsg, playerHand)
 
 turnCard :: [String] -> String
 turnCard = turnOrRiver True
@@ -25,13 +29,13 @@ riverCard = turnOrRiver False
 
 turnOrRiver :: Bool -> [String] -> String
 turnOrRiver turn xs = start ++ totalCards xs
-    where start = printf msg (last xs)
+    where start = printf msg (lastNote "in turnOrRiver!" xs)
           msg | turn = turnMsg
               | otherwise = riverMsg
 
 totalCards :: [String] -> String
-totalCards xs = printf (fullSet filler) (last xs)
-    where filler = concatMap printCard (init xs)
+totalCards xs = printf (fullSet filler) (lastNote "in turnOrRiver!" xs)
+    where filler = concatMap printCard (initNote "in totalCards!" xs)
 
 printCard :: String -> String
 printCard = printf card
@@ -40,15 +44,15 @@ playerCards :: [Player] -> String
 playerCards players = dealt ++ dealtCards
     where dealtCards = concatMap printCards players
 
-{-# ANN printCards "HLint: ignore Use head" #-}
 printCards :: Player -> String
 printCards p = printf hasCards (playerNum p) (p^.name) card1 card2
-    where card1 = show $ (p^.cards) !! 0
-          card2 = show $ (p^.cards) !! 1
+    where card1 = show $ (p^.cards) `at` 0
+          card2 = show $ (p^.cards) `at` 1
 
 potWinners :: (Pot, [Player]) -> String
 potWinners (pot', players')
-    | length players' == 1 = singleWinner pot' (head players')
+    | length players' == 1 = singleWinner pot' 
+                             (headNote "in potWinners!" players')
     | otherwise = multiWinners pot' players'
 
 multiWinners :: Pot -> [Player] -> String
@@ -60,8 +64,9 @@ singleWinner pot' p = printf singleWinnerMsg (playerNum p) (p^.name) (pot'^.pot)
 
 printWinners :: [Player] -> String
 printWinners players = start ++ end
-    where start = concatMap (printWinner True) (init players)
-          end = printWinner False (last players)
+    where start = concatMap (printWinner True) 
+                            (initNote "in printWinners!" players)
+          end = printWinner False (lastNote "in printWinners!" players)
 
 printWinner :: Bool -> Player -> String
 printWinner final player = printf (playerMsg final) (playerNum player) 
@@ -71,9 +76,8 @@ printWinner final player = printf (playerMsg final) (playerNum player)
 playerNum :: Player -> Int
 playerNum p = p^.num + 1
 
-{-# ANN printHand "HLint: ignore Use head" #-}
 printHand :: Player -> String
 printHand p = printf playerHand (playerNum p) (p^.name) value card1 card2
     where value = show $ fromJust (p^.handInfo)^.handValue
-          card1 = show $ (p^.cards) !! 0
-          card2 = show $ (p^.cards) !! 1
+          card1 = show $ (p^.cards) `at` 0
+          card2 = show $ (p^.cards) `at` 1

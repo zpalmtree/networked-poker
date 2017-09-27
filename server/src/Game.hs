@@ -6,33 +6,36 @@ module Game
 )
 where
 
-import Control.Lens ((^.), (+~), (&), (.~), (.=), traversed, zoom)
-import Control.Monad.Trans.State (StateT, get)
-import Control.Monad.Trans.Class ()
+import Control.Lens ((^.), (.=), (+=), traversed, zoom)
+import Control.Monad.Trans.State (get)
+import Control.Monad (unless)
 
 import Types (Game, Pot, Player, Stage(..), Cards(..), GameStateT)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
+import Showdown (distributePot, calculateHandValues)
+import Utilities.Types (fromPure)
 
-import Utilities.Player (nextPlayer, numInPlay, getCurrentPlayer, numAllIn,
-                         victor, advanceDealer, advancePlayerTurn,
-                         removeOutPlayers)
+import Utilities.Card 
+    (dealCards, revealFlop, revealTurn, revealRiver, fullDeck)
 
-import Utilities.Card (dealCards, revealFlop, revealTurn, revealRiver, fullDeck)
-import Showdown (getHandValue, distributePot)
+import Utilities.Player 
+    (nextPlayerT, getCurrentPlayerPure, removeOutPlayers, numInPlayPure, 
+     victorID, numAllInPure, nextDealerT)
 
-import Lenses (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet,
-               allIn, playerInfo, depreciatedPlayers, pots, stage, canReRaise, 
-               depreciatedPlayerTurn, minimumRaise, bigBlindSize, hand, 
-               handInfo, depreciatedDealer, cardInfo, roundDone, roundNumber)
+import Lenses 
+    (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet, allIn, pots, 
+     stage, canReRaise, minimumRaise, bigBlindSize, hand, handInfo, cardInfo, 
+     roundDone, roundNumber, playerQueue, players)
 
 #ifdef DEBUG
-import Output.Terminal.Output (outputRoundNumber, outputHandValues, 
-                               outputWinners, outputWinner, outputFlop,
-                               outputTurn, outputRiver, outputPlayersRemoved)
+import Output.Terminal.Output 
+    (outputRoundNumber, outputHandValues, outputWinners, outputWinner, 
+     outputFlop, outputTurn, outputRiver, outputPlayersRemoved)
+
 #else
-import Output.Network.Output (outputRoundNumber, outputHandValues, 
-                              outputWinners, outputWinner, outputFlop,
-                              outputTurn, outputRiver, outputPlayersRemoved)
+import Output.Network.Output 
+    (outputRoundNumber, outputHandValues, outputWinners, outputWinner, 
+     outputFlop, outputTurn, outputRiver, outputPlayersRemoved)
 #endif
 
 gameLoop :: GameStateT ()
@@ -42,19 +45,17 @@ gameLoop = do
 
     s <- get
 
-    if s^.gameFinished
-        then return ()
-        else do
-            outputRoundNumber
-            dealCards
-            gameLoop
+    unless (s^.gameFinished) $ do
+        outputRoundNumber
+        dealCards
+        gameLoop
 
 postBlindsAndPlayRound :: GameStateT ()
 postBlindsAndPlayRound = do
     smallBlind
-    nextPlayer
+    nextPlayerT
     bigBlind
-    nextPlayer
+    nextPlayerT
     playRound
 
 playRound :: GameStateT ()
@@ -62,95 +63,102 @@ playRound = do
     s <- get
     makeChoice s
 
+-- in showdown -> no more betting can happen
+inShowdown :: Game -> Bool
+inShowdown s = s^.stage == Showdown
+
+-- only one player left -> they get the winnings, start next round
+onlyOnePlayerLeft :: Game -> Bool
+onlyOnePlayerLeft s = numInPlayPure s == 1
+
+-- max of one person isn't all in -> no more betting can happen -> deal
+-- more cards, but can't do anymore betting
+maxOneNotAllIn :: Game -> Bool
+maxOneNotAllIn s = getCurrentPlayerPure s^.bet == s^.bets.currentBet && 
+                   numInPlayPure s - numAllInPure s <= 1
+
+-- player isn't in play, go onto next player 
+notInPlay :: Game -> Bool
+notInPlay s = not $ getCurrentPlayerPure s^.inPlay
+
+-- player is in play, and hasn't made their initial bet, so prompt for bet
+-- they can check because their bet is equal to the current bet - i.e.
+-- they were big blind
+inPlayCanCheck :: Game -> Bool
+inPlayCanCheck s = not (p^.madeInitialBet) && 
+                   not (p^.allIn) &&
+                   p^.bet == s^.bets.currentBet
+
+    where p = getCurrentPlayerPure s
+
+-- in play but unmatched bet, so prompt for bet, can't check
+notAllInAndUnmatched :: Game -> Bool
+notAllInAndUnmatched s = not (p^.allIn) && p^.bet < s^.bets.currentBet
+    where p = getCurrentPlayerPure s
+
 makeChoice :: Game -> GameStateT ()
 makeChoice s
-    -- in showdown -> no more betting can happen
-    | isShowdown = do
+    | inShowdown s = do
         winnerMapping <- showdown
         outputHandValues
         outputWinners winnerMapping
 
-    -- only one player left -> they get the winnings, start next round
-    | s^.numInPlay == 1 = do
-        winner <- victorID
+    | onlyOnePlayerLeft s = do
+        winner <- fromPure victorID
         outputWinner winner
-        giveWinnings (winner, losers)
+        fromPure $ giveWinnings winner
 
-    -- max of one person isn't all in -> no more betting can happen -> deal
-    -- more cards, but can't do anymore betting
-    | s^.getCurrentPlayer.bet == s^.bets.currentBet && 
-      s^.numInPlay - s^.numAllIn <= 1 = do
+    | maxOneNotAllIn s = do
         nextState
         playRound
 
-    -- player isn't in play, go onto next player 
-    | not $ s^.getCurrentPlayer.inPlay = do
-        nextPlayer
+    | notInPlay s = do
+        nextPlayerT
         playRound 
 
-    -- player is in play, and hasn't made their initial bet, so prompt for bet
-    -- they can check because their bet is equal to the current bet - i.e.
-    -- they were big blind
-    | not (s^.getCurrentPlayer.madeInitialBet) 
-       && (s^.getCurrentPlayer.bet == s^.bets.currentBet) 
-       && not (s^.getCurrentPlayer.allIn) = do
+    | inPlayCanCheck s = do
         promptBet True
-        nextPlayer
+        nextPlayerT
         playRound
 
-    -- player is in play, and hasn't made their intial bet, so prompt for bet
-    -- isn't matched with current bet, so can't check
-    | not (s^.getCurrentPlayer.madeInitialBet) &&
-      not (s^.getCurrentPlayer.allIn) = do
+    | notAllInAndUnmatched s = do
         promptBet False
-        nextPlayer
+        nextPlayerT
         playRound
 
-    -- player is in play, and has made initial bet, but isn't matched with
-    -- current bet level -> has to call/fold/raise
-    | s^.getCurrentPlayer.madeInitialBet && 
-      s^.getCurrentPlayer.bet < s^.bets^.currentBet && -- combine this with above?
-      not (s^.getCurrentPlayer.allIn) = do
-        promptBet False
-        nextPlayer
-        playRound
-
-    -- else the player has already made their bet so move on to next load of 
-    -- cards and bets
+    --already bet or all in
     | otherwise = do
         nextState
         playRound
 
-    where isShowdown = case s^.stage of
-                        Showdown -> True
-                        _ -> False
-
-showdown :: GameStateT (Pot, [Player])
+showdown :: GameStateT [(Pot, [Player])]
 showdown = do
+    fromPure calculateHandValues
     s <- get
     getWinnersAndDistribute (s^.bets.pots)
 
-getWinnersAndDistribute :: [Pot] -> GameStateT (Pot, [Player])
+getWinnersAndDistribute :: [Pot] -> GameStateT [(Pot, [Player])]
+getWinnersAndDistribute [] = return []
 getWinnersAndDistribute (p:ps) = do
-    winners <- distributePot game pot
+    winners <- fromPure $ distributePot p
     winners' <- getWinnersAndDistribute ps
-    return $ winners ++ winners'
+    return $ winners : winners'
 
 nextState :: GameStateT ()
 nextState = do
     s <- get
 
-    zoom (playerInfo.depreciatedPlayers.traversed) $ do
+    zoom (playerQueue.players.traversed) $ do
         madeInitialBet .= False
         canReRaise .= True
 
     zoom bets $ do
         currentBet .= 0
-        minimumRaise .= (s^.bets.bigBlingSize)
+        minimumRaise .= (s^.bets.bigBlindSize)
 
-    playerInfo.depreciatedPlayerTurn .= advanceDealer
+    nextPlayerT
 
-    updatePot
+    fromPure updatePot
         
     case s^.stage of
         PreFlop -> do
@@ -165,8 +173,7 @@ nextState = do
             revealRiver
             outputRiver
 
-        River -> do
-            state .= Showdown
+        River -> stage .= Showdown
 
         Showdown -> error "Can't advance stage at showdown!"
 
@@ -174,9 +181,9 @@ nextRound :: GameStateT ()
 nextRound = do
     s <- get
 
-    removed <- removeOutPlayers 
+    removed <- fromPure removeOutPlayers 
 
-    zoom (playerInfo.depreciatedPlayers.traversed) $ do
+    zoom (playerQueue.players.traversed) $ do
         inPlay .= True
         bet .= 0
         madeInitialBet .= False
@@ -185,18 +192,17 @@ nextRound = do
         canReRaise .= True
         allIn .= False
 
-    zoom (playerInfo) $ do
-        depreciatedDealer .= advanceDealer
-        depreciatedPlayerTurn .= advancePlayerTurn
-
-    zoom (bets) $ do
+    zoom bets $ do
         pots .= []
         currentBet .= 0
         minimumRaise .= s^.bets.bigBlindSize
 
-    state .= PreFlop
+    stage .= PreFlop
     cardInfo .= Cards [] fullDeck
     roundDone .= False
     roundNumber += 1
 
-    return removed
+    nextPlayerT
+    nextDealerT
+
+    outputPlayersRemoved removed

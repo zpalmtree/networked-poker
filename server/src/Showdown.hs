@@ -1,13 +1,14 @@
 module Showdown
 (
     distributePot,
-    getHandValue
+    calculateHandValues
 )
 where
 
 import Control.Lens
 import Data.Maybe (fromJust)
 import Data.List (sortBy)
+import Safe (headNote)
 
 import Types (GameState, Card, HandInfo, Player, Pot)
 import Showdown.Ord (ordHand)
@@ -39,8 +40,8 @@ topHand cards'
     | isPair cards' = bestPair cards'
     | otherwise = bestHighCard cards'
 
-getHandValue :: GameState ()
-getHandValue = do
+calculateHandValues :: GameState ()
+calculateHandValues = do
     s <- get
     let cards' = s^.cardInfo.tableCards
 
@@ -52,7 +53,7 @@ getHandValue = do
 getWinners :: [Player] -> [Player]
 getWinners p = filter equalToWinner sorted
     where sorted = sortBy (flip sortHandValue) p
-          winnerHand = fromJust $ head sorted^.handInfo
+          winnerHand = fromJust $ headNote "in getWinners!" sorted^.handInfo
           equalToWinner x = ordHand winnerHand (fromJust (x^.handInfo)) == EQ
 
 sortHandValue :: Player -> Player -> Ordering
@@ -66,7 +67,7 @@ distributePot sidePot = do
 
     let inPot = filter (\p -> p^.num `elem` sidePot^.playerIDs) 
                        (s^.playerQueue.players)
-        winners = getWinners $ inPot
+        winners = getWinners inPot
         chipsPerPerson = sidePot^.pot `div` length winners
         spareChips = sidePot^.pot `rem` length winners
         allPlayers = playerQueue.players.traversed
@@ -74,7 +75,7 @@ distributePot sidePot = do
 
     spareID <- leftOfDealer winners
 
-    zoom (allPlayers.(filtered isWinner)) $ do
+    zoom (allPlayers.filtered isWinner) $ do
         p <- get
 
         chips += chipsPerPerson

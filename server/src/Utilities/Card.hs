@@ -19,6 +19,7 @@ import Control.Lens ((^.), (.=), (%=), (<~), ix)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (when, replicateM_, replicateM)
+import Safe (at)
 
 import Types (Card(..), Value, Suit(..), Stage(..), GameStateT)
 import Utilities.Player (numPlayersT)
@@ -57,7 +58,7 @@ getRandomCard = do
     cardNum <- lift . getStdRandom $ randomR (0, length deck' - 1)
     deleteNth cardNum
 
-    return $ deck' !! cardNum
+    return $ deck' `at` cardNum
 
 drawCard :: GameStateT ()
 drawCard = do

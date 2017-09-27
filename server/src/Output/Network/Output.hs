@@ -17,46 +17,46 @@ module Output.Network.Output
 )
 where
 
-import Types (Game, Action, Player, Pot)
+import Types (GameStateT, PlayerID, Action, Player, Pot)
 
-outputAction :: Game -> Action Int -> IO ()
+outputAction :: Action Int -> GameStateT ()
 outputAction = undefined
 
-outputPlayerTurn :: Game -> IO ()
+outputPlayerTurn :: GameStateT ()
 outputPlayerTurn = undefined
 
-outputFlop :: Game -> IO ()
+outputFlop :: GameStateT ()
 outputFlop = undefined
 
-outputTurn :: Game -> IO ()
+outputTurn :: GameStateT ()
 outputTurn = undefined
 
-outputRiver :: Game -> IO ()
+outputRiver :: GameStateT ()
 outputRiver = undefined
 
-outputPlayerCards :: Game -> IO ()
+outputPlayerCards :: GameStateT ()
 outputPlayerCards = undefined
 
-outputWinner :: Game -> Player -> IO ()
+outputWinner :: PlayerID -> GameStateT ()
 outputWinner = undefined
 
-outputWinners :: Game -> [(Pot, [Player])] -> IO ()
+outputWinners :: [(Pot, [Player])] -> GameStateT ()
 outputWinners = undefined
 
-outputGameOver :: Game -> IO ()
+outputGameOver :: GameStateT ()
 outputGameOver = undefined
 
-outputPlayersRemoved :: Game -> Maybe [Player] -> IO ()
+outputPlayersRemoved :: Maybe [Player] -> GameStateT ()
 outputPlayersRemoved = undefined
 
-outputHandValues :: Game -> IO ()
+outputHandValues :: GameStateT ()
 outputHandValues = undefined
 
-outputRoundNumber :: Game -> IO ()
+outputRoundNumber :: GameStateT ()
 outputRoundNumber = undefined
 
-outputSmallBlindMade :: Game -> IO ()
+outputSmallBlindMade :: GameStateT ()
 outputSmallBlindMade = undefined
 
-outputBigBlindMade :: Game -> IO ()
+outputBigBlindMade :: GameStateT ()
 outputBigBlindMade = undefined

@@ -4,18 +4,16 @@ module RunLocal
 )
 where
 
-import Control.Monad.Trans.State (StateT, evalStateT)
+import Control.Monad.Trans.State (evalStateT)
 
-import Types (Game)
+import Types (GameStateT)
 import Game (gameLoop)
-
 import TestStates (testGame)
-
 import Output.Terminal.Output (outputRoundNumber, outputGameOver)
-import CardUtilities (dealCards)
+import Utilities.Card (dealCards)
 
 run :: IO ()
-run = evalStateT play initialGame
+run = evalStateT play testGame
 
 play :: GameStateT ()
 play = do

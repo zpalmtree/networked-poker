@@ -69,7 +69,7 @@ data Stage = PreFlop
            | Turn 
            | River 
            | Showdown 
-           deriving (Show)
+           deriving (Show, Eq)
 
 data Suit = Heart 
           | Spade 
@@ -121,23 +121,46 @@ type PlayerID = Int
 -- INSTANCES
 
 instance (PrintfArg a, PrintfArg b) => Show (Hand a b) where
-    show (HighCard a) = printf "high card %V" a
-    show (Pair a) = printf "pair of %Vs" a
-    show (TwoPair a b) = printf "two pair, %Vs and %Vs" a b
-    show (ThreeOfAKind a) = printf "three of a kind, %Vs" a
-    show (Straight a b) = printf "straight, %V to %V" a b
-    show (Flush a) = printf "flush, %V high" a
-    -- a's over b's == 3 a's, 2 b's
-    show (FullHouse a b) = printf "full house, %Vs over %Vs" a b
-    show (FourOfAKind a) = printf "four of a kind, %Vs" a
-    show (StraightFlush a b) = printf "straight flush, %V to %V" a b
+    show (HighCard a)
+        = printf "high card %V" a
+
+    show (Pair a)
+        = printf "pair of %Us" a
+
+    show (TwoPair a b)
+        = printf "two pair, %Us and %Us" a b
+
+    show (ThreeOfAKind a)
+        = printf "three of a kind, %Us" a
+
+    show (Straight a b)
+        = printf "straight, %V to %V" a b
+
+    show (Flush a)
+        = printf "flush, %V high" a
+
+    show (FullHouse a b)
+        = printf "full house, %Us over %Us" a b
+
+    show (FourOfAKind a)
+        = printf "four of a kind, %Us" a
+
+    show (StraightFlush a b)
+        = printf "straight flush, %V to %V" a b
 
 instance PrintfArg Value where
     formatArg x fmt
         | fmtChar (vFmt 'V' fmt) == 'V' 
             = formatString (map toLower $ show x) 
               (fmt { fmtChar = 's', fmtPrecision = Nothing })
+
+        | fmtChar (vFmt 'U' fmt) == 'U'
+            = formatString (plural . map toLower $ show x)
+              (fmt { fmtChar = 's', fmtPrecision = Nothing})
+
         | otherwise = errorBadFormat $ fmtChar fmt
+        where plural "six" = "sixe"
+              plural s = s
 
 instance Show Card where
     show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"

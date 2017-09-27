@@ -1,15 +1,21 @@
 module Utilities.Player
 (
     numInPlay,
+    numInPlayPure,
     numAllIn,
+    numAllInPure,
     numPlayers,
     numPlayersT,
+    getPlayerN,
+    getPlayerNT,
     getCurrentPlayerPure,
     getCurrentPlayer,
     getCurrentPlayerT,
     victorID,
     nextPlayer,
+    nextPlayerT,
     nextDealer,
+    nextDealerT,
     removeOutPlayers,
     leftOfDealer
 )
@@ -20,12 +26,32 @@ import Control.Monad.Trans.State (get)
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
 import Control.Monad (when)
+import Safe (at, headNote, tailNote)
 
 import Utilities.Types (fromPure)
 import Types (Player, GameState, GameStateT, PlayerID, Game)
 
 import Lenses (inPlay, allIn, gameFinished, dealer, num, chips, players,
                playerQueue)
+
+getPlayerNT :: PlayerID -> GameStateT Player
+getPlayerNT = fromPure . getPlayerN
+
+getPlayerN :: PlayerID -> GameState Player
+getPlayerN n = do
+    s <- get
+    num' <- numPlayers
+    when (n > num') $ error "Invalid index in getPlayerN"
+    return $ (s^.playerQueue.players) `at` n
+
+numInPlayPure :: Game -> Int
+numInPlayPure = numXPure inPlay
+
+numAllInPure :: Game -> Int
+numAllInPure = numXPure allIn
+
+numXPure :: Getting Bool Player Bool -> Game -> Int
+numXPure lens s = length $ filter (^.lens) (s^.playerQueue.players)
 
 numInPlay :: GameState Int
 numInPlay = numX inPlay
@@ -64,7 +90,11 @@ victorID :: GameState PlayerID
 victorID = do
     s <- get
 
-    return $ head (filter (^.inPlay) (s^.playerQueue.players))^.num
+    return $ headNote "in victorID!" 
+                      (filter (^.inPlay) (s^.playerQueue.players))^.num
+
+nextDealerT :: GameStateT ()
+nextDealerT = fromPure nextDealer
 
 nextDealer :: GameState ()
 nextDealer = do
@@ -75,7 +105,10 @@ nextDealer = do
 
 nextPlayer :: GameState ()
 nextPlayer = playerQueue.players %= shift
-    where shift x = last x : init x
+    where shift x = tailNote "in nextPlayer!" x ++ [headNote "in nextPlayer!" x]
+
+nextPlayerT :: GameStateT ()
+nextPlayerT = fromPure nextPlayer
 
 removeOutPlayers :: GameState (Maybe [Player])
 removeOutPlayers = do
@@ -115,19 +148,14 @@ flatten' :: Monad m => Int -> [a] -> m [a]
 flatten' offset p = let (end, beginning) = splitAt offset p
                     in  return $ beginning ++ end
 
-flattenWithOffset :: Int -> GameState [Player]
-flattenWithOffset n = do
-    s <- get
-
-    let pos = s^.playerQueue.dealer + n
-
-    numPlayers' <- numPlayers
-    flatten' (pos `rem` numPlayers') (s^.playerQueue.players)
-
 leftOfDealer :: [Player] -> GameState PlayerID
 leftOfDealer subset = do
     s <- get
 
-    flat <- flattenWithOffset 1
+    return $ findNearestToDealer subset (s^.playerQueue.players)
 
-    return $ (subset !! find flat (s^.playerQueue.players))^.num
+findNearestToDealer :: [Player] -> [Player] -> Int
+findNearestToDealer _ [] = error "No players in p:ps exist in subset!"
+findNearestToDealer subset (p:ps)
+    | p `elem` subset = p^.num
+    | otherwise = find subset ps

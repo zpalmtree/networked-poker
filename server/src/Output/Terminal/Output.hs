@@ -23,9 +23,10 @@ import Data.List (maximumBy)
 import Control.Lens ((^.), (^..), traversed)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
+import Safe (at)
 
-import Types (GameStateT, Action(..), Player, Pot)
-import Utilities.Player (getCurrentPlayerT)
+import Types (GameStateT, Action(..), Player, Pot, PlayerID)
+import Utilities.Player (getCurrentPlayerT, getPlayerNT)
 
 import Output.Terminal.OutputMessages
     (actionFold, actionCheck, actionCall, actionRaise, actionAllIn,
@@ -67,15 +68,14 @@ outputPlayerTurn = do
 
     lift . putStrLn $ printf playersTurn num playerName
 
-{-# ANN outputFlop "HLint: ignore Use head" #-}
 outputFlop :: GameStateT ()
 outputFlop = do
     s <- get
 
     let cards = s^.cardInfo.tableCards
-        card1 = show $ cards !! 0
-        card2 = show $ cards !! 1
-        card3 = show $ cards !! 2
+        card1 = show $ cards `at` 0
+        card2 = show $ cards `at` 1
+        card3 = show $ cards `at` 2
 
     lift . putStrLn $ printf flopCards card1 card2 card3
 
@@ -97,9 +97,11 @@ outputPlayerCards = do
 
     lift . putStrLn $ playerCards (s^.playerQueue.players)
 
-outputWinner :: Player -> GameStateT ()
-outputWinner p = do
+outputWinner :: PlayerID -> GameStateT ()
+outputWinner i = do
     s <- get
+
+    p <- getPlayerNT i
     
     let chips' = sum (s^..bets.pots.traversed.pot)
                + sum (s^..playerQueue.players.traversed.bet)
