@@ -9,9 +9,10 @@ module Showdown.Ord
 where
 
 import Data.List (sort, group, sortBy)
+import Safe (tailNote, lastNote)
 
 import Types (Card, HandInfo(..), Hand(..))
-import Showdown.Utilities (getValue, cardValue, cardValueAceLow)
+import Utilities.Showdown (getValue, cardValue, cardValueAceLow)
 
 ordOnValue :: [Card] -> [Card] -> Ordering
 ordOnValue c1 c2 = compare (values c1) (values c2)
@@ -99,12 +100,14 @@ compareKickers (HandInfo value1 hand1) (HandInfo value2 hand2)
     | isTwoPair value1 value2 = compare (twoPairFix hand1) (twoPairFix hand2)
 
     | otherwise = error "Unexpected cards in compareKickers"
-    where multiSameCardFix xs = tail . group . sort $ map getValue xs
+    where multiSameCardFix xs = tailNote "in compareKickers!" . group . sort 
+                              $ map getValue xs
           -- pair fix removes the first group of same cards, i.e. the first
           -- pair, three of a kind, four of a kind, whatever
           -- it's still nested in a list, but whatever, compare works fine
 
-          twoPairFix xs = last . group . sort $ map getValue xs
+          twoPairFix xs = lastNote "in compareKickers!" . group . 
+                          sort $ map getValue xs
           -- two pair fix just takes the last item, cause 5 cards minus two
           -- pairs just leaves one card, wrapped in a list
 

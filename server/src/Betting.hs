@@ -11,184 +11,257 @@ module Betting
 )
 where
 
-import Control.Lens hiding (Fold)
-import Data.List (partition, sortBy)
-import Data.Function (on)
+import Data.Monoid (Sum(..), getSum)
 
-import Types (Game, Action(..), Player, Pot(..))
-import PlayerUtilities (getCurrentPlayer, setCurrentPlayer)
-import Lenses (bets, currentBet, chips, bet, smallBlindSize, bigBlindSize,
-               pots, pot, playerInfo, depreciatedPlayers, inPlay, num, allIn, minimumRaise,
-               canReRaise, madeInitialBet)
+import Types (Game, Action(..), Pot(..), Player, GameState, GameStateT)
+import Utilities.Types (fromPure)
+import Control.Monad.Trans.State (get)
+import Control.Monad (when)
+import Safe (headNote)
+
+import Utilities.Player
+    (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayerT)
+
+import Control.Lens 
+    (traversed, zoom, ix, filtered, (-=), (+=), (.=), (^.), (^..), (%=))
+
+import Lenses 
+    (bets, currentBet, chips, bet, smallBlindSize, bigBlindSize, pots, pot, 
+     inPlay, num, allIn, minimumRaise, canReRaise, madeInitialBet, playerQueue, 
+     players)
+
 #ifdef DEBUG
 import Input.Terminal.Input (foldAllIn, checkAllIn, checkRaiseAllIn,
                              foldCallAllIn, foldCallRaiseAllIn)
+
 import Output.Terminal.Output (outputSmallBlindMade, outputBigBlindMade,
                                outputPlayerTurn, outputAction)
 #else
 import Input.Network.Input (foldAllIn, checkAllIn, checkRaiseAllIn,
                             foldCallAllIn, foldCallRaiseAllIn)
+
 import Output.Network.Output (outputSmallBlindMade, outputBigBlindMade,
                               outputPlayerTurn, outputAction)
 #endif
-makeBet :: Int -> Game -> Game
-makeBet amount game
-    | newBet > newGame^.bets.currentBet = newGame & bets.currentBet .~ newBet
-    | otherwise = newGame
-    where newGame = game & setCurrentPlayer game . chips -~ amount
-                          & setCurrentPlayer game . bet +~ amount
 
-          newBet = getCurrentPlayer newGame^.bet
+makeBet :: Int -> GameState ()
+makeBet amount = do
+    zoom (playerQueue.players.ix 0) $ do
+        chips -= amount
+        bet += amount
 
-smallBlind :: Game -> IO Game
-smallBlind game = do
-    outputSmallBlindMade game
-    return $ smallBlind' game
+    s <- get
+    player <- getCurrentPlayer
 
-bigBlind :: Game -> IO Game
-bigBlind game = do
-    outputBigBlindMade game
-    return $ bigBlind' game
+    bets.currentBet .= max (s^.bets.currentBet) (player^.bet)
 
-smallBlind' :: Game -> Game
-smallBlind' game = makeBet (game^.bets.smallBlindSize) game
+smallBlind :: GameStateT ()
+smallBlind = do
+    outputSmallBlindMade
+    s <- get
+    fromPure $ makeBet (s^.bets.smallBlindSize)
 
-bigBlind' :: Game -> Game
-bigBlind' game = makeBet (game^.bets.bigBlindSize) game
+bigBlind :: GameStateT ()
+bigBlind = do
+    outputBigBlindMade
+    s <- get
+    fromPure $ makeBet (s^.bets.bigBlindSize)
 
-gatherChips :: Game -> Int
-gatherChips game = sum (game^..bets.pots.traversed.pot)
-                 + sum (game^..playerInfo.depreciatedPlayers.traversed.bet)
+gatherChips :: GameState Int
+gatherChips = do
+    s <- get
+    return $ sum (s^..bets.pots.traversed.pot)
+           + sum (s^..playerQueue.players.traversed.bet)
 
-updatePotSimple :: Game -> Game
-updatePotSimple game = game & playerInfo.depreciatedPlayers.traversed.bet .~ 0
-                            & bets.pots .~ fixedPot
-    where potSize = sum $ game^..playerInfo.depreciatedPlayers.traversed.bet
-          inPlayers = filter (^.inPlay) (game^.playerInfo.depreciatedPlayers)
-          ids = inPlayers^..traversed.num
-          newPot = [Pot potSize ids]
-          updatedPot = [Pot (oldPot^.pot + potSize) ids]
-          oldPot = head $ game^.bets.pots
-          fixedPot = if null (game^.bets.pots) then newPot else updatedPot
+updatePotSimple :: GameState ()
+updatePotSimple = do
+    s <- get
 
-updatePot :: Game -> Game
-updatePot game
-    | sum (game^..playerInfo.depreciatedPlayers.traversed.bet) < 0 = error "Negative bets!"
-    | sum (game^..playerInfo.depreciatedPlayers.traversed.bet) == 0 = game
-    | length potEligible == 1 = refund game refundPlayer
-    | not $ any (^.allIn) (game^.playerInfo.depreciatedPlayers) = updatePotSimple game
-    | otherwise = updatePot $ addPot game sidePotSize
-    where potEligible = filter (\p -> p^.bet > 0 && p^.inPlay)
-                               (game^.playerInfo.depreciatedPlayers)
-          sidePotSize = minimum $ potEligible^..traversed.bet
-          refundPlayer = head potEligible^.num
+    let potSize = sum $ s^..playerQueue.players.traversed.bet
+        inPlayers = filter (^.inPlay) (s^.playerQueue.players)
+        ids = inPlayers^..traversed.num
+        newPot = [Pot potSize ids]
+        oldPot = headNote "in updatePotSimple!" (s^.bets.pots)
+        updatedPot = [Pot (oldPot^.pot + potSize) ids]
+        fixedPot
+            | null (s^.bets.pots) = newPot
+            | otherwise = updatedPot
 
-refund :: Game -> Int -> Game
-refund game n = game & p.chips +~ game^.playerInfo.depreciatedPlayers ^?! ix n.bet
-                     & p.bet .~ 0
-    where p = playerInfo.depreciatedPlayers.ix n
+    playerQueue.players.traversed.bet .= 0
+    bets.pots .= fixedPot
 
-addPot :: Game -> Int -> Game
-addPot game betSize = game & bets.pots %~ (newPot :)
-                           & playerInfo.depreciatedPlayers .~ newPlayers
+updatePot :: GameState ()
+updatePot = do
+    s <- get
 
-    where (potEligible, rest) = partition (\p -> p^.inPlay && p^.bet > 0) 
-                                          (game^.playerInfo.depreciatedPlayers)
+    -- want to use nice guard notation instead of tons of nested ifs
+    updatePot' s
 
-          potSize = spareChips + length potEligible * betSize
-          newBetters = potEligible & traversed.bet -~ betSize
-          newPot = Pot potSize (potEligible^..traversed.num)
-          newPlayers = sortBy (compare `on` (^.num)) (newBetters ++ newRest)
-          (newRest, spareChips) = takeOutPlayersPot rest betSize [] 0
+updatePot' :: Game -> GameState ()
+updatePot' s
+    | sum (s^..playerQueue.players.traversed.bet) < 0 = error "Negative bets!"
+    | sum (s^..playerQueue.players.traversed.bet) == 0 = return ()
+    | length eligible == 1 = refund refundPlayer
+    | not $ any (^.allIn) (s^.playerQueue.players) = updatePotSimple
+    | otherwise = do
+        addPot sidePotSize
+        updatePot
 
-takeOutPlayersPot :: [Player] -> Int -> [Player] -> Int -> ([Player], Int)
-takeOutPlayersPot [] _ players' n = (players', n)
-takeOutPlayersPot (p:ps) betSize acc n
-    | p^.bet >= betSize = takeOutPlayersPot ps betSize (newP : acc) 
-                                                       (n + betSize)
-    | otherwise = takeOutPlayersPot ps betSize (newP2 : acc) (n + p^.bet)
-    where newP = p & bet -~ betSize
-          newP2 = p & bet .~ 0
+    where eligible = filter potEligible (s^.playerQueue.players)
+          sidePotSize = minimum $ eligible^..traversed.bet
+          refundPlayer = headNote "in updatePot'!" eligible^.num
 
-updateMinimumRaise :: Game -> Int -> Game
-updateMinimumRaise game raise' = game & bets.minimumRaise .~ raise'
-                                      & allPlayers.canReRaise .~ True
-                                      & setRaiseMatched .~ False
-    where allPlayers = playerInfo.depreciatedPlayers.traversed
-          setRaiseMatched = setCurrentPlayer game.canReRaise
+refund :: Int -> GameState ()
+refund n = zoom (playerQueue.players.ix n) $ do
+    p <- get
+    chips += p^.bet
+    bet .= 0
 
-promptBet :: Game -> Bool -> IO Game
-promptBet game canCheck
+addPot :: Int -> GameState ()
+addPot betSize = do
+    s <- get
+
+    spareChips <- takeOutPlayersPot betSize
+
+    let eligible = filter potEligible (s^.playerQueue.players)
+        potSize = spareChips + length eligible * betSize
+        newPot = Pot potSize (eligible^..traversed.num)
+    
+    eligible'.bet -= betSize
+    bets.pots %= (newPot :)
+
+    where eligible' = playerQueue.players.traversed.filtered potEligible
+
+potEligible :: Player -> Bool
+potEligible p = p^.inPlay && p^.bet > 0
+        
+takeOutPlayersPot :: Int -> GameState Int
+takeOutPlayersPot betSize = do
+    result <- zoom nonEligible $ do
+        p <- get
+
+        let numChips = if p^.bet >= betSize
+                        then betSize
+                        else p^.bet
+
+        bet -= numChips
+
+        return (Sum numChips)
+
+    return $ getSum result -- what does this return??
+
+    where nonEligible = playerQueue.players.traversed.filtered 
+                        (not . potEligible)
+
+updateMinimumRaise :: Int -> GameState ()
+updateMinimumRaise raise' = do
+    bets.minimumRaise .= raise'
+    playerQueue.players.traversed.canReRaise .= True
+
+promptBet :: Bool -> GameStateT ()
+promptBet canCheck = do
+    s <- get
+
+    promptBet' s canCheck
+
+promptBet' :: Game -> Bool -> GameStateT ()
+promptBet' s canCheck
     -- doesn't have enough chips to match the current bet
     -- must fold or go all in
-    | game^.bets.currentBet >= totalChips = promptAndUpdate foldAllIn game
+    | s^.bets.currentBet >= totalChips = promptAndUpdate foldAllIn
 
     -- can check, but doesn't have enough chips to make a minimum raise, so
     -- must go all in if they want to raise
-    | canCheck && cantRaise = promptAndUpdate checkAllIn game
+    | canCheck && cantRaise = promptAndUpdate checkAllIn
 
     -- matches current bet, so can check or raise
-    | canCheck = promptAndUpdate checkRaiseAllIn game
+    | canCheck = promptAndUpdate checkRaiseAllIn
 
     -- raise hasn't been matched, so can only fold or call
     -- this is due to a player going all in with a raise lower than the minimum
     -- bet, so technically the raise hasn't been matched. Player can't re-raise
     -- in this case.
-    | not (getCurrentPlayer game^.canReRaise) = promptAndUpdate foldCallAllIn 
-                                                game
+    | not (player^.canReRaise) = promptAndUpdate foldCallAllIn 
 
     -- otherise it's a standard betting optino of fold/call/raise
-    | otherwise = promptAndUpdate foldCallRaiseAllIn game
+    | otherwise = promptAndUpdate foldCallRaiseAllIn
 
-    where totalChips = getCurrentPlayer game^.bet + getCurrentPlayer game^.chips
-          cantRaise = getCurrentPlayer game^.chips < game^.bets.minimumRaise
+    where player = getCurrentPlayerPure s
+          totalChips = player^.bet + player^.chips
+          cantRaise = player^.chips < s^.bets.minimumRaise
 
-promptAndUpdate :: (Game -> IO (Action Int)) -> Game -> IO Game
-promptAndUpdate f game = do
-    -- update players' GUI's on whose turn it is
-    outputPlayerTurn game
-    -- get the players actions
-    action <- f game
-    -- update the players' GUI's on what action they made
-    outputAction game action
-    let newGame = handleInput game action
-    return $ newGame & setCurrentPlayer newGame.madeInitialBet .~ True
+promptAndUpdate :: GameStateT (Action Int) -> GameStateT ()
+promptAndUpdate f = do
+    outputPlayerTurn
 
-handleInput :: Game -> Action Int -> Game
-handleInput game action = case action of
-    Fold -> fold game
-    Check -> game
-    Call -> call game
-    (Raise n) -> raise n game
-    AllIn -> goAllIn game
+    action <- convertMaxRaise =<< f
 
-fold :: Game -> Game
-fold game = game & setCurrentPlayer game . inPlay .~ False
+    outputAction action
 
-raise :: Int -> Game -> Game
-raise amount game
-    | raise' == getCurrentPlayer game^.chips = goAllIn game
-    | otherwise = updateMinimumRaise (makeBet bet' game) raise'
-    where raise' = amount - game^.bets.currentBet
-          bet' = amount - getCurrentPlayer game^.bet
+    fromPure $ handleInput action
 
-call :: Game -> Game
-call game = makeBet (game^.bets.currentBet - getCurrentPlayer game^.bet) game
+    playerQueue.players.ix 0.madeInitialBet .= True
+
+convertMaxRaise :: Action Int -> GameStateT (Action Int)
+convertMaxRaise a = do
+    p <- getCurrentPlayerT
+    case a of
+        Raise n -> if (n - p^.bet) == p^.chips
+                    then return AllIn
+                    else return a
+        _ -> return a
+
+handleInput :: Action Int -> GameState ()
+handleInput action = case action of
+    Fold -> fold
+    Check -> return ()
+    Call -> call
+    (Raise n) -> raise n
+    AllIn -> goAllIn
+
+fold :: GameState ()
+fold = playerQueue.players.ix 0.inPlay .= False
+
+raise :: Int -> GameState ()
+raise amount = do
+    s <- get
+
+    player <- getCurrentPlayer
+
+    let raise' = amount - s^.bets.currentBet
+        bet' = amount - player^.bet
+
+    if bet' == player^.chips 
+        then goAllIn
+        else do
+            makeBet bet'
+            updateMinimumRaise raise'
+
+call :: GameState ()
+call = do
+    s <- get
+    player <- getCurrentPlayer
+    makeBet (s^.bets.currentBet - player^.bet)
 
 -- if it's a raise and it's at least the minimum bet, then let any previous
 -- raisers re-raise, plus update minimum raise
-goAllIn :: Game -> Game
-goAllIn game
-    | bet' > game^.bets.currentBet && 
-      raise' >= game^.bets.minimumRaise
-      = updateMinimumRaise newGame raise'
-    | otherwise = newGame
-    where newGame = makeBet raise' game
-                  & setCurrentPlayer game . allIn .~ True
-          bet' = (getCurrentPlayer game^.chips) + (getCurrentPlayer game^.bet)
-          raise' = getCurrentPlayer game^.chips
+goAllIn :: GameState ()
+goAllIn = do
+    s <- get
 
-giveWinnings :: (Player, [Player]) -> Game -> Game
-giveWinnings (winner, losers) game = game & playerInfo.depreciatedPlayers .~ newPlayers
-    where newPlayer = winner & chips +~ gatherChips game
-          newPlayers = sortBy (compare `on` (^.num)) $ newPlayer : losers
+    player <- getCurrentPlayer
+
+    let bet' = player^.chips + player^.bet
+        raise' = player^.chips
+
+    makeBet raise'
+    playerQueue.players.ix 0.allIn .= True
+
+    when (bet' > s^.bets.currentBet && raise' >= s^.bets.minimumRaise) $
+        updateMinimumRaise raise'
+
+giveWinnings :: Int -> GameState ()
+giveWinnings winnerID = do
+    winnings <- gatherChips
+    playerQueue.players.traversed.filtered isWinner.chips += winnings
+    where isWinner p = p^.num == winnerID

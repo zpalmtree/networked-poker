@@ -20,16 +20,17 @@ executable server
   hs-source-dirs:      src
   default-language:    Haskell2010
   default-extensions: CPP
-  build-depends: base >= 4.9 && <4.10, lens, random
-  other-modules: Betting, CardUtilities, PlayerUtilities, TestStates, Types,
-                 Showdown, Showdown.Utilities, Showdown.Ord, Showdown.Value, 
-                 Showdown.Best, Game, Lenses, Queue
+  build-depends: base >= 4.9 && <4.10, lens, random, transformers, safe
+
+  other-modules: Betting, Utilities.Card, Utilities.Player, Utilities.Showdown,
+                 Utilities.Types, TestStates, Types, Showdown, Showdown.Ord, 
+                 Showdown.Value, Showdown.Best, Game, Lenses
 
   if !flag(debug)
     build-depends: network, bytestring, aeson
     other-modules: Input.Network.Input, Output.Network.Output, RunNetwork,
                    Output.Terminal.Output, Output.Terminal.OutputMessages,
-                   Output.Terminal.OutputUtilities
+                   Utilities.Terminal.Output
                    --need to include these three output modules otherwise stack
                    --complains, can't figure out why...
 
@@ -38,4 +39,4 @@ executable server
     other-modules: Input.Terminal.Input,
                    Output.Terminal.InputMessages,
                    Output.Terminal.Output, Output.Terminal.OutputMessages,
-                   Output.Terminal.OutputUtilities, RunLocal
+                   Utilities.Terminal.Output, RunLocal

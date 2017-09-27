@@ -1,4 +1,4 @@
-module Showdown.Utilities
+module Utilities.Showdown
 (
     handSubsets,
     cardValue,
@@ -16,9 +16,10 @@ where
 
 import Data.List (sort, sortBy, group)
 import Data.Function (on)
+import Safe (at, headNote)
 
 import Types (Card(..), Value(..), Hand)
-import CardUtilities (hearts, clubs, diamonds, spades)
+import Utilities.Card (hearts, clubs, diamonds, spades)
 
 cardValues :: [Card] -> Bool -> [Int]
 cardValues c aceHigh
@@ -64,7 +65,7 @@ cardValueAceLow c = 1 + cardValueAceLow (pred c)
 -- For the 7 cards on the table, get all unique 5 card hands. There will be 21.
 -- Taken from http://rosettacode.org/wiki/Combinations#Haskell
 handSubsets :: [Card] -> [[Card]]
-handSubsets xs = combsBySize xs !! sizeOfHand
+handSubsets xs = combsBySize xs `at` sizeOfHand
     where combsBySize = foldr f ([[]] : repeat [])
           f x next = zipWith (++) (map (map (x:)) ([]:next)) next
 
@@ -73,7 +74,7 @@ sizeOfHand = 5
 
 consecutive :: (Eq a, Num a) => [a] -> Bool
 consecutive [] = True
-consecutive xs = consecutive' xs (head xs)
+consecutive xs = consecutive' xs (headNote "in consecutive!" xs)
 
 consecutive' :: (Num t, Eq t) => [t] -> t -> Bool
 consecutive' [] _ = True

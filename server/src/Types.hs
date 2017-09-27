@@ -1,7 +1,6 @@
-{-# LANGUAGE DeriveFunctor #-}
-
 module Types where
 
+import Control.Monad.Trans.State (StateT(..), State)
 import Data.Char (toLower)
 import Text.Printf (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt, 
                     formatString, errorBadFormat)
@@ -10,8 +9,7 @@ import Text.Printf (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt,
 
 data Game = Game {
     _playerQueue :: PlayerQueue,
-    _playerInfo :: Players,
-    _state :: State,
+    _stage :: Stage,
     _cardInfo :: Cards,
     _roundDone :: Bool,
     _bets :: Bets,
@@ -32,13 +30,6 @@ data Player = Player {
     _handInfo :: Maybe HandInfo,
     _canReRaise :: Bool
 } deriving (Eq, Show)
-
-data Players = Players {
-    _depreciatedNumPlayers :: Int,
-    _depreciatedPlayers :: [Player],
-    _depreciatedDealer :: Int,
-    _depreciatedPlayerTurn :: Int
-} deriving (Show)
 
 data Cards = Cards {
     _tableCards :: [Card],
@@ -68,17 +59,17 @@ data Pot = Pot {
     _playerIDs :: [Int]
 } deriving (Show)
 
-data Queue = Queue {
+data PlayerQueue = PlayerQueue {
     _players :: [Player],
     _dealer :: Int
 } deriving (Show)
 
-data State = PreFlop 
+data Stage = PreFlop 
            | Flop 
            | Turn 
            | River 
            | Showdown 
-           deriving (Show)
+           deriving (Show, Eq)
 
 data Suit = Heart 
           | Spade 
@@ -119,36 +110,57 @@ data Hand a b = HighCard a
               | StraightFlush a b
               deriving (Eq, Ord)
 
--- NEWTYPES
-
-newtype PQ a = PQ {
-    getQueue :: a
-} deriving (Show, Eq, Functor)
-
 -- TYPES
 
-type PlayerQueue = PQ Queue
+type GameStateT a = StateT Game IO a
+
+type GameState a = State Game a
+
+type PlayerID = Int
 
 -- INSTANCES
 
 instance (PrintfArg a, PrintfArg b) => Show (Hand a b) where
-    show (HighCard a) = printf "high card %V" a
-    show (Pair a) = printf "pair of %Vs" a
-    show (TwoPair a b) = printf "two pair, %Vs and %Vs" a b
-    show (ThreeOfAKind a) = printf "three of a kind, %Vs" a
-    show (Straight a b) = printf "straight, %V to %V" a b
-    show (Flush a) = printf "flush, %V high" a
-    -- a's over b's == 3 a's, 2 b's
-    show (FullHouse a b) = printf "full house, %Vs over %Vs" a b
-    show (FourOfAKind a) = printf "four of a kind, %Vs" a
-    show (StraightFlush a b) = printf "straight flush, %V to %V" a b
+    show (HighCard a)
+        = printf "high card %V" a
+
+    show (Pair a)
+        = printf "pair of %Us" a
+
+    show (TwoPair a b)
+        = printf "two pair, %Us and %Us" a b
+
+    show (ThreeOfAKind a)
+        = printf "three of a kind, %Us" a
+
+    show (Straight a b)
+        = printf "straight, %V to %V" a b
+
+    show (Flush a)
+        = printf "flush, %V high" a
+
+    show (FullHouse a b)
+        = printf "full house, %Us over %Us" a b
+
+    show (FourOfAKind a)
+        = printf "four of a kind, %Us" a
+
+    show (StraightFlush a b)
+        = printf "straight flush, %V to %V" a b
 
 instance PrintfArg Value where
     formatArg x fmt
         | fmtChar (vFmt 'V' fmt) == 'V' 
             = formatString (map toLower $ show x) 
               (fmt { fmtChar = 's', fmtPrecision = Nothing })
+
+        | fmtChar (vFmt 'U' fmt) == 'U'
+            = formatString (plural . map toLower $ show x)
+              (fmt { fmtChar = 's', fmtPrecision = Nothing})
+
         | otherwise = errorBadFormat $ fmtChar fmt
+        where plural "six" = "sixe"
+              plural s = s
 
 instance Show Card where
     show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"

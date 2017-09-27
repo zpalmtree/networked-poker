@@ -10,95 +10,137 @@ where
 
 import Text.Printf (printf)
 import Data.Char (toLower)
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Maybe (listToMaybe)
 import System.IO (hFlush, stdout)
-import Control.Lens hiding (Fold)
+import Control.Lens ((^.))
+import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
 
-import Types (Game, Action(..))
+import Types (Game, Action(..), GameState, GameStateT)
 import Output.Terminal.InputMessages
-import PlayerUtilities (getCurrentPlayer)
+import Utilities.Types (fromPure)
 import Lenses (bets, currentBet, num, name, bet, chips, minimumRaise)
 
-checkRaiseAllIn :: Game -> IO (Action Int)
-checkRaiseAllIn game = getAction actionMapping inputCheckRaiseAllIn
-                                 badCheckRaiseAllInInput game
-    where actionMapping = [("check",    return Check),
-                           ("all in",   return AllIn),
-                           ("raise",    getRaiseAmount game)]
+import Utilities.Player 
+    (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayerT)
 
-foldCallRaiseAllIn :: Game -> IO (Action Int)
-foldCallRaiseAllIn game = getAction actionMapping msg
-                                    badFoldCallRaiseAllInInput game
-    where actionMapping = [("fold",     return Fold),
-                           ("call",     return Call),
-                           ("all in",   return AllIn),
-                           ("raise",    getRaiseAmount game)]
-          msg = inputFoldCallRaiseAllIn (game^.bets.currentBet)
+--prelude pls go
+foldMap' :: (String, GameStateT (Action a))
+foldMap' = ("fold", return Fold)
 
-foldAllIn :: Game -> IO (Action Int)
-foldAllIn = getAction actionMapping inputFoldAllIn badFoldAllInInput
-    where actionMapping = [("fold",     return Fold),
-                           ("all in",   return AllIn)]
+checkMap :: (String, GameStateT (Action a))
+checkMap = ("check", return Check)
 
-foldCallAllIn :: Game -> IO (Action Int)
-foldCallAllIn game = getAction actionMapping msg badFoldCallAllInInput game
-    where actionMapping = [("fold",     return Fold),
-                           ("call",     return Call),
-                           ("all in",   return AllIn)]
-          msg = inputFoldCallAllIn (game^.bets.currentBet)
+callMap :: (String, GameStateT (Action a))
+callMap = ("call", return Call)
 
-checkAllIn :: Game -> IO (Action Int)
-checkAllIn = getAction actionMapping inputCheckAllIn badCheckAllInInput
-    where actionMapping = [("check",    return Check),
-                           ("all in",   return AllIn)]
+allInMap :: (String, GameStateT (Action a))
+allInMap = ("all in", return AllIn)
 
-getAction :: [(String, IO (Action Int))] -> String -> String -> Game 
-                                         -> IO (Action Int)
-getAction actionMapping inputMsg badInputMsg game = do
-    printf inputMsg (player^.num+1) (player^.name) (player^.bet) (player^.chips)
-    hFlush stdout
-    input <- map toLower <$> getLine
-    fromMaybe badInput (lookup input actionMapping)
-    where badInput = do
-            putStrLn badInputMsg
-            getAction actionMapping inputMsg badInputMsg game
-          player = getCurrentPlayer game
+raiseMap :: (String, GameStateT (Action Int))
+raiseMap = ("raise", getRaiseAmount)
+
+checkRaiseAllIn :: GameStateT (Action Int)
+checkRaiseAllIn = getAction aMap inputCheckRaiseAllIn badCheckRaiseAllInInput
+    where aMap = [checkMap, allInMap, raiseMap]
+
+foldCallRaiseAllIn :: GameStateT (Action Int)
+foldCallRaiseAllIn = do
+    s <- get
+    
+    let msg = inputFoldCallRaiseAllIn (s^.bets.currentBet)
+    
+    getAction aMap msg badFoldCallRaiseAllInInput
+    where aMap = [foldMap', callMap, allInMap, raiseMap]
+
+foldAllIn :: GameStateT (Action Int)
+foldAllIn = getAction aMap inputFoldAllIn badFoldAllInInput
+    where aMap = [foldMap', allInMap]
+
+foldCallAllIn :: GameStateT (Action Int)
+foldCallAllIn = do
+    s <- get
+    let msg = inputFoldCallAllIn (s^.bets.currentBet)
+    
+    getAction aMap msg badFoldCallAllInInput
+
+    where aMap = [foldMap', callMap, allInMap]
+
+checkAllIn :: GameStateT (Action Int)
+checkAllIn = getAction aMap inputCheckAllIn badCheckAllInInput
+    where aMap = [checkMap, allInMap]
+
+getAndHandleInput :: String -> (String -> a) -> (a -> GameStateT b) -> 
+                     GameStateT b
+getAndHandleInput inputMsg transformF caseFunc = do
+    player <- getCurrentPlayerT
+
+    input <- lift $ do
+        printf inputMsg (player^.num+1) (player^.name) (player^.bet)
+                        (player^.chips)
+
+        hFlush stdout
+        transformF <$> getLine
+
+    caseFunc input
+
+{-# ANN getAction "HLint: ignore Use fromMaybe" #-}
+getAction :: [(String, GameStateT a)] -> String -> String -> GameStateT a
+getAction actionMap inputMsg badInputMsg = 
+    getAndHandleInput inputMsg (map toLower) caseFunc
+
+    where caseFunc x = case lookup x actionMap of
+                        Nothing -> do
+                            lift $ putStrLn badInputMsg
+                            getAction actionMap inputMsg badInputMsg
+                        Just action -> action
 
 -- Note: raise amount is new bet value, not current bet + raise.
 -- So, "I want to raise to 500" means if the current bet is 100, the new bet
 -- will be 500, not 600.
-getRaiseAmount :: Game -> IO (Action Int)
-getRaiseAmount game = do
-    printf inputRaise (player^.num+1) (player^.name) (player^.bet) 
-                      (player^.chips)
-    hFlush stdout
-    input <- maybeRead <$> getLine
-    case input of
-        Nothing -> putStrLn raiseNotInteger >> getRaiseAmount game
-        Just raise -> handleRaise raise game
-    where maybeRead = fmap fst . listToMaybe . reads
-          player = getCurrentPlayer game
+getRaiseAmount :: GameStateT (Action Int)
+getRaiseAmount = getAndHandleInput inputRaise maybeRead caseFunc
+    where caseFunc x = case x of
+                        Nothing -> do
+                            lift $ putStrLn raiseNotInteger
+                            getRaiseAmount
+                        Just raise -> handleRaise raise
 
-handleRaise :: Int -> Game -> IO (Action Int)
-handleRaise raise game
-    | raise < minRaiseAbsolute = putStrLn (lessThanMinimumRaise' game) >> def
-    | chips' + bet' < raise = putStrLn (notEnoughChips' game) >> def
+          maybeRead = fmap fst . listToMaybe . reads
+
+handleRaise :: Int -> GameStateT (Action Int)
+handleRaise raise = do
+    s <- get
+
+    handleRaise' s raise
+
+handleRaise' :: Game -> Int -> GameStateT (Action Int)
+handleRaise' s raise
+    | raise < minRaiseAbsolute = def lessThanMinimumRaise'
+    | chips' + bet' < raise = def notEnoughChips'
     | otherwise = return $ Raise raise
-    where minRaise = game^.bets.minimumRaise
-          currentBet' = game^.bets.currentBet
-          chips' = getCurrentPlayer game^.chips
-          bet' = getCurrentPlayer game^.bet
+    where def msgF = do
+            msg <- fromPure msgF
+            lift $ putStrLn msg
+            getRaiseAmount
+
+          minRaise = s^.bets.minimumRaise
+          currentBet' = s^.bets.currentBet
+          chips' = getCurrentPlayerPure s^.chips
+          bet' = getCurrentPlayerPure s^.bet
           minRaiseAbsolute = currentBet' + minRaise
-          def = getRaiseAmount game
 
-lessThanMinimumRaise' :: Game -> String
-lessThanMinimumRaise' game = printf lessThanMinimumRaise minRaiseAbsolute
-    where minRaiseAbsolute = currentBet' + minRaise
-          currentBet' = game^.bets.currentBet
-          minRaise = game^.bets.minimumRaise
+lessThanMinimumRaise' :: GameState String
+lessThanMinimumRaise' = do
+    s <- get
 
-notEnoughChips' :: Game -> String
-notEnoughChips' game = printf notEnoughChips maxBet
-    where chips' = getCurrentPlayer game^.chips
-          bet' = getCurrentPlayer game^.bet
-          maxBet = chips' + bet'
+    let currentBet' = s^.bets.currentBet
+        minRaise = s^.bets.minimumRaise
+
+    return . printf lessThanMinimumRaise $ currentBet' + minRaise
+
+notEnoughChips' :: GameState String
+notEnoughChips' = do
+    player <- getCurrentPlayer
+
+    return . printf notEnoughChips $ player^.chips + player^.bet

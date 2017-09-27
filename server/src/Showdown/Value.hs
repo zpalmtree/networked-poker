@@ -14,11 +14,13 @@ module Showdown.Value
 where
 
 import Data.List (sortBy)
+import Safe (headNote)
 
 import Types (Card)
 
-import Showdown.Utilities (handSubsets, numOfEachValue, numOfSuit, sizeOfHand,
-                           sorted, consecutive, cardValues)
+import Utilities.Showdown 
+    (handSubsets, numOfEachValue, numOfSuit, sizeOfHand, sorted, consecutive, 
+     cardValues)
 
 isStraightFlush7Card :: [Card] -> Bool
 isStraightFlush7Card cards' = any isStraightFlush5Card $ handSubsets cards'
@@ -44,7 +46,7 @@ isPair = isXOfAKind 2
 -- longer than two then if the head is >= 3, it must be a full house
 isFullHouse :: [Card] -> Bool
 isFullHouse cards'
-    | length sorted' >= 2 = head sorted' >= 3
+    | length sorted' >= 2 = headNote "in isFullHouse!" sorted' >= 3
     | otherwise = False
     where pairOrAbove = filter (>=2) $ numOfEachValue cards'
           sorted' = sortBy (flip compare) pairOrAbove
