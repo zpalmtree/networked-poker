@@ -8,11 +8,11 @@ module Types
     HandInfo(..),
     Pot(..),
     PlayerQueue(..),
-    Stage,
-    Suit,
-    Value,
-    Action,
-    Hand,
+    Stage(..),
+    Suit(..),
+    Value(..),
+    Action(..),
+    Hand(..),
     GameStateT,
     GameState,
     PlayerID
@@ -246,28 +246,24 @@ instance Arbitrary Player where
                         madeInitialBet' hand' handInfo' canReRaise'
         where cardGen = replicateM 2 arbitrary
 
-arbitraryCardInfo :: PlayerQueue -> Stage -> Gen Cards
-arbitraryCardInfo pq s = case s of
-    PreFlop -> takeN 0
-    Flop -> takeN 3
-    Turn -> takeN 4
-    River -> takeN 5
-    Showdown -> takeN 5
+instance Arbitrary Card where
+    arbitrary = Card <$> arbitrary <*> arbitrary
 
-    where playerCards = concat $ pq^..players.traversed.cards
-          takeN n = do
-            (tableCards', deck') <- drawN n playerCards
-            return $ Cards tableCards' deck'
+instance Arbitrary Stage where
+    arbitrary = elements [PreFlop, Flop, Turn, River, Showdown]
 
-drawN :: (Foldable t) => Int -> t a -> Gen ([Card], [Card])
-drawN n playerCards
-    | n > (length fullDeck - length playerCards) = error "Can't draw that many cards!"
-    | otherwise = do
-        shuffled <- shuffle fullDeck  
-        return $ splitAt n shuffled
-    where fullDeck = [Card value suit | 
-                           value <- [minBound :: Value .. maxBound],
-                           suit <- [minBound :: Suit .. maxBound]]
+instance Arbitrary Suit where
+    arbitrary = elements [Heart, Spade, Club, Diamond]
+
+instance Arbitrary Value where
+    arbitrary = elements [Two, Three, Four, Five, Six, Seven, Eight, Nine,
+                          Ten, Jack, Queen, King, Ace]
+
+arbitraryPot :: [PlayerID] -> Gen Pot
+arbitraryPot ids = do
+    (NonNegative pot') <- arbitrary
+    actualIds' <- sublistOf ids
+    return $ Pot pot' actualIds'
 
 arbitraryBets :: [PlayerID] -> Gen Bets
 arbitraryBets ids = do
@@ -286,21 +282,26 @@ arbitraryBets ids = do
     return $ Bets pots' currentBet' smallBlindSize' bigBlindSize'
                     minimumRaise'
 
-instance Arbitrary Card where
-    arbitrary = Card <$> arbitrary <*> arbitrary
+drawN :: (Foldable t) => Int -> t a -> Gen ([Card], [Card])
+drawN n playerCards
+    | n > (length fullDeck - length playerCards)
+      = error "Can't draw that many cards!"
+    | otherwise = do
+        shuffled <- shuffle fullDeck  
+        return $ splitAt n shuffled
+    where fullDeck = [Card value suit | 
+                           value <- [minBound :: Value .. maxBound],
+                           suit <- [minBound :: Suit .. maxBound]]
 
-arbitraryPot :: [PlayerID] -> Gen Pot
-arbitraryPot ids = do
-    (NonNegative pot') <- arbitrary
-    actualIds' <- sublistOf ids
-    return $ Pot pot' actualIds'
+arbitraryCardInfo :: PlayerQueue -> Stage -> Gen Cards
+arbitraryCardInfo pq s = case s of
+    PreFlop -> takeN 0
+    Flop -> takeN 3
+    Turn -> takeN 4
+    River -> takeN 5
+    Showdown -> takeN 5
 
-instance Arbitrary Stage where
-    arbitrary = elements [PreFlop, Flop, Turn, River, Showdown]
-
-instance Arbitrary Suit where
-    arbitrary = elements [Heart, Spade, Club, Diamond]
-
-instance Arbitrary Value where
-    arbitrary = elements [Two, Three, Four, Five, Six, Seven, Eight, Nine,
-                          Ten, Jack, Queen, King, Ace]
+    where playerCards = concat $ pq^..players.traversed.cards
+          takeN n = do
+            (tableCards', deck') <- drawN n playerCards
+            return $ Cards tableCards' deck'
