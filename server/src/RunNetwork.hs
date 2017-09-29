@@ -8,14 +8,16 @@ import Network.Socket (Socket, getAddrInfo, socket, addrFamily, addrProtocol,
                        SockAddr, isReadable)
 
 import Data.ByteString.Char8 (unpack)
+import Data.ByteString.Lazy (ByteString, fromStrict)
 import Network.Socket.ByteString (recv)
 import Control.Concurrent (forkIO)
 import Control.Monad (void, forever)
 import Text.Printf (printf)
 import GHC.Generics (Generic)
-import Data.Aeson
+import Data.Binary (Binary, decodeOrFail)
+import Data.Binary.Get (ByteOffset)
 
-import Types
+import Types (GameStateT)
 import Game (gameLoop)
 
 run :: IO ()
@@ -46,21 +48,27 @@ listenForConnections localSock = do
 handleNewClient :: Socket -> SockAddr -> IO ()
 handleNewClient sock addr = do
     readable <- isReadable sock
+
     if readable
         then do
-        -- add a timer here?
-        msg <- recv sock 4096
-        putStrLn $ printf "Recieved message \"%s\" from %s..." 
-                          (unpack msg) (show addr)
-        handleMsg (eitherDecodeStrict msg) sock addr
+            -- add a timer here?
+            msg <- recv sock 4096
+
+            putStrLn $ printf "Recieved message \"%s\" from %s..." 
+                            (unpack msg) (show addr)
+
+            handleMsg (decodeOrFail $ fromStrict msg) sock addr
         else putStrLn "Socket is unreadable..."
 
-handleMsg :: Either String InitRequest -> Socket -> SockAddr -> IO ()
-handleMsg (Left err) _ addr = 
+handleMsg :: Either (ByteString, ByteOffset, String) 
+                    (ByteString, ByteOffset, InitRequest) 
+          -> Socket -> SockAddr -> IO ()
+handleMsg (Left (_, _, err)) _ addr = 
     putStrLn $ printf "Couldn't decode recieved message from %s: %s..." 
                       (show addr) err
-handleMsg (Right (Join name')) sock addr = join name' sock addr
-handleMsg (Right (Host name')) sock addr = host name' sock addr
+
+handleMsg (Right (_, _, (Join name'))) sock addr = join name' sock addr
+handleMsg (Right (_, _, (Host name'))) sock addr = host name' sock addr
 
 join :: String -> Socket -> SockAddr -> IO ()
 join = undefined
@@ -68,16 +76,16 @@ join = undefined
 host :: String -> Socket -> SockAddr -> IO ()
 host = undefined
 
-play :: IO ()
+play :: GameStateT ()
 play = do
-    initial <- setup
-    final <- gameLoop initial
-    cleanup final
+    setup
+    gameLoop
+    cleanup
 
-setup :: IO Game
+setup :: GameStateT ()
 setup = undefined
 
-cleanup :: Game -> IO ()
+cleanup :: GameStateT ()
 cleanup = undefined
 
 data ActionPost = Fold
@@ -92,7 +100,4 @@ data InitRequest = Join { name :: String }
                  | Host { name :: String }
                  deriving (Generic, Show)
 
-instance ToJSON InitRequest where
-    toEncoding = genericToEncoding defaultOptions
-
-instance FromJSON InitRequest
+instance Binary InitRequest

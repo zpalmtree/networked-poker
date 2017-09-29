@@ -27,7 +27,7 @@ executable server
                  Showdown.Value, Showdown.Best, Game, Lenses
 
   if !flag(debug)
-    build-depends: network, bytestring, aeson
+    build-depends: network, bytestring, binary
     other-modules: Input.Network.Input, Output.Network.Output, RunNetwork,
                    Output.Terminal.Output, Output.Terminal.OutputMessages,
                    Utilities.Terminal.Output
