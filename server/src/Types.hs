@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
 module Types
 (
     Game(..),
@@ -24,7 +22,7 @@ where
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import Test.QuickCheck.Modifiers (NonEmptyList(..), NonNegative(..))
 import Test.QuickCheck.Gen 
-    (Gen(..), choose, shuffle, suchThat, oneof, sublistOf)
+    (Gen(..), choose, shuffle, suchThat, oneof, sublistOf, elements)
 
 import Control.Monad (replicateM)
 import Control.Monad.Trans.State (StateT(..), State)
@@ -99,13 +97,13 @@ data Stage = PreFlop
            | Turn 
            | River 
            | Showdown 
-           deriving (Show, Eq, Arbitrary)
+           deriving (Show, Eq)
 
 data Suit = Heart 
           | Spade 
           | Club 
           | Diamond 
-          deriving (Show, Bounded, Enum, Eq, Arbitrary)
+          deriving (Show, Bounded, Enum, Eq)
 
 data Value = Two 
            | Three 
@@ -120,7 +118,7 @@ data Value = Two
            | Queen 
            | King 
            | Ace 
-           deriving (Show, Bounded, Enum, Eq, Ord, Arbitrary)
+           deriving (Show, Bounded, Enum, Eq, Ord)
 
 data Action a = Fold 
               | Check 
@@ -283,7 +281,7 @@ arbitraryBets ids = do
     let bigBlindSize' = smallBlindSize' * 2
 
     --minimumRaise much be at least big blind
-    minimumRaise' <- suchThat arbitrary (\i -> i > bigBlindSize')
+    minimumRaise' <- suchThat arbitrary (> bigBlindSize')
 
     return $ Bets pots' currentBet' smallBlindSize' bigBlindSize'
                     minimumRaise'
@@ -296,3 +294,13 @@ arbitraryPot ids = do
     (NonNegative pot') <- arbitrary
     actualIds' <- sublistOf ids
     return $ Pot pot' actualIds'
+
+instance Arbitrary Stage where
+    arbitrary = elements [PreFlop, Flop, Turn, River, Showdown]
+
+instance Arbitrary Suit where
+    arbitrary = elements [Heart, Spade, Club, Diamond]
+
+instance Arbitrary Value where
+    arbitrary = elements [Two, Three, Four, Five, Six, Seven, Eight, Nine,
+                          Ten, Jack, Queen, King, Ace]
