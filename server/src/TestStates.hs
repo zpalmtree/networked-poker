@@ -23,16 +23,16 @@ testPlayerQueue = PlayerQueue
                   [testPlayer1, testPlayer2, testPlayer3, testPlayer4] 0
 
 testPlayer1 :: Player
-testPlayer1 = Player "test" 0 1000 [] True False 0 False [] Nothing True
+testPlayer1 = Player "test" 0 1000 [] True False 0 False Nothing True
 
 testPlayer2 :: Player
-testPlayer2 = Player "test2" 1 1000 [] True False 0 False [] Nothing True
+testPlayer2 = Player "test2" 1 1000 [] True False 0 False Nothing True
 
 testPlayer3 :: Player
-testPlayer3 = Player "test3" 2 1000 [] True False 0 False [] Nothing True
+testPlayer3 = Player "test3" 2 1000 [] True False 0 False Nothing True
 
 testPlayer4 :: Player
-testPlayer4 = Player "test4" 3 1000 [] True False 0 False [] Nothing True
+testPlayer4 = Player "test4" 3 1000 [] True False 0 False Nothing True
 
 initialPlayerQueue :: [Player] -> PlayerQueue
 initialPlayerQueue p = PlayerQueue p 0

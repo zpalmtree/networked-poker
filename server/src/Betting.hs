@@ -105,6 +105,7 @@ updatePot = do
 
 updatePot' :: Game -> GameState ()
 updatePot' s
+    | length eligible == 0 = return ()
     | sum (s^..playerQueue.players.traversed.bet) < 0 = error "Negative bets!"
     | sum (s^..playerQueue.players.traversed.bet) == 0 = return ()
     | length eligible == 1 = refund refundPlayer

@@ -49,12 +49,11 @@ data Player = Player {
     _name :: String,
     _num :: PlayerID,
     _chips :: Int,
-    _cards :: [Card],
+    _cards :: [Card], -- why do i have this
     _inPlay :: Bool,
     _allIn :: Bool,
     _bet :: Int,
     _madeInitialBet :: Bool,
-    _hand :: [Card],
     _handInfo :: Maybe HandInfo,
     _canReRaise :: Bool
 } deriving (Eq, Show)
@@ -235,7 +234,6 @@ instance Arbitrary Player where
         allIn' <- arbitrary
         (NonNegative bet') <- arbitrary
         madeInitialBet' <- arbitrary
-        hand' <- arbitrary
 
         --we can't set this up, because to get valid values we need to know
         --the cards on the table. We can't know this, because to get the valid
@@ -243,7 +241,7 @@ instance Arbitrary Player where
         let handInfo' = Nothing
         canReRaise' <- arbitrary
         return $ Player name' num' chips' cards' inPlay' allIn' bet'
-                        madeInitialBet' hand' handInfo' canReRaise'
+                        madeInitialBet' handInfo' canReRaise'
         where cardGen = replicateM 2 arbitrary
 
 instance Arbitrary Card where

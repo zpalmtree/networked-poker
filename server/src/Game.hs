@@ -24,7 +24,7 @@ import Utilities.Player
 
 import Lenses 
     (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet, allIn, pots, 
-     stage, canReRaise, minimumRaise, bigBlindSize, hand, handInfo, cardInfo, 
+     stage, canReRaise, minimumRaise, bigBlindSize, handInfo, cardInfo, 
      roundDone, roundNumber, playerQueue, players)
 
 #ifdef DEBUG
@@ -187,7 +187,6 @@ nextRound = do
         inPlay .= True
         bet .= 0
         madeInitialBet .= False
-        hand .= []
         handInfo .= Nothing
         canReRaise .= True
         allIn .= False
