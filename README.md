@@ -41,3 +41,9 @@ Or, run
 `stack exec ai`
 `stack exec client`
 `stack exec server`
+
+## Tests
+
+Assuming you have already installed the program successfully, you can run the tests with:
+
+`stack test`

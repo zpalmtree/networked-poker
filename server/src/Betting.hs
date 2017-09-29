@@ -46,14 +46,20 @@ import Output.Network.Output (outputSmallBlindMade, outputBigBlindMade,
 
 makeBet :: Int -> GameState ()
 makeBet amount = do
+    when (amount < 0) $ error "Negative bet in makeBet!"
+
     zoom (playerQueue.players.ix 0) $ do
         chips -= amount
         bet += amount
 
-    s <- get
     player <- getCurrentPlayer
 
-    bets.currentBet .= max (s^.bets.currentBet) (player^.bet)
+    updateMaxBet (player^.bet)
+
+updateMaxBet :: Int -> GameState ()
+updateMaxBet n = do
+    s <- get
+    bets.currentBet .= max (s^.bets.currentBet) n
 
 smallBlind :: GameStateT ()
 smallBlind = do
