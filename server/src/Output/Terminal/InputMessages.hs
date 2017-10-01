@@ -54,33 +54,33 @@ badFoldCallRaiseAllInInput
 
 inputRaise :: String
 inputRaise
-    = "Player %d, %s, what do you want to raise to? Your current bet is " ++
+    = "%s, what do you want to raise to? Your current bet is " ++
       "%d, and you have %d chips left in your stack: "
 
 inputFoldAllIn :: String
 inputFoldAllIn
-    = "Player %d, %s, would you like to fold, or go all in? Your current " ++
+    = "%s, would you like to fold, or go all in? Your current " ++
       "bet is %d, and you have %d chips left in your stack: "
 
 inputCheckAllIn :: String
 inputCheckAllIn
-    = "Player %d, %s, would you like to check, or go all in? Your current " ++
+    = "%s, would you like to check, or go all in? Your current " ++
       "bet is %d, and you have %d chips left in your stack: "
 
 inputFoldCallAllIn :: Int -> String
 inputFoldCallAllIn call
-    = "Player %d, %s, would you like to fold, call " ++ show call ++
+    = "%s, would you like to fold, call " ++ show call ++
       ", or go all in? Your current bet is %d, and you have %d chips left " ++ 
       "in your stack: "
     
 inputCheckRaiseAllIn :: String
 inputCheckRaiseAllIn
-    = "Player %d, %s, would you like to check, raise, or go all in? Your " ++ 
+    = "%s, would you like to check, raise, or go all in? Your " ++ 
       "current bet is %d, and you have %d chips left in your stack: "
 
 inputFoldCallRaiseAllIn :: Int -> String
 inputFoldCallRaiseAllIn call
-    = "Player %d, %s, would you like to fold, call " ++ show call ++
+    = "%s, would you like to fold, call " ++ show call ++
       ", raise, or go all in? Your current bet is %d, and you have %d " ++
       "chips left in your stack: "
 

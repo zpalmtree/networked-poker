@@ -24,9 +24,10 @@ import Control.Lens ((^.), (^..), traversed)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Safe (at)
+import Data.UUID.Types (UUID)
 
-import Types (GameStateT, Action(..), Player, Pot, PlayerID)
-import Utilities.Player (getCurrentPlayerT, getPlayerNT)
+import Types (GameStateT, Action(..), Player, Pot)
+import Utilities.Player (getCurrentPlayerT, getPlayerByUUID)
 
 import Output.Terminal.OutputMessages
     (actionFold, actionCheck, actionCall, actionRaise, actionAllIn,
@@ -34,7 +35,7 @@ import Output.Terminal.OutputMessages
      roundNumberMsg, smallBlind, bigBlind)
 
 import Utilities.Terminal.Output
-    (playerNum, turnCard, riverCard, playerCards, potWinners, printHand)
+    (turnCard, riverCard, playerCards, potWinners, printHand)
 
 import Lenses
     (name, bets, currentBet, chips, bet, name, cardInfo, tableCards, pots, 
@@ -47,26 +48,22 @@ outputAction action = do
 
     player <- getCurrentPlayerT
 
-    let num = playerNum player
-        playerName = player^.name
+    let playerName = player^.name
         bet' = s^.bets.currentBet
         chips' = player^.chips + player^.bet
 
     case action of
-        Fold -> lift . putStrLn $ printf actionFold num playerName
-        Check -> lift . putStrLn $ printf actionCheck num playerName
-        Call -> lift . putStrLn $ printf actionCall num playerName bet'
-        Raise n -> lift . putStrLn $ printf actionRaise num playerName bet' n
-        AllIn -> lift . putStrLn $ printf actionAllIn num playerName chips'
+        Fold -> lift . putStrLn $ printf actionFold playerName
+        Check -> lift . putStrLn $ printf actionCheck playerName
+        Call -> lift . putStrLn $ printf actionCall playerName bet'
+        Raise n -> lift . putStrLn $ printf actionRaise playerName bet' n
+        AllIn -> lift . putStrLn $ printf actionAllIn playerName chips'
 
 outputPlayerTurn :: GameStateT ()
 outputPlayerTurn = do
     player <- getCurrentPlayerT
 
-    let playerName = player^.name
-        num = playerNum player
-
-    lift . putStrLn $ printf playersTurn num playerName
+    lift . putStrLn $ printf playersTurn (player^.name)
 
 outputFlop :: GameStateT ()
 outputFlop = do
@@ -97,16 +94,16 @@ outputPlayerCards = do
 
     lift . putStrLn $ playerCards (s^.playerQueue.players)
 
-outputWinner :: PlayerID -> GameStateT ()
-outputWinner i = do
+outputWinner :: UUID -> GameStateT ()
+outputWinner uuid' = do
     s <- get
 
-    p <- getPlayerNT i
+    p <- getPlayerByUUID uuid'
     
     let chips' = sum (s^..bets.pots.traversed.pot)
                + sum (s^..playerQueue.players.traversed.bet)
 
-    lift . putStrLn $ printf winner (playerNum p) (p^.name) chips'
+    lift . putStrLn $ printf winner (p^.name) chips'
 
 outputWinners :: [(Pot, [Player])] -> GameStateT ()
 outputWinners = mapM_ (lift . putStrLn . potWinners)
@@ -118,14 +115,13 @@ outputGameOver = do
     let players' = s^.playerQueue.players
         winner' = maximumBy (compare `on` (^.chips)) players'
         name' = winner'^.name
-        num = playerNum winner'
         chips' = winner'^.chips
 
-    lift . putStrLn $ printf totalWinner num name' chips'
+    lift . putStrLn $ printf totalWinner name' chips'
 
 outputPlayersRemoved :: Maybe [Player] -> GameStateT ()
 outputPlayersRemoved = mapM_ (mapM_ (lift . putStrLn . helper))
-    where helper p = printf playerRemoved (playerNum p) (p^.name)
+    where helper p = printf playerRemoved (p^.name)
 
 outputHandValues :: GameStateT ()
 outputHandValues = do
@@ -154,4 +150,4 @@ outputBlindMade :: String -> Int -> GameStateT ()
 outputBlindMade f size = do
     player <- getCurrentPlayerT
 
-    lift . putStrLn $ printf f (playerNum player) (player^.name) size
+    lift . putStrLn $ printf f (player^.name) size

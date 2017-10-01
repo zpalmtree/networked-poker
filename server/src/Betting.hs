@@ -18,6 +18,7 @@ import Utilities.Types (fromPure)
 import Control.Monad.Trans.State (get)
 import Control.Monad (when)
 import Safe (headNote)
+import Data.UUID.Types (UUID)
 
 import Utilities.Player
     (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayerT)
@@ -27,7 +28,7 @@ import Control.Lens
 
 import Lenses 
     (bets, currentBet, chips, bet, smallBlindSize, bigBlindSize, pots, pot, 
-     inPlay, num, allIn, minimumRaise, canReRaise, madeInitialBet, playerQueue, 
+     inPlay, uuid, allIn, minimumRaise, canReRaise, madeInitialBet, playerQueue, 
      players)
 
 #ifdef DEBUG
@@ -85,7 +86,7 @@ updatePotSimple = do
 
     let potSize = sum $ s^..playerQueue.players.traversed.bet
         inPlayers = filter (^.inPlay) (s^.playerQueue.players)
-        ids = inPlayers^..traversed.num
+        ids = inPlayers^..traversed.uuid
         newPot = [Pot potSize ids]
         oldPot = headNote "in updatePotSimple!" (s^.bets.pots)
         updatedPot = [Pot (oldPot^.pot + potSize) ids]
@@ -105,7 +106,7 @@ updatePot = do
 
 updatePot' :: Game -> GameState ()
 updatePot' s
-    | length eligible == 0 = return ()
+    | null eligible = return ()
     | sum (s^..playerQueue.players.traversed.bet) < 0 = error "Negative bets!"
     | sum (s^..playerQueue.players.traversed.bet) == 0 = return ()
     | length eligible == 1 = refund refundPlayer
@@ -116,13 +117,15 @@ updatePot' s
 
     where eligible = filter potEligible (s^.playerQueue.players)
           sidePotSize = minimum $ eligible^..traversed.bet
-          refundPlayer = headNote "in updatePot'!" eligible^.num
+          refundPlayer = headNote "in updatePot'!" eligible^.uuid
 
-refund :: Int -> GameState ()
-refund n = zoom (playerQueue.players.ix n) $ do
+refund :: UUID -> GameState ()
+refund uuid' = zoom eligible $ do
     p <- get
     chips += p^.bet
     bet .= 0
+    where hasUUID p = p^.uuid == uuid'
+          eligible = playerQueue.players.traversed.filtered hasUUID
 
 addPot :: Int -> GameState ()
 addPot betSize = do
@@ -132,7 +135,7 @@ addPot betSize = do
 
     let eligible = filter potEligible (s^.playerQueue.players)
         potSize = spareChips + length eligible * betSize
-        newPot = Pot potSize (eligible^..traversed.num)
+        newPot = Pot potSize (eligible^..traversed.uuid)
     
     eligible'.bet -= betSize
     bets.pots %= (newPot :)
@@ -147,15 +150,15 @@ takeOutPlayersPot betSize = do
     result <- zoom nonEligible $ do
         p <- get
 
-        let numChips = if p^.bet >= betSize
+        let uuidChips = if p^.bet >= betSize
                         then betSize
                         else p^.bet
 
-        bet -= numChips
+        bet -= uuidChips
 
-        return (Sum numChips)
+        return (Sum uuidChips)
 
-    return $ getSum result -- what does this return??
+    return $ getSum result
 
     where nonEligible = playerQueue.players.traversed.filtered 
                         (not . potEligible)
@@ -267,8 +270,8 @@ goAllIn = do
     when (bet' > s^.bets.currentBet && raise' >= s^.bets.minimumRaise) $
         updateMinimumRaise raise'
 
-giveWinnings :: Int -> GameState ()
-giveWinnings winnerID = do
+giveWinnings :: UUID -> GameState ()
+giveWinnings winnerUUID = do
     winnings <- gatherChips
     playerQueue.players.traversed.filtered isWinner.chips += winnings
-    where isWinner p = p^.num == winnerID
+    where isWinner p = p^.uuid == winnerUUID

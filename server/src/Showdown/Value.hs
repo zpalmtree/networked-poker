@@ -19,14 +19,18 @@ import Safe (headNote)
 import Types (Card)
 
 import Utilities.Showdown 
-    (handSubsets, numOfEachValue, numOfSuit, sizeOfHand, sorted, consecutive, 
+    (handSubsets, uuidOfEachValue, uuidOfSuit, sizeOfHand, sorted, consecutive, 
      cardValues)
 
 isStraightFlush7Card :: [Card] -> Bool
-isStraightFlush7Card cards' = any isStraightFlush5Card $ handSubsets cards'
+isStraightFlush7Card cards'
+    | length cards' /= 7 = error "7 cards not passed to isStraightFlush7Card!"
+    | otherwise = any isStraightFlush5Card $ handSubsets cards'
 
 isStraightFlush5Card :: [Card] -> Bool
-isStraightFlush5Card cards' = isStraight5Card cards' && isFlush cards'
+isStraightFlush5Card cards'
+    | length cards' /= 5 = error "5 cards not passed to isStraightFlush5Card!"
+    | otherwise = isStraight5Card cards' && isFlush cards'
 
 isFourOfAKind :: [Card] -> Bool
 isFourOfAKind = isXOfAKind 4
@@ -36,8 +40,8 @@ isThreeOfAKind = isXOfAKind 3
 
 isTwoPair :: [Card] -> Bool
 isTwoPair cards'
-    | (length . filter (>=2) $ numOfEachValue cards') >= 2 = True
-    | otherwise = any (>=4) $ numOfEachValue cards'
+    | (length . filter (>=2) $ uuidOfEachValue cards') >= 2 = True
+    | otherwise = any (>=4) $ uuidOfEachValue cards'
 
 isPair :: [Card] -> Bool
 isPair = isXOfAKind 2
@@ -48,25 +52,29 @@ isFullHouse :: [Card] -> Bool
 isFullHouse cards'
     | length sorted' >= 2 = headNote "in isFullHouse!" sorted' >= 3
     | otherwise = False
-    where pairOrAbove = filter (>=2) $ numOfEachValue cards'
+    where pairOrAbove = filter (>=2) $ uuidOfEachValue cards'
           sorted' = sortBy (flip compare) pairOrAbove
 
 isXOfAKind :: Int -> [Card] -> Bool
-isXOfAKind x cards' = maximum (numOfEachValue cards') >= x
+isXOfAKind x cards' = maximum (uuidOfEachValue cards') >= x
 
 isFlush :: [Card] -> Bool
-isFlush cards' = maximum (numOfSuit cards') >= sizeOfHand
+isFlush cards' = maximum (uuidOfSuit cards') >= sizeOfHand
 
 -- note - if 7 cards aren't passed to this, it won't work correctly
 isStraight7Card :: [Card] -> Bool
-isStraight7Card c = isStraight5Card x || isStraight5Card x' 
-                                      || isStraight5Card x''
+isStraight7Card c
+    | length c /= 7 = error "7 cards not passed to isStraight7Card!"
+    | otherwise = isStraight5Card x || isStraight5Card x' 
+                                    || isStraight5Card x''
     where x = take 5 fixed
           x' = take 5 $ drop 1 fixed
           x'' = drop 2 fixed
           fixed = sorted c
 
 isStraight5Card :: [Card] -> Bool
-isStraight5Card c = consecutive values || consecutive valuesAceLow
+isStraight5Card c
+    | length c /= 5 = error "5 cards not passed to isStraight5Card!"
+    | otherwise = consecutive values || consecutive valuesAceLow
     where valuesAceLow = cardValues c False
           values = cardValues c True

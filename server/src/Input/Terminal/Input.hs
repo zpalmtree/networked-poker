@@ -19,7 +19,7 @@ import Control.Monad.Trans.Class (lift)
 import Types (Game, Action(..), GameState, GameStateT)
 import Output.Terminal.InputMessages
 import Utilities.Types (fromPure)
-import Lenses (bets, currentBet, num, name, bet, chips, minimumRaise)
+import Lenses (bets, currentBet, uuid, name, bet, chips, minimumRaise)
 
 import Utilities.Player 
     (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayerT)
@@ -76,8 +76,7 @@ getAndHandleInput inputMsg transformF caseFunc = do
     player <- getCurrentPlayerT
 
     input <- lift $ do
-        printf inputMsg (player^.num+1) (player^.name) (player^.bet)
-                        (player^.chips)
+        printf inputMsg (player^.name) (player^.bet) (player^.chips)
 
         hFlush stdout
         transformF <$> getLine

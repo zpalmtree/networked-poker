@@ -1,6 +1,5 @@
 module Utilities.Terminal.Output
 (
-    playerNum,
     turnCard,
     riverCard,
     playerCards,
@@ -15,7 +14,7 @@ import Control.Lens ((^.))
 import Safe (at, headNote, initNote, lastNote)
 
 import Types (Player, Pot)
-import Lenses (name, cards, pot, num, handInfo, handValue)
+import Lenses (name, cards, pot, uuid, handInfo, handValue)
 
 import Output.Terminal.OutputMessages
     (turnMsg, riverMsg, fullSet, card, dealt, hasCards, multiWinnerMsg,
@@ -45,7 +44,7 @@ playerCards players = dealt ++ dealtCards
     where dealtCards = concatMap printCards players
 
 printCards :: Player -> String
-printCards p = printf hasCards (playerNum p) (p^.name) card1 card2
+printCards p = printf hasCards (p^.name) card1 card2
     where card1 = show $ (p^.cards) `at` 0
           card2 = show $ (p^.cards) `at` 1
 
@@ -60,7 +59,7 @@ multiWinners pot' players' = printf (multiWinnerMsg middle) (pot'^.pot)
     where middle = printWinners players'
 
 singleWinner :: Pot -> Player -> String
-singleWinner pot' p = printf singleWinnerMsg (playerNum p) (p^.name) (pot'^.pot)
+singleWinner pot' p = printf singleWinnerMsg (p^.name) (pot'^.pot)
 
 printWinners :: [Player] -> String
 printWinners players = start ++ end
@@ -69,15 +68,10 @@ printWinners players = start ++ end
           end = printWinner False (lastNote "in printWinners!" players)
 
 printWinner :: Bool -> Player -> String
-printWinner final player = printf (playerMsg final) (playerNum player) 
-                                  (player^.name)
-
---0 indexed
-playerNum :: Player -> Int
-playerNum p = p^.num + 1
+printWinner final player = printf (playerMsg final) (player^.name)
 
 printHand :: Player -> String
-printHand p = printf playerHand (playerNum p) (p^.name) value card1 card2
+printHand p = printf playerHand (p^.name) value card1 card2
     where value = show $ fromJust (p^.handInfo)^.handValue
           card1 = show $ (p^.cards) `at` 0
           card2 = show $ (p^.cards) `at` 1

@@ -6,11 +6,10 @@ module Utilities.Player
     numAllInPure,
     numPlayers,
     numPlayersT,
-    getPlayerN,
-    getPlayerNT,
     getCurrentPlayerPure,
     getCurrentPlayer,
     getCurrentPlayerT,
+    getPlayerByUUID,
     victorID,
     nextPlayer,
     nextPlayerT,
@@ -21,28 +20,19 @@ module Utilities.Player
 )
 where
 
-import Control.Lens (Getting, (^.), (^?!), (%=), (.=), _head)
+import Control.Lens (Getting, (^.), (^?!), (%=), (.=), (^..), _head, traversed)
 import Control.Monad.Trans.State (get)
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
-import Control.Monad (when)
+import Control.Monad (when, unless)
 import Safe (at, headNote, tailNote)
+import Data.UUID.Types (UUID)
 
 import Utilities.Types (fromPure)
-import Types (Player, GameState, GameStateT, PlayerID, Game)
+import Types (Player, GameState, GameStateT, Game)
 
-import Lenses (inPlay, allIn, gameFinished, dealer, num, chips, players,
+import Lenses (inPlay, allIn, gameFinished, dealer, uuid, chips, players,
                playerQueue)
-
-getPlayerNT :: PlayerID -> GameStateT Player
-getPlayerNT = fromPure . getPlayerN
-
-getPlayerN :: PlayerID -> GameState Player
-getPlayerN n = do
-    s <- get
-    num' <- numPlayers
-    when (n > num') $ error "Invalid index in getPlayerN"
-    return $ (s^.playerQueue.players) `at` n
 
 numInPlayPure :: Game -> Int
 numInPlayPure = numXPure inPlay
@@ -86,12 +76,12 @@ getCurrentPlayer = do
 getCurrentPlayerT :: GameStateT Player
 getCurrentPlayerT = fromPure getCurrentPlayer
 
-victorID :: GameState PlayerID
+victorID :: GameState UUID
 victorID = do
     s <- get
 
     return $ headNote "in victorID!" 
-                      (filter (^.inPlay) (s^.playerQueue.players))^.num
+                      (filter (^.inPlay) (s^.playerQueue.players))^.uuid
 
 nextDealerT :: GameStateT ()
 nextDealerT = fromPure nextDealer
@@ -148,14 +138,28 @@ flatten' :: Monad m => Int -> [a] -> m [a]
 flatten' offset p = let (end, beginning) = splitAt offset p
                     in  return $ beginning ++ end
 
-leftOfDealer :: [Player] -> GameState PlayerID
+leftOfDealer :: [Player] -> GameState UUID
 leftOfDealer subset = do
     s <- get
 
     return $ findNearestToDealer subset (s^.playerQueue.players)
 
-findNearestToDealer :: [Player] -> [Player] -> Int
+findNearestToDealer :: [Player] -> [Player] -> UUID
 findNearestToDealer _ [] = error "No players in p:ps exist in subset!"
 findNearestToDealer subset (p:ps)
-    | p `elem` subset = p^.num
-    | otherwise = find subset ps
+    | p `elem` subset = p^.uuid
+    | otherwise = findNearestToDealer subset ps
+
+getPlayerByUUID :: UUID -> GameStateT Player
+getPlayerByUUID = fromPure . getPlayerByUUIDPure
+
+getPlayerByUUIDPure :: UUID -> GameState Player
+getPlayerByUUIDPure uuid' = do
+    s <- get
+
+    unless (uuid' `elem` (s^..playerQueue.players.traversed.uuid)) $ 
+        error "UUID does not belong to any known players in getPlayerByUUID!"
+
+    let players' = filter (\p -> p^.uuid == uuid') (s^.playerQueue.players)
+
+    return $ head players'

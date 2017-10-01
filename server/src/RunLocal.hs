@@ -13,14 +13,14 @@ import Output.Terminal.Output (outputRoundNumber, outputGameOver)
 import Utilities.Card (dealCards)
 
 run :: IO ()
-run = evalStateT play testGame
+run = do
+    game <- testGame
+    evalStateT play game
 
 play :: GameStateT ()
 play = do
     setup
-
     gameLoop
-
     cleanup
 
 setup :: GameStateT ()

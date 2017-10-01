@@ -31,7 +31,7 @@ run = do
 
     putStrLn "Listening for connections..."
 
-    listen sock 5 -- maximum number of queued connections, apparently set at 5
+    listen sock 5 -- maximum uuidber of queued connections, apparently set at 5
                   -- for most OS's. Need to look into. Queued connections
                   -- should be accepted very fast? Loop is very simple.
 
@@ -67,8 +67,8 @@ handleMsg (Left (_, _, err)) _ addr =
     putStrLn $ printf "Couldn't decode recieved message from %s: %s..." 
                       (show addr) err
 
-handleMsg (Right (_, _, (Join name'))) sock addr = join name' sock addr
-handleMsg (Right (_, _, (Host name'))) sock addr = host name' sock addr
+handleMsg (Right (_, _, Join name')) sock addr = join name' sock addr
+handleMsg (Right (_, _, Host name')) sock addr = host name' sock addr
 
 join :: String -> Socket -> SockAddr -> IO ()
 join = undefined

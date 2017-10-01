@@ -14,20 +14,24 @@ module Types
     Action(..),
     Hand(..),
     GameStateT,
-    GameState,
-    PlayerID
+    GameState
 )
 where
 
-import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
-import Test.QuickCheck.Modifiers (NonEmptyList(..), NonNegative(..))
-import Test.QuickCheck.Gen 
-    (Gen(..), choose, shuffle, suchThat, oneof, sublistOf, elements)
-
-import Control.Monad (replicateM)
+import Control.Monad (replicateM, filterM)
 import Control.Monad.Trans.State (StateT(..), State)
 import Data.Char (toLower)
-import Control.Lens (Lens', (^..), traversed, lens)
+import Control.Lens (Lens', (^..), (^.), traversed, lens)
+import Data.UUID.Types (UUID)
+
+import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
+import Test.QuickCheck.Instances
+
+import Test.QuickCheck.Modifiers 
+    (NonNegative(..), Positive(..), NonEmptyList(..))
+
+import Test.QuickCheck.Gen 
+    (Gen(..), choose, shuffle, suchThat, sublistOf, elements, resize, listOf1)
 
 import Text.Printf 
     (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt, formatString, 
@@ -43,13 +47,13 @@ data Game = Game {
     _bets :: Bets,
     _gameFinished :: Bool,
     _roundNumber :: Int
-} deriving (Show)
+} deriving (Show, Eq)
 
 data Player = Player {
     _name :: String,
-    _num :: PlayerID,
+    _uuid :: UUID,
     _chips :: Int,
-    _cards :: [Card], -- why do i have this
+    _cards :: [Card],
     _inPlay :: Bool,
     _allIn :: Bool,
     _bet :: Int,
@@ -61,7 +65,7 @@ data Player = Player {
 data Cards = Cards {
     _tableCards :: [Card],
     _deck :: [Card]
-} deriving (Show)
+} deriving (Show, Eq)
 
 data Bets = Bets {
     _pots :: [Pot],
@@ -69,7 +73,7 @@ data Bets = Bets {
     _smallBlindSize :: Int,
     _bigBlindSize :: Int,
     _minimumRaise :: Int
-} deriving (Show)
+} deriving (Show, Eq)
 
 data Card = Card {
     _value :: Value,
@@ -83,13 +87,13 @@ data HandInfo = HandInfo {
 
 data Pot = Pot {
     _pot :: Int,
-    _playerIDs :: [PlayerID]
-} deriving (Show)
+    _playerUUIDs :: [UUID]
+} deriving (Show, Eq)
 
 data PlayerQueue = PlayerQueue {
     _players :: [Player],
     _dealer :: Int
-} deriving (Show)
+} deriving (Show, Eq)
 
 data Stage = PreFlop 
            | Flop 
@@ -143,8 +147,6 @@ type GameStateT a = StateT Game IO a
 
 type GameState a = State Game a
 
-type PlayerID = Int
-
 -- LENSES FOR EASIER INSTANCE DECLARATION
 
 -- manually deriving lenses because deriving them before the data
@@ -154,9 +156,12 @@ players = lens _players (\queue v -> queue { _players = v })
 
 cards :: Lens' Player [Card]
 cards = lens _cards (\p v -> p { _cards = v })
---why doesn't this work?
-num :: Lens' Player PlayerID
-num = lens _num (\p v -> p { _num = v })
+
+uuid :: Lens' Player UUID
+uuid = lens _uuid (\p v -> p { _uuid = v })
+
+allIn :: Lens' Player Bool
+allIn = lens _allIn (\p v -> p { _allIn = v})
 
 -- INSTANCES
 
@@ -207,42 +212,15 @@ instance Show Card where
 
 instance Arbitrary Game where
     arbitrary = do
-        queue' <- arbitrary
         stage' <- arbitrary
+        queue' <- arbitraryQueue stage'
         cardInfo' <- arbitraryCardInfo queue' stage'
         roundDone' <- arbitrary
-        let playerIDs = queue'^..players.traversed.num
-        bets' <- arbitraryBets playerIDs
+        bets' <- arbitraryBets queue'
         gameFinished' <- arbitrary
         roundNumber' <- arbitrary
         return $ Game queue' stage' cardInfo' roundDone' bets' gameFinished'
                       roundNumber'
-
-instance Arbitrary PlayerQueue where
-    arbitrary = do
-        (NonEmpty players') <- arbitrary
-        dealer' <- choose (0, length players' - 1)
-        return $ PlayerQueue players' dealer'
-
-instance Arbitrary Player where
-    arbitrary = do
-        name' <- arbitrary
-        num' <- arbitrary -- what happens if this is negative?
-        (NonNegative chips') <- arbitrary
-        cards' <- oneof [return [], cardGen]
-        inPlay' <- arbitrary
-        allIn' <- arbitrary
-        (NonNegative bet') <- arbitrary
-        madeInitialBet' <- arbitrary
-
-        --we can't set this up, because to get valid values we need to know
-        --the cards on the table. We can't know this, because to get the valid
-        --cards on the table, we need to know the players cards
-        let handInfo' = Nothing
-        canReRaise' <- arbitrary
-        return $ Player name' num' chips' cards' inPlay' allIn' bet'
-                        madeInitialBet' handInfo' canReRaise'
-        where cardGen = replicateM 2 arbitrary
 
 instance Arbitrary Card where
     arbitrary = Card <$> arbitrary <*> arbitrary
@@ -257,16 +235,21 @@ instance Arbitrary Value where
     arbitrary = elements [Two, Three, Four, Five, Six, Seven, Eight, Nine,
                           Ten, Jack, Queen, King, Ace]
 
-arbitraryPot :: [PlayerID] -> Gen Pot
+arbitraryPot :: [UUID] -> Gen Pot
 arbitraryPot ids = do
     (NonNegative pot') <- arbitrary
-    actualIds' <- sublistOf ids
+    actualIds' <- sublistOf1 ids
     return $ Pot pot' actualIds'
 
-arbitraryBets :: [PlayerID] -> Gen Bets
-arbitraryBets ids = do
-    n <- arbitrary
-    pots' <- replicateM n (arbitraryPot ids)
+sublistOf1 :: [a] -> Gen [a]
+sublistOf1 (x:xs) = do
+    result <- filterM (\_ -> choose (False, True)) xs
+    return (x : result)
+
+arbitraryBets :: PlayerQueue -> Gen Bets
+arbitraryBets queue' = do
+    Positive n <- arbitrary
+    pots' <- replicateM (if anyAllIn then n else 1) (arbitraryPot ids)
     (NonNegative currentBet') <- arbitrary
 
     --this could become too big and cause problems, might need to constrain
@@ -279,6 +262,8 @@ arbitraryBets ids = do
 
     return $ Bets pots' currentBet' smallBlindSize' bigBlindSize'
                     minimumRaise'
+    where ids = queue'^..players.traversed.uuid
+          anyAllIn = any (^.allIn) (queue'^..players.traversed)
 
 drawN :: (Foldable t) => Int -> t a -> Gen ([Card], [Card])
 drawN n playerCards
@@ -303,3 +288,30 @@ arbitraryCardInfo pq s = case s of
           takeN n = do
             (tableCards', deck') <- drawN n playerCards
             return $ Cards tableCards' deck'
+
+arbitraryPlayers :: Stage -> Gen Player
+arbitraryPlayers stage = do
+    name' <- arbitrary
+    uuid' <- arbitrary -- what happens if this is negative?
+    (NonNegative chips') <- arbitrary
+    cards' <- if stage == PreFlop then return [] else cardGen
+    inPlay' <- arbitrary
+    allIn' <- arbitrary
+    (NonNegative bet') <- arbitrary
+    madeInitialBet' <- arbitrary
+
+    --we can't set this up, because to get valid values we need to know
+    --the cards on the table. We can't know this, because to get the valid
+    --cards on the table, we need to know the players cards
+    let handInfo' = Nothing
+    canReRaise' <- arbitrary
+    return $ Player name' uuid' chips' cards' inPlay' allIn' bet'
+                    madeInitialBet' handInfo' canReRaise'
+    where cardGen = replicateM 2 arbitrary
+
+-- set size param, use list of to cap
+arbitraryQueue :: Stage -> Gen PlayerQueue
+arbitraryQueue stage = do
+    players' <- resize 23 . listOf1 $ arbitraryPlayers stage
+    dealer' <- choose (0, length players' - 1)
+    return $ PlayerQueue players' dealer'

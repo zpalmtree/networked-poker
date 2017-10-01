@@ -28,27 +28,27 @@ where
 
 actionFold :: String
 actionFold
-    = "Player %d, %s, folded."
+    = "%s folded."
 
 actionCheck :: String
 actionCheck
-    = "Player %d, %s, checked."
+    = "%s checked."
 
 actionCall :: String
 actionCall
-    = "Player %d, %s, called a bet of %d."
+    = "%s called a bet of %d."
 
 actionRaise :: String
 actionRaise
-    = "Player %d, %s, raised the bet from %d to %d."
+    = "%s raised the bet from %d to %d."
 
 actionAllIn :: String
 actionAllIn
-    = "Player %d, %s, went all in for a total bet of %d."
+    = "%s went all in for a total bet of %d."
 
 playersTurn :: String
 playersTurn
-    = "It is player %d's turn. (%s)."
+    = "It is %s's turn."
 
 flopCards :: String
 flopCards
@@ -76,11 +76,11 @@ dealt
 
 hasCards :: String
 hasCards 
-    = " Player %d, %s, has the %s and the %s."
+    = " %s has the %s and the %s."
 
 winner :: String
 winner 
-    = "Player %d, %s, won the hand, and gained %d chips!"
+    = "%s won the hand, and gained %d chips!"
 
 multiWinnerMsg :: String -> String
 multiWinnerMsg middle
@@ -89,27 +89,26 @@ multiWinnerMsg middle
 
 singleWinnerMsg :: String
 singleWinnerMsg
-    = "Player %d, %s, won the pot of %d chips!"
+    = "%s won the pot of %d chips!"
 
 playerMsg :: Bool -> String
 playerMsg final
     | final = msg
     | otherwise = msg ++ ", "
-    where msg = "player %d, %s"
+    where msg = "%s"
 
 totalWinner :: String
 totalWinner
-    = "Game over! The winner was player %d, %s, who ended the game with " ++
-      "%d chips!"
+    = "Game over! The winner was %s, who ended the game with %d chips!"
 
 playerRemoved :: String
 playerRemoved
-    = "Thanks for playing player %d, %s, unfortunately you've run out of " ++
+    = "Thanks for playing %s, unfortunately you've run out of " ++
       "chips! Come back soon!"
 
 playerHand :: String
 playerHand
-    = "Player %d, %s, has a %s, their cards are the %s and the %s."
+    = "%s, has a %s, their cards are the %s and the %s."
 
 roundNumberMsg :: String
 roundNumberMsg
@@ -117,8 +116,8 @@ roundNumberMsg
 
 smallBlind :: String
 smallBlind
-    = "Player %d, %s, posted a small blind of %d."
+    = "%s posted a small blind of %d."
 
 bigBlind :: String
 bigBlind
-    = "Player %d, %s, posted a big blind of %d."
+    = "%s posted a big blind of %d."

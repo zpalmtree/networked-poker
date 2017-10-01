@@ -25,8 +25,8 @@ import Showdown.Best
      bestStraight, bestThreeOfAKind, bestTwoPair, bestPair, bestHighCard)
 
 import Lenses 
-    (playerQueue, players, cardInfo, handInfo, tableCards, cards, num, 
-     playerIDs, chips, pot)
+    (playerQueue, players, cardInfo, handInfo, tableCards, cards, uuid, 
+     chips, pot, playerUUIDs)
 
 topHand :: [Card] -> HandInfo
 topHand cards'
@@ -61,17 +61,17 @@ sortHandValue p1 p2 = ordHand hand1 hand2
     where hand1 = fromJust $ p1^.handInfo
           hand2 = fromJust $ p2^.handInfo
 
-distributePot :: Pot -> GameState (Pot, [Player])
+distributePot :: Pot -> GameState [Player]
 distributePot sidePot = do
     s <- get
 
-    let inPot = filter (\p -> p^.num `elem` sidePot^.playerIDs) 
+    let inPot = filter (\p -> p^.uuid `elem` sidePot^.playerUUIDs) 
                        (s^.playerQueue.players)
         winners = getWinners inPot
         chipsPerPerson = sidePot^.pot `div` length winners
         spareChips = sidePot^.pot `rem` length winners
         allPlayers = playerQueue.players.traversed
-        isWinner p = p^.num `elem` winners^..traversed.num
+        isWinner p = p^.uuid `elem` winners^..traversed.uuid
 
     spareID <- leftOfDealer winners
 
@@ -80,6 +80,6 @@ distributePot sidePot = do
 
         chips += chipsPerPerson
 
-        when (p^.num == spareID) $ chips += spareChips
+        when (p^.uuid == spareID) $ chips += spareChips
 
-    return (sidePot, winners)
+    return winners

@@ -4,8 +4,8 @@ module Utilities.Showdown
     cardValue,
     cardValueAceLow,
     getValue,
-    numOfEachValue,
-    numOfSuit,
+    uuidOfEachValue,
+    uuidOfSuit,
     sorted,
     consecutive,
     cardValues,
@@ -26,11 +26,11 @@ cardValues c aceHigh
     | aceHigh = sort $ map (cardValue . getValue) c
     | otherwise = sort $ map (cardValueAceLow . getValue) c
 
-numOfSuit :: [Card] -> [Int]
-numOfSuit c = map (`numSuit` c) [isHeart, isClub, isDiamond, isSpade]
+uuidOfSuit :: [Card] -> [Int]
+uuidOfSuit c = map (`uuidSuit` c) [isHeart, isClub, isDiamond, isSpade]
 
-numSuit :: (a -> Bool) -> [a] -> Int
-numSuit f x = length $ filter f x
+uuidSuit :: (a -> Bool) -> [a] -> Int
+uuidSuit f x = length $ filter f x
 
 isHeart :: Card -> Bool
 isHeart x = x `elem` hearts
@@ -82,5 +82,5 @@ consecutive' (x:xs) val
     | x == val = consecutive' xs (val + 1)
     | otherwise = False
 
-numOfEachValue :: [Card] -> [Int]
-numOfEachValue cards' = map length . group . sort $ map getValue cards'
+uuidOfEachValue :: [Card] -> [Int]
+uuidOfEachValue cards' = map length . group . sort $ map getValue cards'

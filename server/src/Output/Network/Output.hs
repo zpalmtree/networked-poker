@@ -17,7 +17,9 @@ module Output.Network.Output
 )
 where
 
-import Types (GameStateT, PlayerID, Action, Player, Pot)
+import Data.UUID.Types (UUID)
+
+import Types (GameStateT, Action, Player, Pot)
 
 outputAction :: Action Int -> GameStateT ()
 outputAction = undefined
@@ -37,7 +39,7 @@ outputRiver = undefined
 outputPlayerCards :: GameStateT ()
 outputPlayerCards = undefined
 
-outputWinner :: PlayerID -> GameStateT ()
+outputWinner :: UUID -> GameStateT ()
 outputWinner = undefined
 
 outputWinners :: [(Pot, [Player])] -> GameStateT ()

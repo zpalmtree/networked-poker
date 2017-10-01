@@ -142,7 +142,7 @@ getWinnersAndDistribute [] = return []
 getWinnersAndDistribute (p:ps) = do
     winners <- fromPure $ distributePot p
     winners' <- getWinnersAndDistribute ps
-    return $ winners : winners'
+    return $ (p, winners) : winners'
 
 nextState :: GameStateT ()
 nextState = do
