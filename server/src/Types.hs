@@ -23,14 +23,15 @@ import Control.Monad.Trans.State (StateT(..), State)
 import Data.Char (toLower)
 import Control.Lens (Lens', (^..), (^.), traversed, lens)
 import Data.UUID.Types (UUID, fromWords)
+import GHC.Word (Word32)
 
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 import Test.QuickCheck.Modifiers 
-    (NonNegative(..), Positive(..), NonEmptyList(..))
+    (NonNegative(..), Positive(..))
 
 import Test.QuickCheck.Gen 
-    (Gen(..), choose, shuffle, suchThat, sublistOf, elements, resize, listOf1)
+    (Gen(..), choose, shuffle, suchThat, elements, resize, listOf1)
 
 import Text.Printf 
     (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt, formatString, 
@@ -237,6 +238,7 @@ instance Arbitrary Value where
 instance Arbitrary UUID where
     arbitrary = uuidFromWords <$> arbitrary
 
+uuidFromWords :: (Word32, Word32, Word32, Word32) -> UUID
 uuidFromWords (a, b, c, d) = fromWords a b c d
 
 arbitraryPot :: [UUID] -> Gen Pot
