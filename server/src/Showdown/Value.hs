@@ -19,7 +19,7 @@ import Safe (headNote)
 import Types (Card)
 
 import Utilities.Showdown 
-    (handSubsets, uuidOfEachValue, uuidOfSuit, sizeOfHand, sorted, consecutive, 
+    (handSubsets, numOfEachValue, numOfSuit, sizeOfHand, sorted, consecutive, 
      cardValues)
 
 isStraightFlush7Card :: [Card] -> Bool
@@ -40,8 +40,8 @@ isThreeOfAKind = isXOfAKind 3
 
 isTwoPair :: [Card] -> Bool
 isTwoPair cards'
-    | (length . filter (>=2) $ uuidOfEachValue cards') >= 2 = True
-    | otherwise = any (>=4) $ uuidOfEachValue cards'
+    | (length . filter (>=2) $ numOfEachValue cards') >= 2 = True
+    | otherwise = any (>=4) $ numOfEachValue cards'
 
 isPair :: [Card] -> Bool
 isPair = isXOfAKind 2
@@ -52,14 +52,14 @@ isFullHouse :: [Card] -> Bool
 isFullHouse cards'
     | length sorted' >= 2 = headNote "in isFullHouse!" sorted' >= 3
     | otherwise = False
-    where pairOrAbove = filter (>=2) $ uuidOfEachValue cards'
+    where pairOrAbove = filter (>=2) $ numOfEachValue cards'
           sorted' = sortBy (flip compare) pairOrAbove
 
 isXOfAKind :: Int -> [Card] -> Bool
-isXOfAKind x cards' = maximum (uuidOfEachValue cards') >= x
+isXOfAKind x cards' = maximum (numOfEachValue cards') >= x
 
 isFlush :: [Card] -> Bool
-isFlush cards' = maximum (uuidOfSuit cards') >= sizeOfHand
+isFlush cards' = maximum (numOfSuit cards') >= sizeOfHand
 
 -- note - if 7 cards aren't passed to this, it won't work correctly
 isStraight7Card :: [Card] -> Bool

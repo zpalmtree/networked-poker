@@ -1,7 +1,8 @@
 module Showdown
 (
     distributePot,
-    calculateHandValues
+    calculateHandValues,
+    topHand
 )
 where
 

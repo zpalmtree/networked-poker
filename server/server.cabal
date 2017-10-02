@@ -48,8 +48,8 @@ test-suite test-server
     hs-source-dirs:     tests, src
     main-is:            Tests.hs
     default-language:   Haskell2010
-    build-depends:      base >= 4.9 && <=4.11, QuickCheck, transformers, lens,
-                        random, safe, uuid-types
+    build-depends:      base >= 4.9 && <=4.11, QuickCheck, lens, random,
+                        transformers, safe, uuid-types
 
     other-modules:      BettingTests, ShowdownTests,
                         Betting, Input.Network.Input, Lenses, Utilities.Card,

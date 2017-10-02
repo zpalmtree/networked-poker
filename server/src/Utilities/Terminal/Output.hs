@@ -14,7 +14,7 @@ import Control.Lens ((^.))
 import Safe (at, headNote, initNote, lastNote)
 
 import Types (Player, Pot)
-import Lenses (name, cards, pot, uuid, handInfo, handValue)
+import Lenses (name, cards, pot, handInfo, handValue)
 
 import Output.Terminal.OutputMessages
     (turnMsg, riverMsg, fullSet, card, dealt, hasCards, multiWinnerMsg,

@@ -24,6 +24,7 @@ import Data.Char (toLower)
 import Control.Lens (Lens', (^..), (^.), traversed, lens)
 import Data.UUID.Types (UUID, fromWords)
 import GHC.Word (Word32)
+import System.Random (Random(..))
 
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
@@ -238,6 +239,14 @@ instance Arbitrary Value where
 instance Arbitrary UUID where
     arbitrary = uuidFromWords <$> arbitrary
 
+instance Random Value where
+    random g = case randomR (fromEnum (minBound :: Value),
+                             fromEnum (maxBound :: Value)) g of
+                    (r, g') -> (toEnum r, g')
+
+    randomR (a,b) g = case randomR (fromEnum a, fromEnum b) g of
+                        (r, g') -> (toEnum r, g')
+
 uuidFromWords :: (Word32, Word32, Word32, Word32) -> UUID
 uuidFromWords (a, b, c, d) = fromWords a b c d
 
@@ -248,6 +257,7 @@ arbitraryPot ids = do
     return $ Pot pot' actualIds'
 
 sublistOf1 :: [a] -> Gen [a]
+sublistOf1 [] = return []
 sublistOf1 (x:xs) = do
     result <- filterM (\_ -> choose (False, True)) xs
     return (x : result)

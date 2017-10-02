@@ -25,7 +25,7 @@ import Control.Monad.Trans.State (get)
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
 import Control.Monad (when, unless)
-import Safe (at, headNote, tailNote)
+import Safe (headNote, tailNote)
 import Data.UUID.Types (UUID)
 
 import Utilities.Types (fromPure)
