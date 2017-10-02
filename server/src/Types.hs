@@ -22,10 +22,9 @@ import Control.Monad (replicateM, filterM)
 import Control.Monad.Trans.State (StateT(..), State)
 import Data.Char (toLower)
 import Control.Lens (Lens', (^..), (^.), traversed, lens)
-import Data.UUID.Types (UUID)
+import Data.UUID.Types (UUID, fromWords)
 
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
-import Test.QuickCheck.Instances
 
 import Test.QuickCheck.Modifiers 
     (NonNegative(..), Positive(..), NonEmptyList(..))
@@ -234,6 +233,11 @@ instance Arbitrary Suit where
 instance Arbitrary Value where
     arbitrary = elements [Two, Three, Four, Five, Six, Seven, Eight, Nine,
                           Ten, Jack, Queen, King, Ace]
+
+instance Arbitrary UUID where
+    arbitrary = uuidFromWords <$> arbitrary
+
+uuidFromWords (a, b, c, d) = fromWords a b c d
 
 arbitraryPot :: [UUID] -> Gen Pot
 arbitraryPot ids = do

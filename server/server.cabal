@@ -20,8 +20,8 @@ executable server
   hs-source-dirs:       src
   default-language:     Haskell2010
   default-extensions:   CPP
-  build-depends:        base >= 4.10 && <=4.11, QuickCheck, lens, random, 
-                        transformers, safe, uuid-types, quickcheck-instances
+  build-depends:        base >= 4.9 && <=4.11, QuickCheck, lens, random, 
+                        transformers, safe, uuid-types
 
   other-modules:        Betting, Utilities.Card, Utilities.Player,
                         Utilities.Showdown, Utilities.Types, TestStates, Types, 
@@ -48,8 +48,8 @@ test-suite test-server
     hs-source-dirs:     tests, src
     main-is:            Tests.hs
     default-language:   Haskell2010
-    build-depends:      base >= 4.10 && <=4.11, QuickCheck, transformers, lens,
-                        random, safe, uuid-types, quickcheck-instances
+    build-depends:      base >= 4.9 && <=4.11, QuickCheck, transformers, lens,
+                        random, safe, uuid-types
 
     other-modules:      BettingTests, ShowdownTests,
                         Betting, Input.Network.Input, Lenses, Utilities.Card,
