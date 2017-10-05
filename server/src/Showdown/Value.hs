@@ -19,7 +19,7 @@ import Safe (headNote)
 import Types (Card)
 
 import Utilities.Showdown 
-    (handSubsets, numOfEachValue, numOfSuit, sizeOfHand, sorted, consecutive, 
+    (handSubsets, numOfEachValue, numOfSuit, sizeOfHand, consecutive, 
      cardValues)
 
 isStraightFlush7Card :: [Card] -> Bool
@@ -65,12 +65,7 @@ isFlush cards' = maximum (numOfSuit cards') >= sizeOfHand
 isStraight7Card :: [Card] -> Bool
 isStraight7Card c
     | length c /= 7 = error "7 cards not passed to isStraight7Card!"
-    | otherwise = isStraight5Card x || isStraight5Card x' 
-                                    || isStraight5Card x''
-    where x = take 5 fixed
-          x' = take 5 $ drop 1 fixed
-          x'' = drop 2 fixed
-          fixed = sorted c
+    | otherwise = any isStraight5Card $ handSubsets c
 
 isStraight5Card :: [Card] -> Bool
 isStraight5Card c
