@@ -44,6 +44,12 @@ Or, run
 
 ## Tests
 
-Assuming you have already installed the program successfully, you can run the tests with:
+#### Install prerequisites
+You need poker-eval/libpoker-eval installed. 
+
+It seems the source URL is down at the moment, I found it on github and compiled it, with
+`./configure`, `make`, `make install`, however for stack to find it I had to copy the library from `/usr/local/lib/` to `/lib/`
+
+#### Running
 
 `stack test`

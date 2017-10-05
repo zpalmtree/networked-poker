@@ -4,6 +4,6 @@ packages:
 - ai
 - client
 - server
-extra-deps: []
+extra-deps: [poker-eval-0.3.1]
 resolver: lts-9.6
 install-ghc: true
