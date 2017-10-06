@@ -51,8 +51,13 @@ test-suite test-server
     build-depends:      base >= 4.9 && <=4.11, QuickCheck, lens, random,
                         transformers, safe, uuid-types, poker-eval
 
-    other-modules:      BettingTests, ShowdownTests,
-                        Betting, Input.Network.Input, Lenses, Utilities.Card,
-                        Output.Network.Output, Types, Utilities.Player,
+  if flag(debug)
+    cpp-options:        -DDEBUG
+    other-modules:      BettingTests, ShowdownTests, CardTests,
+                        Betting, Input.Terminal.Input, Lenses, Utilities.Card,
+                        Output.Terminal.Output, Types, Utilities.Player,
                         Utilities.Types, Showdown, Showdown.Best, Showdown.Ord,
-                        Showdown.Value, Utilities.Showdown
+                        Showdown.Value, Utilities.Showdown, 
+                        Output.Terminal.InputMessages, 
+                        Output.Terminal.OutputMessages, 
+                        Utilities.Terminal.Output

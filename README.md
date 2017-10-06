@@ -47,9 +47,9 @@ Or, run
 #### Install prerequisites
 You need poker-eval/libpoker-eval installed. 
 
-It seems the source URL is down at the moment, I found it on github and compiled it, with
-`./configure`, `make`, `make install`, however for stack to find it I had to copy the library from `/usr/local/lib/` to `/lib/`
+It seems the source for poker-eval is down, but it can be found at https://github.com/atinm/poker-eval
 
+You might need to manually move the lib to /lib/ from /usr/local/lib/ for stack to find it.
 #### Running
 
 `stack test`

@@ -19,7 +19,7 @@ import Control.Monad.Trans.Class (lift)
 import Types (Game, Action(..), GameState, GameStateT)
 import Output.Terminal.InputMessages
 import Utilities.Types (fromPure)
-import Lenses (bets, currentBet, uuid, name, bet, chips, minimumRaise)
+import Lenses (bets, currentBet, name, bet, chips, minimumRaise)
 
 import Utilities.Player 
     (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayerT)
