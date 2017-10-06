@@ -1,4 +1,6 @@
 # networked-poker
+[![Build Status](https://travis-ci.org/ZedPea/networked-poker.svg?branch=master)](https://travis-ci.org/ZedPea/networked-poker)
+
 A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against.
 
 Local server gameplay is pretty good, just started adding network support and initial network work on the client.
