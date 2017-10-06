@@ -7,7 +7,7 @@ cache:
 addons:
     apt:
         packages:
-            - libpoker-eval
+            - libpoker-eval-dev
 
 before_install:
 # Download and unpack the stack executable
