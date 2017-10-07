@@ -4,11 +4,6 @@ cache:
     directories:
     - $HOME/.stack
 
-addons:
-    apt:
-        packages:
-            - libpoker-eval-dev
-
 before_install:
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
