@@ -16,7 +16,9 @@ module Utilities.Player
     nextDealer,
     nextDealerT,
     removeOutPlayers,
-    leftOfDealer
+    leftOfDealer,
+    mkNewPlayer,
+    getCurrentPlayerUUIDT
 )
 where
 
@@ -27,9 +29,11 @@ import Data.Maybe (fromMaybe)
 import Control.Monad (when, unless)
 import Safe (headNote, tailNote)
 import Data.UUID.Types (UUID)
+import Network.Socket (Socket)
+import System.Random (getStdRandom, random)
 
 import Utilities.Types (fromPure)
-import Types (Player, GameState, GameStateT, Game)
+import Types (Player(..), GameState, GameStateT, Game)
 
 import Lenses (inPlay, allIn, gameFinished, dealer, uuid, chips, players,
                playerQueue)
@@ -163,3 +167,13 @@ getPlayerByUUIDPure uuid' = do
     let players' = filter (\p -> p^.uuid == uuid') (s^.playerQueue.players)
 
     return $ head players'
+
+mkNewPlayer :: String -> Socket -> IO Player
+mkNewPlayer name' sock = do
+    uuid' <- getStdRandom random
+    return $ Player sock name' uuid' 1000 [] True False 0 False Nothing True
+
+getCurrentPlayerUUIDT :: GameStateT UUID
+getCurrentPlayerUUIDT = do
+    p <- getCurrentPlayerT
+    return $ p^.uuid

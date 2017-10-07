@@ -1,0 +1,32 @@
+name: server
+version: '0.1.0.0'
+synopsis: A server hosting a poker game
+description: Play texas hold em' poker against other players across the internet
+category: Network
+author: ZedPea
+maintainer: zp+github@zacharypalmer.co.uk
+license: BSD3
+dependencies:
+- base >=4.9 && <=4.11
+- lens
+- random
+- transformers
+- safe
+- uuid-types
+- QuickCheck
+- stm
+library:
+    source-dirs: src
+    dependencies:
+    - network
+    - bytestring
+    - binary
+executables:
+    server:
+        main: Main.hs
+        source-dirs: src
+        dependencies:
+        - server
+        - network
+        - bytestring
+        - binary

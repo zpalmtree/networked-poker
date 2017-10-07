@@ -1,0 +1,17 @@
+name: client
+version: '0.1.0.0'
+synopsis: A GUI to connect to a server and play poker
+category: Network
+author: ZedPea
+maintainer: z.palmer@openmailbox.org
+license: BSD3
+dependencies:
+- base >=4.9 && <=4.11
+- network
+- bytestring
+- binary
+- uuid-types
+executables:
+  client:
+    main: Main.hs
+    source-dirs: src

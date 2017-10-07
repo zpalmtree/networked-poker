@@ -1,63 +1,84 @@
-name:                   server
-version:                0.1.0.0
-synopsis:               A server hosting a poker game
-description:            Play texas hold em' poker against other players across the internet
-license:                BSD3
-license-file:           LICENSE
-author:                 ZedPea
-maintainer:             z.palmer@openmailbox.org
-category:               Network
-build-type:             Simple
-cabal-version:          >=1.10
+-- This file has been generated from package.yaml by hpack version 0.18.1.
+--
+-- see: https://github.com/sol/hpack
 
-flag debug
-  Description:          Enable local play rather than network
-  Default:              True
+name:           server
+version:        0.1.0.0
+synopsis:       A server hosting a poker game
+description:    Play texas hold em' poker against other players across the internet
+category:       Network
+author:         ZedPea
+maintainer:     zp+github@zacharypalmer.co.uk
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.9 && <=4.11
+    , lens
+    , random
+    , transformers
+    , safe
+    , uuid-types
+    , QuickCheck
+    , stm
+    , network
+    , bytestring
+    , binary
+  exposed-modules:
+      Betting
+      Game
+      Input
+      Lenses
+      Main
+      Output
+      Showdown
+      Showdown.Best
+      Showdown.Ord
+      Showdown.Value
+      Types
+      Utilities.Card
+      Utilities.Player
+      Utilities.Showdown
+      Utilities.Types
+  other-modules:
+      Paths_server
+  default-language: Haskell2010
 
 executable server
-  main-is:              Main.hs
-  other-extensions:     TemplateHaskell
-  hs-source-dirs:       src
-  default-language:     Haskell2010
-  default-extensions:   CPP
-  build-depends:        base >= 4.9 && <=4.11, QuickCheck, lens, random, 
-                        transformers, safe, uuid-types
-
-  other-modules:        Betting, Utilities.Card, Utilities.Player,
-                        Utilities.Showdown, Utilities.Types, TestStates, Types, 
-                        Showdown, Showdown.Ord, Showdown.Value, Showdown.Best, 
-                        Game, Lenses
-
-  if !flag(debug)
-    build-depends:      network, bytestring, binary
-    other-modules:      Input.Network.Input, Output.Network.Output, RunNetwork,
-                        Output.Terminal.Output, Output.Terminal.OutputMessages,
-                        Utilities.Terminal.Output
-                        --need to include these three output modules otherwise
-                        --stack complains, can't figure out why...
-
-  if flag(debug)
-    cpp-options:        -DDEBUG
-    other-modules:      Input.Terminal.Input,
-                        Output.Terminal.InputMessages,
-                        Output.Terminal.Output, Output.Terminal.OutputMessages,
-                        Utilities.Terminal.Output, RunLocal
-
-test-suite test-server
-    type:               exitcode-stdio-1.0
-    hs-source-dirs:     tests, src
-    main-is:            Tests.hs
-    default-language:   Haskell2010
-    build-depends:      base >= 4.9 && <=4.11, QuickCheck, lens, random,
-                        transformers, safe, uuid-types, poker-eval
-
-  if flag(debug)
-    cpp-options:        -DDEBUG
-    other-modules:      BettingTests, ShowdownTests, CardTests,
-                        Betting, Input.Terminal.Input, Lenses, Utilities.Card,
-                        Output.Terminal.Output, Types, Utilities.Player,
-                        Utilities.Types, Showdown, Showdown.Best, Showdown.Ord,
-                        Showdown.Value, Utilities.Showdown, 
-                        Output.Terminal.InputMessages, 
-                        Output.Terminal.OutputMessages, 
-                        Utilities.Terminal.Output
+  main-is: Main.hs
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.9 && <=4.11
+    , lens
+    , random
+    , transformers
+    , safe
+    , uuid-types
+    , QuickCheck
+    , stm
+    , server
+    , network
+    , bytestring
+    , binary
+  other-modules:
+      Betting
+      Game
+      Input
+      Lenses
+      Output
+      Showdown
+      Showdown.Best
+      Showdown.Ord
+      Showdown.Value
+      Types
+      Utilities.Card
+      Utilities.Player
+      Utilities.Showdown
+      Utilities.Types
+  default-language: Haskell2010

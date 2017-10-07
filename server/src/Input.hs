@@ -1,4 +1,4 @@
-module Input.Network.Input
+module Input
 (
     checkRaiseAllIn,
     checkAllIn,

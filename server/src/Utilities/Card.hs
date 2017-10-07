@@ -23,15 +23,10 @@ import Safe (at)
 
 import Types (Card(..), Value, Suit(..), Stage(..), GameStateT)
 import Utilities.Player (numPlayersT)
+import Output (outputPlayerCards)
 
 import Lenses 
     (cards, cardInfo, deck, tableCards, stage, playerQueue, players)
-
-#ifdef DEBUG
-import Output.Terminal.Output (outputPlayerCards)
-#else
-import Output.Network.Output (outputPlayerCards)
-#endif
 
 dealCards :: GameStateT ()
 dealCards = do

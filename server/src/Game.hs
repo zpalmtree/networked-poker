@@ -27,16 +27,9 @@ import Lenses
      stage, canReRaise, minimumRaise, bigBlindSize, handInfo, cardInfo, 
      roundDone, roundNumber, playerQueue, players)
 
-#ifdef DEBUG
-import Output.Terminal.Output 
-    (outputRoundNumber, outputHandValues, outputWinners, outputWinner, 
-     outputFlop, outputTurn, outputRiver, outputPlayersRemoved)
-
-#else
-import Output.Network.Output 
-    (outputRoundNumber, outputHandValues, outputWinners, outputWinner, 
-     outputFlop, outputTurn, outputRiver, outputPlayersRemoved)
-#endif
+import Output
+    (outputHandValues, outputWinners, outputWinner, outputFlop, outputTurn, 
+     outputRiver, outputPlayersRemoved)
 
 gameLoop :: GameStateT ()
 gameLoop = do
@@ -46,7 +39,6 @@ gameLoop = do
     s <- get
 
     unless (s^.gameFinished) $ do
-        outputRoundNumber
         dealCards
         gameLoop
 

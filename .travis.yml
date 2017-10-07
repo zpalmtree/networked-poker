@@ -17,6 +17,3 @@ before_install:
 
 install:
     - stack --no-terminal install
-
-script:
-    - stack --no-terminal --skip-ghc-check test

@@ -1,4 +1,4 @@
-module Output.Network.Output
+module Output
 (
     outputAction,
     outputPlayerTurn,
@@ -11,18 +11,28 @@ module Output.Network.Output
     outputGameOver,
     outputPlayersRemoved,
     outputHandValues,
-    outputRoundNumber,
     outputSmallBlindMade,
     outputBigBlindMade
 )
 where
 
 import Data.UUID.Types (UUID)
+import Network.Socket.ByteString (send)
+import Control.Lens ((^.))
+import Data.Binary (encode)
+import Data.ByteString.Lazy (toStrict)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad (void)
 
-import Types (GameStateT, Action, Player, Pot)
+import Utilities.Player (getCurrentPlayerT)
+import Types (GameStateT, Action, Player, Pot, ActionMessage(..))
+import Lenses (socket, uuid)
 
 outputAction :: Action Int -> GameStateT ()
-outputAction = undefined
+outputAction a = do
+    p <- getCurrentPlayerT
+    void . lift $ 
+        send (p^.socket) (toStrict . encode $ ActionMessage a (p^.uuid))
 
 outputPlayerTurn :: GameStateT ()
 outputPlayerTurn = undefined
@@ -53,9 +63,6 @@ outputPlayersRemoved = undefined
 
 outputHandValues :: GameStateT ()
 outputHandValues = undefined
-
-outputRoundNumber :: GameStateT ()
-outputRoundNumber = undefined
 
 outputSmallBlindMade :: GameStateT ()
 outputSmallBlindMade = undefined

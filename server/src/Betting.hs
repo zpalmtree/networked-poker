@@ -31,19 +31,11 @@ import Lenses
      inPlay, uuid, allIn, minimumRaise, canReRaise, madeInitialBet, playerQueue, 
      players)
 
-#ifdef DEBUG
-import Input.Terminal.Input (foldAllIn, checkAllIn, checkRaiseAllIn,
-                             foldCallAllIn, foldCallRaiseAllIn)
+import Input
+    (foldAllIn, checkAllIn, checkRaiseAllIn, foldCallAllIn, foldCallRaiseAllIn)
 
-import Output.Terminal.Output (outputSmallBlindMade, outputBigBlindMade,
-                               outputPlayerTurn, outputAction)
-#else
-import Input.Network.Input (foldAllIn, checkAllIn, checkRaiseAllIn,
-                            foldCallAllIn, foldCallRaiseAllIn)
-
-import Output.Network.Output (outputSmallBlindMade, outputBigBlindMade,
-                              outputPlayerTurn, outputAction)
-#endif
+import Output
+    (outputSmallBlindMade, outputBigBlindMade, outputPlayerTurn, outputAction)
 
 makeBet :: Int -> GameState ()
 makeBet amount = do
