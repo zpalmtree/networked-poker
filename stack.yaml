@@ -7,4 +7,6 @@ packages:
 resolver: lts-9.6
 install-ghc: true
 ghc-options:
-    $locals: -O0
+    client: -O0
+    server: -O0
+    ai: -O0
