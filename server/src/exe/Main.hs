@@ -8,7 +8,6 @@ import Network.Socket
     (Socket, SockAddr, getAddrInfo, socket, addrFamily, addrProtocol,
      addrSocketType, bind, addrAddress, listen, accept, isReadable)
 
-import Data.ByteString.Char8 (unpack)
 import Data.ByteString.Lazy (ByteString, fromStrict)
 import Network.Socket.ByteString (recv)
 import Control.Concurrent.MVar (MVar, newMVar, modifyMVar_)
@@ -63,9 +62,6 @@ handleNewClient sock addr unseated = do
         then do
             -- add a timer here?
             msg <- recv sock 4096
-
-            putStrLn $ printf "Recieved message \"%s\" from %s..." 
-                            (unpack msg) (show addr)
 
             handleMsg (decodeOrFail $ fromStrict msg) sock addr unseated
         else putStrLn "Socket is unreadable..."

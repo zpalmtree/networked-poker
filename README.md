@@ -26,12 +26,6 @@ You need stack installed.
 
 `stack install`
 
-If you want to try the functional local game, run instead
-
-`stack install --flag server:debug`
-
-It is currently non functional.
-
 Then either add ~/.local/bin to your path and run the executable of your choice:
 
 `ai`
@@ -43,15 +37,3 @@ Or, run
 `stack exec ai`
 `stack exec client`
 `stack exec server`
-
-## Tests
-
-#### Install prerequisites
-You need poker-eval/libpoker-eval installed. 
-
-It seems the source for poker-eval is down, but it can be found at https://github.com/atinm/poker-eval
-
-You might need to manually move the lib to /lib/ from /usr/local/lib/ for stack to find it.
-#### Running
-
-`stack test`
