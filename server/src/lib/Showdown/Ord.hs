@@ -10,19 +10,21 @@ where
 
 import Data.List (sort, group, sortBy)
 import Safe (tailNote, lastNote)
+import Control.Lens ((^.))
 
 import Types (Card, HandInfo(..), Hand(..))
-import Utilities.Showdown (getValue, cardValue, cardValueAceLow)
+import Utilities.Showdown (cardValue, cardValueAceLow)
+import Lenses (value)
 
 ordOnValue :: [Card] -> [Card] -> Ordering
 ordOnValue c1 c2 = compare (values c1) (values c2)
-    where values x = sort $ map (cardValue . getValue) x
+    where values x = sort $ map (cardValue . (^.value)) x
 
 ordXOfAKind :: [Card] -> [Card] -> Ordering
 ordXOfAKind xOfAKind1 xOfAKind2 = compare (sortOnLength xOfAKind1) 
                                           (sortOnLength xOfAKind2)
     where sortOnLength x = sortBy (flip ordOnLength) $ grouped x
-          grouped c = group . sort $ map (cardValue . getValue) c
+          grouped c = group . sort $ map (cardValue . (^.value)) c
 
 ordOnLength :: (Ord (t a), Foldable t) => t a -> t a -> Ordering
 ordOnLength x1 x2
@@ -33,10 +35,10 @@ ordOnLength x1 x2
 ordStraight :: [Card] -> [Card] -> Ordering
 ordStraight straight1 straight2 = compare (straightKicker straight1) 
                                            (straightKicker straight2)
-    where aceLow = map (cardValueAceLow . getValue)
+    where aceLow = map (cardValueAceLow . (^.value))
           straightKicker straight'
             | aceLow straight' == [1..5] = maximum $ aceLow straight'
-            | otherwise = maximum $ map (cardValue . getValue) straight'
+            | otherwise = maximum $ map (cardValue . (^.value)) straight'
 
 ordHand :: HandInfo -> HandInfo -> Ordering
 ordHand (HandInfo a _) (HandInfo b _)
@@ -46,7 +48,7 @@ ordHand (HandInfo a _) (HandInfo b _)
 ordHand (HandInfo (HighCard a) c1) (HandInfo (HighCard b) c2)
     | a > b = GT
     | a < b = LT
-    | otherwise = compare (map getValue c1) (map getValue c2)
+    | otherwise = compare (map (^.value) c1) (map (^.value) c2)
 
 ordHand h1@(HandInfo (Pair a) _) h2@(HandInfo (Pair b) _)
     | a > b = GT
@@ -101,13 +103,13 @@ compareKickers (HandInfo value1 hand1) (HandInfo value2 hand2)
 
     | otherwise = error "Unexpected cards in compareKickers"
     where multiSameCardFix xs = tailNote "in compareKickers!" . group . sort 
-                              $ map getValue xs
+                              $ map (^.value) xs
           -- pair fix removes the first group of same cards, i.e. the first
           -- pair, three of a kind, four of a kind, whatever
           -- it's still nested in a list, but whatever, compare works fine
 
           twoPairFix xs = lastNote "in compareKickers!" . group . 
-                          sort $ map getValue xs
+                          sort $ map (^.value) xs
           -- two pair fix just takes the last item, cause 5 cards minus two
           -- pairs just leaves one card, wrapped in a list
 

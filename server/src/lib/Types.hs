@@ -15,23 +15,27 @@ module Types
     Value(..),
     Action(..),
     Hand(..),
+    Message(..),
     ActionMessage(..),
+    PlayerTurnMessage(..),
+    CardMessage(..),
+    DealtCardsMessage(..),
+    PotWinnersMessage(..),
+    GameOverMessage(..),
+    PlayersRemovedMessage(..),
+    CardRevealMessage(..),
+    PlayerHandInfo(..),
     GameStateT,
     GameState
 )
 where
 
 import Control.Monad.Trans.State (StateT(..), State)
-import Data.Char (toLower)
 import Data.UUID.Types (UUID)
 import Control.Concurrent.MVar (MVar)
 import Network.Socket (Socket)
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
-
-import Text.Printf 
-    (PrintfArg(..), printf, fmtPrecision, fmtChar, vFmt, formatString, 
-     errorBadFormat)
 
 -- DATA TYPES
 
@@ -58,12 +62,12 @@ data Player = Player {
     _madeInitialBet :: Bool,
     _handInfo :: Maybe HandInfo,
     _canReRaise :: Bool
-} deriving (Eq, Show)
+} deriving (Eq)
 
 data Cards = Cards {
     _tableCards :: [Card],
     _deck :: [Card]
-} deriving (Show, Eq)
+} deriving (Eq)
 
 data Bets = Bets {
     _pots :: [Pot],
@@ -71,27 +75,38 @@ data Bets = Bets {
     _smallBlindSize :: Int,
     _bigBlindSize :: Int,
     _minimumRaise :: Int
-} deriving (Show, Eq)
+} deriving (Eq)
 
 data Card = Card {
     _value :: Value,
     _suit :: Suit
-} deriving (Eq)
+} deriving (Eq, Generic)
 
 data HandInfo = HandInfo {
     _handValue :: Hand Value Value,
     _bestHand :: [Card]
-} deriving (Eq, Show)
+} deriving (Eq)
 
 data Pot = Pot {
     _pot :: Int,
     _playerUUIDs :: [UUID]
-} deriving (Show, Eq)
+} deriving (Eq, Generic)
 
 data PlayerQueue = PlayerQueue {
     _players :: [Player],
     _dealer :: Int
-} deriving (Show, Eq)
+} deriving (Eq)
+
+data ActionMessage a = ActionMessage {
+    _action :: Action a,
+    _player :: UUID
+} deriving (Generic)
+
+data PlayerHandInfo = PlayerHandInfo {
+    _id :: UUID,
+    _rank :: Hand Value Value,
+    _hand :: [Card]
+} deriving (Generic)
 
 data Stage = PreFlop 
            | Flop 
@@ -104,7 +119,7 @@ data Suit = Heart
           | Spade 
           | Club 
           | Diamond 
-          deriving (Show, Bounded, Enum, Eq)
+          deriving (Show, Bounded, Enum, Eq, Generic)
 
 data Value = Two 
            | Three 
@@ -119,13 +134,15 @@ data Value = Two
            | Queen 
            | King 
            | Ace 
-           deriving (Show, Bounded, Enum, Eq, Ord)
+           deriving (Show, Bounded, Enum, Eq, Ord, Generic)
 
 data Action a = Fold 
               | Check 
               | Call 
               | Raise Int
               | AllIn 
+              | SmallBlind
+              | BigBlind
               deriving (Generic, Show)
 
 data Hand a b = HighCard a 
@@ -137,11 +154,38 @@ data Hand a b = HighCard a
               | FullHouse a b 
               | FourOfAKind a
               | StraightFlush a b
-              deriving (Eq, Ord)
+              deriving (Eq, Ord, Generic)
 
-data ActionMessage a = ActionMessage {
-    _action :: Action a,
-    _player :: UUID
+data GameOverMessage = GameOverMessage deriving (Generic)
+
+-- NEWTYPES
+
+newtype Message a = Message { 
+    getMessage :: a
+} deriving (Generic)
+
+newtype CardMessage = CardMessage {
+    _allCards :: [Card]
+} deriving (Generic)
+
+newtype PlayerTurnMessage = PlayerTurnMessage {
+    _playerTurn :: UUID
+} deriving (Generic)
+
+newtype DealtCardsMessage = DealtCardsMessage {
+    _playerCards :: [Card]
+} deriving (Generic)
+
+newtype PotWinnersMessage = PotWinnersMessage {
+    _mapping :: [(Pot, [UUID])]
+} deriving (Generic)
+
+newtype PlayersRemovedMessage = PlayersRemovedMessage {
+    _removed :: [UUID]
+} deriving (Generic)
+
+newtype CardRevealMessage = CardRevealMessage {
+    _infos :: [PlayerHandInfo]
 } deriving (Generic)
 
 -- TYPES
@@ -152,51 +196,34 @@ type GameState a = State Game a
 
 -- INSTANCES
 
-instance (PrintfArg a, PrintfArg b) => Show (Hand a b) where
-    show (HighCard a)
-        = printf "high card %V" a
-
-    show (Pair a)
-        = printf "pair of %Us" a
-
-    show (TwoPair a b)
-        = printf "two pair, %Us and %Us" a b
-
-    show (ThreeOfAKind a)
-        = printf "three of a kind, %Us" a
-
-    show (Straight a b)
-        = printf "straight, %V to %V" a b
-
-    show (Flush a)
-        = printf "flush, %V high" a
-
-    show (FullHouse a b)
-        = printf "full house, %Us over %Us" a b
-
-    show (FourOfAKind a)
-        = printf "four of a kind, %Us" a
-
-    show (StraightFlush a b)
-        = printf "straight flush, %V to %V" a b
-
-instance PrintfArg Value where
-    formatArg x fmt
-        | fmtChar (vFmt 'V' fmt) == 'V' 
-            = formatString (map toLower $ show x) 
-              (fmt { fmtChar = 's', fmtPrecision = Nothing })
-
-        | fmtChar (vFmt 'U' fmt) == 'U'
-            = formatString (plural . map toLower $ show x)
-              (fmt { fmtChar = 's', fmtPrecision = Nothing})
-
-        | otherwise = errorBadFormat $ fmtChar fmt
-        where plural "six" = "sixe"
-              plural s = s
-
-instance Show Card where
-    show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"
-
 instance Binary (ActionMessage a)
 
+instance Binary PlayerTurnMessage
+
+instance Binary CardMessage
+
+instance Binary DealtCardsMessage
+
+instance Binary PotWinnersMessage
+
+instance Binary GameOverMessage
+
+instance Binary PlayersRemovedMessage
+
+instance Binary CardRevealMessage
+
+instance Binary PlayerHandInfo
+
+instance (Binary a, Binary b) => Binary (Hand a b)
+
+instance Binary Pot
+
+instance Binary Card
+
+instance Binary Suit
+
+instance Binary Value
+
 instance Binary (Action a)
+
+instance (Binary a) => Binary (Message a)

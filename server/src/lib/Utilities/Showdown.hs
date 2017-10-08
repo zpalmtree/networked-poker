@@ -3,28 +3,26 @@ module Utilities.Showdown
     handSubsets,
     cardValue,
     cardValueAceLow,
-    getValue,
     numOfEachValue,
     numOfSuit,
-    sorted,
     consecutive,
     cardValues,
-    sizeOfHand,
-    getHand
+    sizeOfHand
 )
 where
 
-import Data.List (sort, sortBy, group)
-import Data.Function (on)
+import Data.List (sort, group)
 import Safe (at, headNote)
+import Control.Lens ((^.))
 
-import Types (Card(..), Value(..), Hand)
+import Types (Card(..), Value(..))
 import Utilities.Card (hearts, clubs, diamonds, spades)
+import Lenses (value)
 
 cardValues :: [Card] -> Bool -> [Int]
 cardValues c aceHigh
-    | aceHigh = sort $ map (cardValue . getValue) c
-    | otherwise = sort $ map (cardValueAceLow . getValue) c
+    | aceHigh = sort $ map (cardValue . (^.value)) c
+    | otherwise = sort $ map (cardValueAceLow . (^.value)) c
 
 numOfSuit :: [Card] -> [Int]
 numOfSuit c = map (`numSuit` c) [isHeart, isClub, isDiamond, isSpade]
@@ -43,15 +41,6 @@ isDiamond x = x `elem` diamonds
 
 isSpade :: Card -> Bool
 isSpade x = x `elem` spades
-
-sorted :: [Card] -> [Card]
-sorted = sortBy (compare `on` getValue)
-
-getValue :: Card -> Value
-getValue (Card v _) = v
-
-getHand :: (Hand a b, [Card]) -> Hand a b
-getHand (h, _) = h
 
 cardValue :: Value -> Int
 cardValue Two = 2
@@ -83,4 +72,4 @@ consecutive' (x:xs) val
     | otherwise = False
 
 numOfEachValue :: [Card] -> [Int]
-numOfEachValue cards' = map length . group . sort $ map getValue cards'
+numOfEachValue cards' = map length . group . sort $ map (^.value) cards'

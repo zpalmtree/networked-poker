@@ -1,9 +1,6 @@
-{-# LANGUAGE CPP #-}
-
 module Betting
 (
     updatePot,
-    gatherChips,
     smallBlind,
     bigBlind,
     promptBet,
@@ -20,6 +17,9 @@ import Control.Monad (when)
 import Safe (headNote)
 import Data.UUID.Types (UUID)
 
+
+import Output (outputPlayerTurn, outputAction)
+
 import Utilities.Player
     (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayerT)
 
@@ -33,9 +33,6 @@ import Lenses
 
 import Input
     (foldAllIn, checkAllIn, checkRaiseAllIn, foldCallAllIn, foldCallRaiseAllIn)
-
-import Output
-    (outputSmallBlindMade, outputBigBlindMade, outputPlayerTurn, outputAction)
 
 makeBet :: Int -> GameState ()
 makeBet amount = do
@@ -56,13 +53,13 @@ updateMaxBet n = do
 
 smallBlind :: GameStateT ()
 smallBlind = do
-    outputSmallBlindMade
+    outputAction SmallBlind
     s <- get
     fromPure $ makeBet (s^.bets.smallBlindSize)
 
 bigBlind :: GameStateT ()
 bigBlind = do
-    outputBigBlindMade
+    outputAction BigBlind
     s <- get
     fromPure $ makeBet (s^.bets.bigBlindSize)
 
@@ -220,6 +217,7 @@ handleInput action = case action of
     Call -> call
     (Raise n) -> raise n
     AllIn -> goAllIn
+    _ -> error "Invalid input given in handleInput!"
 
 fold :: GameState ()
 fold = playerQueue.players.ix 0.inPlay .= False

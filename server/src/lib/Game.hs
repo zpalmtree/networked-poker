@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module Game
 (
     gameLoop
@@ -9,8 +7,9 @@ where
 import Control.Lens ((^.), (.=), (+=), traversed, zoom)
 import Control.Monad.Trans.State (get)
 import Control.Monad (unless)
+import Data.UUID.Types (UUID)
 
-import Types (Game, Pot, Player, Stage(..), Cards(..), GameStateT)
+import Types (Game, Pot, Stage(..), Cards(..), GameStateT)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
 import Showdown (distributePot, calculateHandValues)
 import Utilities.Types (fromPure)
@@ -28,8 +27,7 @@ import Lenses
      roundDone, roundNumber, playerQueue, players)
 
 import Output
-    (outputHandValues, outputWinners, outputWinner, outputFlop, outputTurn, 
-     outputRiver, outputPlayersRemoved)
+    (outputHandValues, outputWinners, outputCards, outputPlayersRemoved)
 
 gameLoop :: GameStateT ()
 gameLoop = do
@@ -96,9 +94,16 @@ makeChoice s
         outputWinners winnerMapping
 
     | onlyOnePlayerLeft s = do
-        winner <- fromPure victorID
-        outputWinner winner
-        fromPure $ giveWinnings winner
+        winnerID <- fromPure victorID
+
+        fromPure updatePot
+
+        let pot' = head $ s^.bets.pots
+            winner' = [winnerID]
+
+        outputWinners [(pot', winner')]
+
+        fromPure $ giveWinnings winnerID
 
     | maxOneNotAllIn s = do
         nextState
@@ -123,18 +128,18 @@ makeChoice s
         nextState
         playRound
 
-showdown :: GameStateT [(Pot, [Player])]
+showdown :: GameStateT [(Pot, [UUID])]
 showdown = do
     fromPure calculateHandValues
     s <- get
     getWinnersAndDistribute (s^.bets.pots)
 
-getWinnersAndDistribute :: [Pot] -> GameStateT [(Pot, [Player])]
+getWinnersAndDistribute :: [Pot] -> GameStateT [(Pot, [UUID])]
 getWinnersAndDistribute [] = return []
 getWinnersAndDistribute (p:ps) = do
-    winners <- fromPure $ distributePot p
-    winners' <- getWinnersAndDistribute ps
-    return $ (p, winners) : winners'
+    winnerIDs <- fromPure $ distributePot p
+    winnerIDs' <- getWinnersAndDistribute ps
+    return $ (p, winnerIDs) : winnerIDs'
 
 nextState :: GameStateT ()
 nextState = do
@@ -155,15 +160,15 @@ nextState = do
     case s^.stage of
         PreFlop -> do
             revealFlop
-            outputFlop
+            outputCards
 
         Flop -> do
             revealTurn
-            outputTurn
+            outputCards
 
         Turn -> do
             revealRiver
-            outputRiver
+            outputCards
 
         River -> stage .= Showdown
 

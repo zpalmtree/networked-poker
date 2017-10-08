@@ -2,70 +2,101 @@ module Output
 (
     outputAction,
     outputPlayerTurn,
-    outputFlop,
-    outputTurn,
-    outputRiver,
+    outputCards,
     outputPlayerCards,
-    outputWinner,
     outputWinners,
     outputGameOver,
     outputPlayersRemoved,
-    outputHandValues,
-    outputSmallBlindMade,
-    outputBigBlindMade
+    outputHandValues
 )
 where
 
 import Data.UUID.Types (UUID)
 import Network.Socket.ByteString (send)
 import Control.Lens ((^.))
-import Data.Binary (encode)
+import Data.Binary (Binary, encode)
 import Data.ByteString.Lazy (toStrict)
+import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (void)
+import Data.Maybe (fromJust)
 
-import Utilities.Player (getCurrentPlayerT)
-import Types (GameStateT, Action, Player, Pot, ActionMessage(..))
-import Lenses (socket, uuid)
+import Utilities.Player (getCurrentPlayerT, getCurrentPlayerUUID)
+
+import Lenses
+    (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
+     handInfo, handValue)
+
+import Types 
+    (Message(..), PlayerTurnMessage(..), ActionMessage(..), CardMessage(..),
+     DealtCardsMessage(..), PotWinnersMessage(..), GameOverMessage(..),
+     PlayersRemovedMessage(..), CardRevealMessage(..), PlayerHandInfo(..),
+     GameStateT, Action, Player, Pot)
+
+msgAll :: (Binary a) => Message a -> GameStateT ()
+msgAll msg = do
+    s <- get
+
+    mapM_ (msgP msg) (s^.playerQueue.players)
+
+msgP :: (Binary a) => Message a -> Player -> GameStateT ()
+msgP msg p = do
+    let sendMsg sock = lift $ send sock (toStrict $ encode msg)
+
+    void . sendMsg $ p^.socket
 
 outputAction :: Action Int -> GameStateT ()
 outputAction a = do
     p <- getCurrentPlayerT
-    void . lift $ 
-        send (p^.socket) (toStrict . encode $ ActionMessage a (p^.uuid))
+
+    let msg = Message $ ActionMessage a (p^.uuid)
+
+    msgAll msg
 
 outputPlayerTurn :: GameStateT ()
-outputPlayerTurn = undefined
+outputPlayerTurn = do
+    u <- getCurrentPlayerUUID
 
-outputFlop :: GameStateT ()
-outputFlop = undefined
+    let msg = Message $ PlayerTurnMessage u
 
-outputTurn :: GameStateT ()
-outputTurn = undefined
+    msgAll msg
 
-outputRiver :: GameStateT ()
-outputRiver = undefined
+outputCards :: GameStateT ()
+outputCards = do
+    s <- get
+
+    let msg = Message $ CardMessage (s^.cardInfo.tableCards)
+
+    msgAll msg
 
 outputPlayerCards :: GameStateT ()
-outputPlayerCards = undefined
+outputPlayerCards = do
+    s <- get
 
-outputWinner :: UUID -> GameStateT ()
-outputWinner = undefined
+    mapM_ (\p -> msgP (msg p) p) (s^.playerQueue.players)
 
-outputWinners :: [(Pot, [Player])] -> GameStateT ()
-outputWinners = undefined
+    where msg p = Message $ DealtCardsMessage (p^.cards)
+
+outputWinners :: [(Pot, [UUID])] -> GameStateT ()
+outputWinners potWinnerMap = msgAll . Message $ PotWinnersMessage potWinnerMap
 
 outputGameOver :: GameStateT ()
-outputGameOver = undefined
+outputGameOver = msgAll . Message $ GameOverMessage
 
-outputPlayersRemoved :: Maybe [Player] -> GameStateT ()
-outputPlayersRemoved = undefined
+outputPlayersRemoved :: Maybe [UUID] -> GameStateT ()
+outputPlayersRemoved maybeP = case maybeP of
+    Nothing -> return ()
+    Just p -> msgAll . Message $ PlayersRemovedMessage p
 
 outputHandValues :: GameStateT ()
-outputHandValues = undefined
+outputHandValues = do
+    s <- get
 
-outputSmallBlindMade :: GameStateT ()
-outputSmallBlindMade = undefined
+    let inPlayers = filter (^.inPlay) (s^.playerQueue.players)
+        details = map mkHandInfo inPlayers
 
-outputBigBlindMade :: GameStateT ()
-outputBigBlindMade = undefined
+    msgAll . Message $ CardRevealMessage details
+
+    where mkHandInfo p = PlayerHandInfo (p^.uuid) 
+                                        (fromJust (p^.handInfo)^.handValue)
+                                        (p^.cards)

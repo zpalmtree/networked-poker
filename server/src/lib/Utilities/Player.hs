@@ -18,7 +18,7 @@ module Utilities.Player
     removeOutPlayers,
     leftOfDealer,
     mkNewPlayer,
-    getCurrentPlayerUUIDT
+    getCurrentPlayerUUID
 )
 where
 
@@ -104,7 +104,7 @@ nextPlayer = playerQueue.players %= shift
 nextPlayerT :: GameStateT ()
 nextPlayerT = fromPure nextPlayer
 
-removeOutPlayers :: GameState (Maybe [Player])
+removeOutPlayers :: GameState (Maybe [UUID])
 removeOutPlayers = do
     s <- get
 
@@ -121,7 +121,7 @@ removeOutPlayers = do
 
             when (numPlayers' <= 1) $ gameFinished .= True
 
-            return (Just removed)
+            return . Just $ removed^..traversed.uuid
 
     where remove = filter (\x -> x^.chips > 0)
 
@@ -173,7 +173,7 @@ mkNewPlayer name' sock = do
     uuid' <- getStdRandom random
     return $ Player sock name' uuid' 1000 [] True False 0 False Nothing True
 
-getCurrentPlayerUUIDT :: GameStateT UUID
-getCurrentPlayerUUIDT = do
+getCurrentPlayerUUID :: GameStateT UUID
+getCurrentPlayerUUID = do
     p <- getCurrentPlayerT
     return $ p^.uuid

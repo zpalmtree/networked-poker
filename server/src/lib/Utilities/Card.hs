@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module Utilities.Card
 (
     dealCards,
