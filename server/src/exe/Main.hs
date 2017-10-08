@@ -1,4 +1,8 @@
-module Main where
+module Main
+(
+    main
+)
+where
 
 import Network.Socket 
     (Socket, SockAddr, getAddrInfo, socket, addrFamily, addrProtocol,

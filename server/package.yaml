@@ -6,6 +6,7 @@ category: Network
 author: ZedPea
 maintainer: zp+github@zacharypalmer.co.uk
 license: BSD3
+ghc-options: -O0
 dependencies:
 - base >=4.9 && <=4.11
 - lens
@@ -16,7 +17,7 @@ dependencies:
 - QuickCheck
 - stm
 library:
-    source-dirs: src
+    source-dirs: src/lib
     dependencies:
     - network
     - bytestring
@@ -24,7 +25,7 @@ library:
 executables:
     server:
         main: Main.hs
-        source-dirs: src
+        source-dirs: src/exe
         dependencies:
         - server
         - network
