@@ -1,6 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Main where
+module Main
+(
+    main
+)
+where
 
 import Data.Binary (Binary, encode, decodeOrFail)
 import qualified Data.ByteString as BS (ByteString)
@@ -12,6 +16,8 @@ import GHC.Generics (Generic)
 import System.IO (hFlush, stdout)
 import Control.Monad (forever)
 import Data.UUID.Types (UUID)
+
+import Types (Message(..), ActionMessage(..))
 
 import Network.Socket 
     (Socket, getAddrInfo, socket, addrFamily, addrProtocol, addrSocketType, 
@@ -37,24 +43,12 @@ ioLoop sock = do
     msg <- decode <$> recv sock 4096
     case msg of
         Left (_, _, err) -> putStrLn err
-        Right (_, _, msg') -> print (msg' :: ActionMessage Int)
+        Right (_, _, msg') -> handleMsg msg'
 
 decode :: (Binary a) => BS.ByteString -> 
                         Either (BL.ByteString, ByteOffset, String)
                                (BL.ByteString, ByteOffset, a)
 decode msg = decodeOrFail $ fromStrict msg
 
-data Action a = Fold 
-              | Check 
-              | Call 
-              | Raise Int
-              | AllIn 
-              deriving (Generic, Show)
-
-data ActionMessage a = ActionMessage {
-    _action :: Action a,
-    _player :: UUID
-} deriving (Generic, Show)
-
-instance Binary (ActionMessage a)
-instance Binary (Action a)
+handleMsg :: Message -> IO () -- how do we make this typecheck?
+handleMsg = undefined

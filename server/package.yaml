@@ -6,7 +6,6 @@ category: Network
 author: ZedPea
 maintainer: zp+github@zacharypalmer.co.uk
 license: BSD3
-ghc-options: -O0
 dependencies:
 - base >=4.9 && <=4.11
 - lens
@@ -14,20 +13,20 @@ dependencies:
 - transformers
 - safe
 - uuid-types
-- QuickCheck
-- stm
 library:
     source-dirs: src/lib
     dependencies:
     - network
     - bytestring
     - binary
+    - types
 executables:
     server:
         main: Main.hs
         source-dirs: src/exe
         dependencies:
         - server
+        - types
         - network
         - bytestring
         - binary

@@ -17,7 +17,6 @@ cabal-version:  >= 1.10
 library
   hs-source-dirs:
       src/lib
-  ghc-options: -O0
   build-depends:
       base >=4.9 && <=4.11
     , lens
@@ -25,22 +24,19 @@ library
     , transformers
     , safe
     , uuid-types
-    , QuickCheck
-    , stm
     , network
     , bytestring
     , binary
+    , types
   exposed-modules:
       Betting
       Game
       Input
-      Lenses
       Output
       Showdown
       Showdown.Best
       Showdown.Ord
       Showdown.Value
-      Types
       Utilities.Card
       Utilities.Player
       Utilities.Showdown
@@ -53,7 +49,6 @@ executable server
   main-is: Main.hs
   hs-source-dirs:
       src/exe
-  ghc-options: -O0
   build-depends:
       base >=4.9 && <=4.11
     , lens
@@ -61,9 +56,8 @@ executable server
     , transformers
     , safe
     , uuid-types
-    , QuickCheck
-    , stm
     , server
+    , types
     , network
     , bytestring
     , binary

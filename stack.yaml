@@ -4,9 +4,11 @@ packages:
 - ai
 - client
 - server
+- types
 resolver: lts-9.6
 install-ghc: true
 ghc-options:
     client: -O0
     server: -O0
     ai: -O0
+    types: -O0

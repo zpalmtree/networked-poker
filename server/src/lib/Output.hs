@@ -14,7 +14,7 @@ where
 import Data.UUID.Types (UUID)
 import Network.Socket.ByteString (send)
 import Control.Lens ((^.))
-import Data.Binary (Binary, encode)
+import Data.Binary (encode)
 import Data.ByteString.Lazy (toStrict)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
@@ -33,13 +33,13 @@ import Types
      PlayersRemovedMessage(..), CardRevealMessage(..), PlayerHandInfo(..),
      GameStateT, Action, Player, Pot)
 
-msgAll :: (Binary a) => Message a -> GameStateT ()
+msgAll :: Message -> GameStateT ()
 msgAll msg = do
     s <- get
 
     mapM_ (msgP msg) (s^.playerQueue.players)
 
-msgP :: (Binary a) => Message a -> Player -> GameStateT ()
+msgP :: Message -> Player -> GameStateT ()
 msgP msg p = do
     let sendMsg sock = lift $ send sock (toStrict $ encode msg)
 
@@ -49,7 +49,7 @@ outputAction :: Action Int -> GameStateT ()
 outputAction a = do
     p <- getCurrentPlayerT
 
-    let msg = Message $ ActionMessage a (p^.uuid)
+    let msg = MIsAction $ ActionMessage a (p^.uuid)
 
     msgAll msg
 
@@ -57,7 +57,7 @@ outputPlayerTurn :: GameStateT ()
 outputPlayerTurn = do
     u <- getCurrentPlayerUUID
 
-    let msg = Message $ PlayerTurnMessage u
+    let msg = MIsPlayerTurn $ PlayerTurnMessage u
 
     msgAll msg
 
@@ -65,7 +65,7 @@ outputCards :: GameStateT ()
 outputCards = do
     s <- get
 
-    let msg = Message $ CardMessage (s^.cardInfo.tableCards)
+    let msg = MIsCard $ CardMessage (s^.cardInfo.tableCards)
 
     msgAll msg
 
@@ -75,18 +75,19 @@ outputPlayerCards = do
 
     mapM_ (\p -> msgP (msg p) p) (s^.playerQueue.players)
 
-    where msg p = Message $ DealtCardsMessage (p^.cards)
+    where msg p = MIsDealt $ DealtCardsMessage (p^.cards)
 
 outputWinners :: [(Pot, [UUID])] -> GameStateT ()
-outputWinners potWinnerMap = msgAll . Message $ PotWinnersMessage potWinnerMap
+outputWinners potWinnerMap = msgAll . MIsPotWinners 
+                                    $ PotWinnersMessage potWinnerMap
 
 outputGameOver :: GameStateT ()
-outputGameOver = msgAll . Message $ GameOverMessage
+outputGameOver = msgAll . MIsGameOver $ GameOverMessage
 
 outputPlayersRemoved :: Maybe [UUID] -> GameStateT ()
 outputPlayersRemoved maybeP = case maybeP of
     Nothing -> return ()
-    Just p -> msgAll . Message $ PlayersRemovedMessage p
+    Just p -> msgAll . MIsPlayersRemoved $ PlayersRemovedMessage p
 
 outputHandValues :: GameStateT ()
 outputHandValues = do
@@ -95,7 +96,7 @@ outputHandValues = do
     let inPlayers = filter (^.inPlay) (s^.playerQueue.players)
         details = map mkHandInfo inPlayers
 
-    msgAll . Message $ CardRevealMessage details
+    msgAll . MIsCardReveal $ CardRevealMessage details
 
     where mkHandInfo p = PlayerHandInfo (p^.uuid) 
                                         (fromJust (p^.handInfo)^.handValue)

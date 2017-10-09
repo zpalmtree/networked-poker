@@ -156,13 +156,19 @@ data Hand a b = HighCard a
               | StraightFlush a b
               deriving (Eq, Ord, Generic)
 
+data Message = MIsAction (ActionMessage Int)
+             | MIsPlayerTurn PlayerTurnMessage
+             | MIsCard CardMessage
+             | MIsDealt DealtCardsMessage
+             | MIsPotWinners PotWinnersMessage
+             | MIsGameOver GameOverMessage
+             | MIsPlayersRemoved PlayersRemovedMessage
+             | MIsCardReveal CardRevealMessage
+             deriving (Generic)
+
 data GameOverMessage = GameOverMessage deriving (Generic)
 
 -- NEWTYPES
-
-newtype Message a = Message { 
-    getMessage :: a
-} deriving (Generic)
 
 newtype CardMessage = CardMessage {
     _allCards :: [Card]
@@ -226,4 +232,4 @@ instance Binary Value
 
 instance Binary (Action a)
 
-instance (Binary a) => Binary (Message a)
+instance Binary Message
