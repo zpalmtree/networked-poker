@@ -13,8 +13,7 @@ before_install:
 addons:
     apt:
         packages:
-        - qml-module-qtquick-controls
-        - qml-module-qtquick-controls2
+        - qtdeclarative5-dev
 
 script:
     - stack --no-terminal install
