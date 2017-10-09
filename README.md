@@ -3,18 +3,18 @@
 
 A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against.
 
-Local server gameplay is pretty good, just started adding network support and initial network work on the client.
+Working on the client GUI, then the networking.
 
 ## Installation
 
 #### Install prerequistes
-You need stack installed.
+You need stack and QtQuick installed.
 
 ##### Debian based:
-`sudo apt-get install haskell-stack`
+`sudo apt-get install haskell-stack qtdeclarative5-dev`
 
 ##### Arch based:
-`sudo pacman -S stack`
+`sudo pacman -S stack qt5-quickcontrols qt5-quickcontrols`
 
 #### Clone the repository
 

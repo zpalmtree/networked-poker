@@ -14,7 +14,9 @@ build-type:     Simple
 cabal-version:  >= 1.10
 
 data-files:
-    src/main.qml
+    src/gui/Action.qml
+    src/gui/main.qml
+    src/gui/Player.qml
 
 library
   hs-source-dirs:

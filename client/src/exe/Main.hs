@@ -36,11 +36,7 @@ import Types
 
 main :: IO ()
 main = do   
-    gui <- getDataFileName "src/main.qml"
-
-    rootClass <- newClass []
-
-    ctx <- newObject rootClass ()
+    gui <- getDataFileName "src/gui/main.qml"
 
     {-
     Just testing GUI for now
@@ -51,8 +47,7 @@ main = do
     -}
 
     runEngineLoop defaultEngineConfig {
-        initialDocument = fileDocument gui,
-        contextObject = Just $ anyObjRef ctx
+        initialDocument = fileDocument gui
     }
 
 initialSetup :: IO (ClientGame, Socket)

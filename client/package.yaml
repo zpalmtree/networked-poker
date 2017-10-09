@@ -5,7 +5,7 @@ category: Network
 author: ZedPea
 maintainer: z.palmer@openmailbox.org
 license: BSD3
-data-files: src/main.qml
+data-files: src/gui/*.qml
 dependencies:
 - base >=4.9 && <=4.11
 - types
