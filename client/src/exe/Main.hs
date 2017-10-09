@@ -15,6 +15,13 @@ import System.IO (hFlush, stdout)
 import Control.Monad.Trans.State (evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Control.Lens ((^.))
+import Control.Concurrent (forkIO)
+
+import Paths_client (getDataFileName)
+
+import Graphics.QML
+    (initialDocument, contextObject, newClass, newObject, runEngineLoop,
+     defaultEngineConfig, fileDocument, anyObjRef)
 
 import Network.Socket 
     (Socket, getAddrInfo, socket, addrFamily, addrProtocol, addrSocketType, 
@@ -29,9 +36,24 @@ import Types
 
 main :: IO ()
 main = do   
+    gui <- getDataFileName "src/main.qml"
+
+    rootClass <- newClass []
+
+    ctx <- newObject rootClass ()
+
+    {-
+    Just testing GUI for now
+
     (initialState, sock) <- initialSetup
-    
-    evalStateT (ioLoop sock) initialState 
+
+    forkIO $ evalStateT (ioLoop sock) initialState 
+    -}
+
+    runEngineLoop defaultEngineConfig {
+        initialDocument = fileDocument gui,
+        contextObject = Just $ anyObjRef ctx
+    }
 
 initialSetup :: IO (ClientGame, Socket)
 initialSetup = do
