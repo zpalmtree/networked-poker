@@ -16,15 +16,19 @@ module Types
     Action(..),
     Hand(..),
     Message(..),
-    ActionMessage(..),
-    PlayerTurnMessage(..),
-    CardMessage(..),
-    DealtCardsMessage(..),
-    PotWinnersMessage(..),
-    GameOverMessage(..),
-    PlayersRemovedMessage(..),
-    CardRevealMessage(..),
+    ActionMsg(..),
+    PlayerTurnMsg(..),
+    CardMsg(..),
+    DealtCardsMsg(..),
+    PotWinnersMsg(..),
+    GameOverMsg(..),
+    PlayersRemovedMsg(..),
+    CardRevealMsg(..),
     PlayerHandInfo(..),
+    InitialGameMsg(..),
+    ClientGame(..),
+    CGameStateT,
+    CGameState,
     GameStateT,
     GameState
 )
@@ -64,6 +68,18 @@ data Player = Player {
     _canReRaise :: Bool
 } deriving (Eq)
 
+data CPlayer = CPlayer {
+    _pName :: String,
+    _pUuid :: UUID,
+    _pChips :: Int,
+    _pInPlay :: Bool,
+    _pAllIn :: Bool,
+    _pBet :: Int,
+    _pMadeInitialBet :: Bool,
+    _pHandValue :: Maybe (Hand Value Value),
+    _pCanReRaise :: Bool
+} deriving (Generic)
+
 data Cards = Cards {
     _tableCards :: [Card],
     _deck :: [Card]
@@ -75,7 +91,7 @@ data Bets = Bets {
     _smallBlindSize :: Int,
     _bigBlindSize :: Int,
     _minimumRaise :: Int
-} deriving (Eq)
+} deriving (Eq, Generic)
 
 data Card = Card {
     _value :: Value,
@@ -97,7 +113,12 @@ data PlayerQueue = PlayerQueue {
     _dealer :: Int
 } deriving (Eq)
 
-data ActionMessage a = ActionMessage {
+data CPlayerQueue = CPlayerQueue {
+    _cPlayers :: [CPlayer],
+    _cDealer :: Int
+} deriving (Generic)
+
+data ActionMsg a = ActionMsg {
     _action :: Action a,
     _player :: UUID
 } deriving (Generic)
@@ -113,7 +134,15 @@ data Stage = PreFlop
            | Turn 
            | River 
            | Showdown 
-           deriving (Show, Eq)
+           deriving (Show, Eq, Generic)
+
+data ClientGame = ClientGame {
+    _me :: CPlayer,
+    _others :: CPlayerQueue,
+    _cstage :: Stage,
+    _communityCards :: [Card],
+    _cbets :: Bets
+} deriving (Generic)
 
 data Suit = Heart 
           | Spade 
@@ -156,42 +185,47 @@ data Hand a b = HighCard a
               | StraightFlush a b
               deriving (Eq, Ord, Generic)
 
-data Message = MIsAction (ActionMessage Int)
-             | MIsPlayerTurn PlayerTurnMessage
-             | MIsCard CardMessage
-             | MIsDealt DealtCardsMessage
-             | MIsPotWinners PotWinnersMessage
-             | MIsGameOver GameOverMessage
-             | MIsPlayersRemoved PlayersRemovedMessage
-             | MIsCardReveal CardRevealMessage
+data Message = MIsAction (ActionMsg Int)
+             | MIsPlayerTurn PlayerTurnMsg
+             | MIsCard CardMsg
+             | MIsDealt DealtCardsMsg
+             | MIsPotWinners PotWinnersMsg
+             | MIsGameOver GameOverMsg
+             | MIsPlayersRemoved PlayersRemovedMsg
+             | MIsCardReveal CardRevealMsg
+             | MIsInitialGame InitialGameMsg
              deriving (Generic)
 
-data GameOverMessage = GameOverMessage deriving (Generic)
+data GameOverMsg = GameOverMsg deriving (Generic)
 
 -- NEWTYPES
 
-newtype CardMessage = CardMessage {
+newtype CardMsg = CardMsg {
     _allCards :: [Card]
 } deriving (Generic)
 
-newtype PlayerTurnMessage = PlayerTurnMessage {
+newtype PlayerTurnMsg = PlayerTurnMsg {
     _playerTurn :: UUID
 } deriving (Generic)
 
-newtype DealtCardsMessage = DealtCardsMessage {
+newtype DealtCardsMsg = DealtCardsMsg {
     _playerCards :: [Card]
 } deriving (Generic)
 
-newtype PotWinnersMessage = PotWinnersMessage {
+newtype PotWinnersMsg = PotWinnersMsg {
     _mapping :: [(Pot, [UUID])]
 } deriving (Generic)
 
-newtype PlayersRemovedMessage = PlayersRemovedMessage {
+newtype PlayersRemovedMsg = PlayersRemovedMsg {
     _removed :: [UUID]
 } deriving (Generic)
 
-newtype CardRevealMessage = CardRevealMessage {
+newtype CardRevealMsg = CardRevealMsg {
     _infos :: [PlayerHandInfo]
+} deriving (Generic)
+
+newtype InitialGameMsg = InitialGameMsg {
+    _cgame :: ClientGame
 } deriving (Generic)
 
 -- TYPES
@@ -200,25 +234,31 @@ type GameStateT a = StateT Game IO a
 
 type GameState a = State Game a
 
+type CGameStateT a = StateT ClientGame IO a
+
+type CGameState a = State ClientGame a
+
 -- INSTANCES
 
-instance Binary (ActionMessage a)
+instance Binary (ActionMsg a)
 
-instance Binary PlayerTurnMessage
+instance Binary PlayerTurnMsg
 
-instance Binary CardMessage
+instance Binary CardMsg
 
-instance Binary DealtCardsMessage
+instance Binary DealtCardsMsg
 
-instance Binary PotWinnersMessage
+instance Binary PotWinnersMsg
 
-instance Binary GameOverMessage
+instance Binary GameOverMsg
 
-instance Binary PlayersRemovedMessage
+instance Binary PlayersRemovedMsg
 
-instance Binary CardRevealMessage
+instance Binary CardRevealMsg
 
 instance Binary PlayerHandInfo
+
+instance Binary InitialGameMsg
 
 instance (Binary a, Binary b) => Binary (Hand a b)
 
@@ -231,5 +271,15 @@ instance Binary Suit
 instance Binary Value
 
 instance Binary (Action a)
+
+instance Binary ClientGame
+
+instance Binary CPlayer
+
+instance Binary CPlayerQueue
+
+instance Binary Stage
+
+instance Binary Bets
 
 instance Binary Message
