@@ -15,8 +15,18 @@ cabal-version:  >= 1.10
 
 data-files:
     src/gui/Action.qml
-    src/gui/main.qml
+    src/gui/Board.qml
+    src/gui/Buttons.qml
+    src/gui/Card.qml
+    src/gui/Main.qml
+    src/gui/OnePlayer.qml
+    src/gui/OnePlayersCards.qml
     src/gui/Player.qml
+    src/gui/PlayerCards.qml
+    src/gui/Players.qml
+    src/gui/TableCards.qml
+    src/gui/TwoPlayers.qml
+    src/gui/TwoPlayersCards.qml
 
 library
   hs-source-dirs:

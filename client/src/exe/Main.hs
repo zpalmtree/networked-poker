@@ -36,7 +36,7 @@ import Types
 
 main :: IO ()
 main = do   
-    gui <- getDataFileName "src/gui/main.qml"
+    gui <- getDataFileName "src/gui/Main.qml"
 
     {-
     Just testing GUI for now
