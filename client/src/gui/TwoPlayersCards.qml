@@ -10,11 +10,11 @@ RowLayout {
 
     Card{
         Layout.leftMargin: 5
-        Layout.rightMargin: 45
+        Layout.rightMargin: 50
     }
 
     Card{
-        Layout.leftMargin: 45
+        Layout.leftMargin: 50
         Layout.rightMargin: 5
     }
 

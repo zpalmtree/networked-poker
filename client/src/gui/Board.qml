@@ -6,7 +6,6 @@ Rectangle {
     border.width: 5
 
     radius: 30
-    antialiasing: true
 
     anchors.fill: parent
 

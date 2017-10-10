@@ -15,6 +15,59 @@ cabal-version:  >= 1.10
 
 data-files:
     src/gui/Action.qml
+    src/gui/assets/card-10-clubs.png
+    src/gui/assets/card-10-diamonds.png
+    src/gui/assets/card-10-hearts.png
+    src/gui/assets/card-10-spades.png
+    src/gui/assets/card-2-clubs.png
+    src/gui/assets/card-2-diamonds.png
+    src/gui/assets/card-2-hearts.png
+    src/gui/assets/card-2-spades.png
+    src/gui/assets/card-3-clubs.png
+    src/gui/assets/card-3-diamonds.png
+    src/gui/assets/card-3-hearts.png
+    src/gui/assets/card-3-spades.png
+    src/gui/assets/card-4-clubs.png
+    src/gui/assets/card-4-diamonds.png
+    src/gui/assets/card-4-hearts.png
+    src/gui/assets/card-4-spades.png
+    src/gui/assets/card-5-clubs.png
+    src/gui/assets/card-5-diamonds.png
+    src/gui/assets/card-5-hearts.png
+    src/gui/assets/card-5-spades.png
+    src/gui/assets/card-6-clubs.png
+    src/gui/assets/card-6-diamonds.png
+    src/gui/assets/card-6-hearts.png
+    src/gui/assets/card-6-spades.png
+    src/gui/assets/card-7-clubs.png
+    src/gui/assets/card-7-diamonds.png
+    src/gui/assets/card-7-hearts.png
+    src/gui/assets/card-7-spades.png
+    src/gui/assets/card-8-clubs.png
+    src/gui/assets/card-8-diamonds.png
+    src/gui/assets/card-8-hearts.png
+    src/gui/assets/card-8-spades.png
+    src/gui/assets/card-9-clubs.png
+    src/gui/assets/card-9-diamonds.png
+    src/gui/assets/card-9-hearts.png
+    src/gui/assets/card-9-spades.png
+    src/gui/assets/card-ace-clubs.png
+    src/gui/assets/card-ace-diamonds.png
+    src/gui/assets/card-ace-hearts.png
+    src/gui/assets/card-ace-spades.png
+    src/gui/assets/card-jack-clubs.png
+    src/gui/assets/card-jack-diamonds.png
+    src/gui/assets/card-jack-hearts.png
+    src/gui/assets/card-jack-spades.png
+    src/gui/assets/card-king-clubs.png
+    src/gui/assets/card-king-diamonds.png
+    src/gui/assets/card-king-hearts.png
+    src/gui/assets/card-king-spades.png
+    src/gui/assets/card-queen-clubs.png
+    src/gui/assets/card-queen-diamonds.png
+    src/gui/assets/card-queen-hearts.png
+    src/gui/assets/card-queen-spades.png
+    src/gui/assets/output.png
     src/gui/Board.qml
     src/gui/Buttons.qml
     src/gui/Card.qml

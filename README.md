@@ -37,3 +37,19 @@ Or, run
 `stack exec ai`
 `stack exec client`
 `stack exec server`
+
+## Thanks
+
+#### Cards
+Icons made by Aussiesim - http://game-icons.net/tags/board.html
+
+They fall under the CC 3.0 license - https://creativecommons.org/licenses/by/3.0/
+
+Icons were cropped and resized.
+
+#### Card back
+Icons made by Kenney.nl - https://opengameart.org/content/boardgame-pack
+
+They fall under the CC0 1.0 license - https://creativecommons.org/licenses/by/1.0/
+
+Icons were resized.

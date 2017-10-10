@@ -7,7 +7,6 @@ Rectangle {
     width: 70
 
     radius: 10
-    antialiasing: true
 
     Text {
         id: label

@@ -3,7 +3,7 @@ import QtQuick 2.7
 Row {
     anchors.horizontalCenter: parent.horizontalCenter
 
-    spacing: 100
+    spacing: 170
 
     topPadding: (anchors.bottom == parent.bottom) ? undefined : 18
 
