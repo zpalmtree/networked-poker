@@ -55,6 +55,7 @@ data-files:
     src/gui/assets/card-ace-diamonds.png
     src/gui/assets/card-ace-hearts.png
     src/gui/assets/card-ace-spades.png
+    src/gui/assets/card-back.png
     src/gui/assets/card-jack-clubs.png
     src/gui/assets/card-jack-diamonds.png
     src/gui/assets/card-jack-hearts.png
@@ -67,7 +68,6 @@ data-files:
     src/gui/assets/card-queen-diamonds.png
     src/gui/assets/card-queen-hearts.png
     src/gui/assets/card-queen-spades.png
-    src/gui/assets/output.png
     src/gui/Board.qml
     src/gui/Buttons.qml
     src/gui/Card.qml
