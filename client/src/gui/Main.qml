@@ -10,8 +10,8 @@ Window {
     title: "Poker Client"
     visible: true
 
-    minimumHeight: 700
-    minimumWidth: 800
+    minimumHeight: 800
+    minimumWidth: 1000
 
     color: "black"
 

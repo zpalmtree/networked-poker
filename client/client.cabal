@@ -68,9 +68,11 @@ data-files:
     src/gui/assets/card-queen-diamonds.png
     src/gui/assets/card-queen-hearts.png
     src/gui/assets/card-queen-spades.png
+    src/gui/assets/chip.png
     src/gui/Board.qml
     src/gui/Buttons.qml
     src/gui/Card.qml
+    src/gui/Chip.qml
     src/gui/Main.qml
     src/gui/OnePlayer.qml
     src/gui/OnePlayersCards.qml

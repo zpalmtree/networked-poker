@@ -47,7 +47,7 @@ They fall under the CC 3.0 license - https://creativecommons.org/licenses/by/3.0
 
 Icons were cropped and resized.
 
-#### Card back
+#### Card Back and Poker Chip
 Icons made by Kenney.nl - https://opengameart.org/content/boardgame-pack
 
 They fall under the CC0 1.0 license - https://creativecommons.org/licenses/by/1.0/

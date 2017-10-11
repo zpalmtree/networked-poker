@@ -2,23 +2,21 @@ import QtQuick 2.7
 import QtQuick.Layouts 1.3
 
 RowLayout {
+    property var rotate
+
+    rotation: rotate ? 180 : 0
+
     anchors.horizontalCenter: parent.horizontalCenter
+    anchors.horizontalCenterOffset: rotate ? -25 : 25
 
-    Card {
-        Layout.rightMargin: 5
-    }
+    spacing: 10
 
-    Card{
-        Layout.leftMargin: 5
-        Layout.rightMargin: 50
+    Card {}
+    Card {}
+    Chip {
+        Layout.rightMargin: 130
     }
-
-    Card{
-        Layout.leftMargin: 50
-        Layout.rightMargin: 5
-    }
-
-    Card{
-        Layout.leftMargin: 5
-    }
+    Card {}
+    Card {}
+    Chip {}
 }

@@ -9,6 +9,7 @@ Item {
     }
 
     TwoPlayersCards {
+        rotate: true
         anchors.top: parent.top
         anchors.topMargin: 120
     }
@@ -19,5 +20,6 @@ Item {
 
     OnePlayersCards {
         anchors.right: parent.right
+        rotate: true
     }
 }

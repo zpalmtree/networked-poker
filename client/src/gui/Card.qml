@@ -7,8 +7,10 @@ Rectangle {
 
     radius: 5
 
+    rotation: parent.rotation
+
     Image {
-        source: "assets/card-back.png"
+        source: "assets/card-ace-spades.png"
         width: parent.width
         height: parent.height
     }
