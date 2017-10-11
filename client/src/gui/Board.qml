@@ -5,7 +5,7 @@ Rectangle {
     border.color: "black"
     border.width: 5
 
-    radius: 30
+    radius: 90
 
     anchors.fill: parent
 

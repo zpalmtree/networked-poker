@@ -2,7 +2,7 @@ import QtQuick 2.7
 import QtQuick.Layouts 1.3
 
 RowLayout {
-    height: 100
+    height: 80
 
     anchors.bottom: parent.bottom
     anchors.right: parent.right
