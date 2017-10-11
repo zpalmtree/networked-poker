@@ -26,6 +26,8 @@ module Types
     CardRevealMsg(..),
     PlayerHandInfo(..),
     InitialGameMsg(..),
+    InputMsg(..),
+    BadInputMsg(..),
     ClientGame(..),
     CGameStateT,
     CGameState,
@@ -194,9 +196,13 @@ data Message = MIsAction (ActionMsg Int)
              | MIsPlayersRemoved PlayersRemovedMsg
              | MIsCardReveal CardRevealMsg
              | MIsInitialGame InitialGameMsg
+             | MIsInput InputMsg
+             | MIsBadInput BadInputMsg
              deriving (Generic)
 
 data GameOverMsg = GameOverMsg deriving (Generic)
+
+data BadInputMsg = BadInputMsg deriving (Generic)
 
 -- NEWTYPES
 
@@ -226,6 +232,10 @@ newtype CardRevealMsg = CardRevealMsg {
 
 newtype InitialGameMsg = InitialGameMsg {
     _cgame :: ClientGame
+} deriving (Generic)
+
+newtype InputMsg = InputMsg {
+    _imsg :: [Action Int]
 } deriving (Generic)
 
 -- TYPES
@@ -260,6 +270,10 @@ instance Binary PlayerHandInfo
 
 instance Binary InitialGameMsg
 
+instance Binary InputMsg
+
+instance Binary BadInputMsg
+
 instance (Binary a, Binary b) => Binary (Hand a b)
 
 instance Binary Pot
@@ -283,3 +297,13 @@ instance Binary Stage
 instance Binary Bets
 
 instance Binary Message
+
+instance Eq (Action a) where
+    (==) Fold Fold = True
+    (==) Check Check = True
+    (==) Call Call = True
+    (==) (Raise _) (Raise _) = True
+    (==) AllIn AllIn = True
+    (==) SmallBlind SmallBlind = True
+    (==) BigBlind BigBlind = True
+    (==) _ _ = False
