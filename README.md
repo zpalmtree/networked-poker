@@ -47,6 +47,20 @@ They fall under the CC 3.0 license - https://creativecommons.org/licenses/by/3.0
 
 Icons were cropped and resized.
 
+##### Card modifications
+
+Remove black borders:
+
+`mogrify -bordercolor black -border 1x1 -alpha set -channel RGBA -fuzz 80% -fill none -floodfill +0+0 black -shave 1x1 -trim +repage *.png`
+
+Replace black with red where necessary:
+
+`find . \( -iname "*diamonds*" -or -iname "*hearts*" \) -exec mogrify -format png -fill red -opaque black -fuzz 80% {} \;`
+
+Resize:
+
+`mogrify -resize 60x80\! *.png`
+
 #### Card Back and Poker Chip
 Icons made by Kenney.nl - https://opengameart.org/content/boardgame-pack
 
