@@ -1,15 +1,10 @@
 import QtQuick 2.7
 
-Row {
+Item {
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
 
-    bottomPadding: 120
+    anchors.horizontalCenterOffset: -20
 
-    spacing: 10
-
-    Repeater {
-        model: 5
-        Card {}
-    }
+    Chip {}
 }

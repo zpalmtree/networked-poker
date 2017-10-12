@@ -3,22 +3,22 @@ import QtQuick 2.7
 Item {
     anchors.fill: parent
 
-    TwoPlayersCards {
+    XCardsAndChips {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 220
     }
 
-    TwoPlayersCards {
+    XCardsAndChips {
         rotate: true
         anchors.top: parent.top
         anchors.topMargin: 120
     }
 
-    OnePlayersCards {
+    YCardsAndChips {
         anchors.left: parent.left
     }
 
-    OnePlayersCards {
+    YCardsAndChips {
         anchors.right: parent.right
         rotate: true
     }

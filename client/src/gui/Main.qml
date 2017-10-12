@@ -19,9 +19,11 @@ Window {
 
     Players {}
 
-    PlayerCards {}
+    PlayerCardsAndChips {}
 
     TableCards {}
+
+    Pot {}
 
     Buttons {}
 }    
