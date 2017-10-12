@@ -15,11 +15,11 @@ library
       src/lib
   build-depends:
       base >=4.9 && <=4.11
-    , lens
     , network
     , binary
     , transformers
     , uuid-types
+    , lens
   exposed-modules:
       Lenses
       Types

@@ -9,23 +9,28 @@ RowLayout {
     anchors.left: parent.left
 
     Action {
+        enabled: foldEnabled
         Layout.leftMargin: 10
         text: "Fold"
     }
 
     Action {
+        enabled: checkEnabled
         text: "Check"
     }
 
     Action {
+        enabled: callEnabled
         text: "Call"
     }
 
     Action {
+        enabled: raiseEnabled
         text: "Raise"
     }
 
     Action {
+        enabled: allInEnabled
         Layout.rightMargin: 10
         text: "All In"
     }

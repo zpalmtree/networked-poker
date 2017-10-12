@@ -29,8 +29,8 @@ module Types
     InputMsg(..),
     BadInputMsg(..),
     ClientGame(..),
-    CGameStateT,
-    CGameState,
+    ClientPlayerQueue(..),
+    ClientPlayer,
     GameStateT,
     GameState
 )
@@ -70,16 +70,18 @@ data Player = Player {
     _canReRaise :: Bool
 } deriving (Eq)
 
-data CPlayer = CPlayer {
-    _pName :: String,
-    _pUuid :: UUID,
-    _pChips :: Int,
-    _pInPlay :: Bool,
-    _pAllIn :: Bool,
-    _pBet :: Int,
-    _pMadeInitialBet :: Bool,
-    _pHandValue :: Maybe (Hand Value Value),
-    _pCanReRaise :: Bool
+data ClientPlayer = ClientPlayer {
+    _clientName :: String,
+    _clientUUID :: UUID,
+    _clientChips :: Int,
+    _clientCards :: Maybe [Card],
+    _clientInPlay :: Bool,
+    _clientAllIn :: Bool,
+    _clientBet :: Int,
+    _clientMadeInitialBet :: Bool,
+    _clientHandValue :: Maybe (Hand Value Value),
+    _clientCanReRaise :: Bool,
+    _clientIsMe :: Bool
 } deriving (Generic)
 
 data Cards = Cards {
@@ -115,9 +117,9 @@ data PlayerQueue = PlayerQueue {
     _dealer :: Int
 } deriving (Eq)
 
-data CPlayerQueue = CPlayerQueue {
-    _cPlayers :: [CPlayer],
-    _cDealer :: Int
+data ClientPlayerQueue = ClientPlayerQueue {
+    _clientPlayers :: [ClientPlayer],
+    _clientDealer :: Int
 } deriving (Generic)
 
 data ActionMsg a = ActionMsg {
@@ -131,20 +133,19 @@ data PlayerHandInfo = PlayerHandInfo {
     _hand :: [Card]
 } deriving (Generic)
 
+data ClientGame = CGame {
+    _clientPlayerQueue :: ClientPlayerQueue,
+    _clientStage :: Stage,
+    _clientCommunityCards :: [Card],
+    _clientBets :: Bets
+} deriving (Generic)
+
 data Stage = PreFlop 
            | Flop 
            | Turn 
            | River 
            | Showdown 
            deriving (Show, Eq, Generic)
-
-data ClientGame = ClientGame {
-    _me :: CPlayer,
-    _others :: CPlayerQueue,
-    _cstage :: Stage,
-    _communityCards :: [Card],
-    _cbets :: Bets
-} deriving (Generic)
 
 data Suit = Heart 
           | Spade 
@@ -231,7 +232,7 @@ newtype CardRevealMsg = CardRevealMsg {
 } deriving (Generic)
 
 newtype InitialGameMsg = InitialGameMsg {
-    _cgame :: ClientGame
+    _clientGame :: ClientGame
 } deriving (Generic)
 
 newtype InputMsg = InputMsg {
@@ -243,10 +244,6 @@ newtype InputMsg = InputMsg {
 type GameStateT a = StateT Game IO a
 
 type GameState a = State Game a
-
-type CGameStateT a = StateT ClientGame IO a
-
-type CGameState a = State ClientGame a
 
 -- INSTANCES
 
@@ -288,9 +285,9 @@ instance Binary (Action a)
 
 instance Binary ClientGame
 
-instance Binary CPlayer
+instance Binary ClientPlayer
 
-instance Binary CPlayerQueue
+instance Binary ClientPlayerQueue
 
 instance Binary Stage
 

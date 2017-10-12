@@ -13,8 +13,12 @@ dependencies:
 - types
 - lens
 - transformers
+- hsqml
+- text
 library:
     source-dirs: src/lib
+    dependencies:
+    - uuid-types
 executables:
     client:
         main: Main.hs
@@ -24,4 +28,3 @@ executables:
         - network
         - bytestring
         - binary
-        - hsqml

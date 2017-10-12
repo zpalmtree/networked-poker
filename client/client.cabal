@@ -91,6 +91,13 @@ library
     , types
     , lens
     , transformers
+    , hsqml
+    , text
+    , uuid-types
+  exposed-modules:
+      CLenses
+      ClientTypes
+      Utilities.ClientTypes
   other-modules:
       Paths_client
   default-language: Haskell2010
@@ -104,9 +111,10 @@ executable client
     , types
     , lens
     , transformers
+    , hsqml
+    , text
     , client
     , network
     , bytestring
     , binary
-    , hsqml
   default-language: Haskell2010
