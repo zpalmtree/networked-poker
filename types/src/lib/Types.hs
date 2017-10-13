@@ -30,7 +30,7 @@ module Types
     BadInputMsg(..),
     ClientGame(..),
     CPlayerQueue(..),
-    CPlayer,
+    CPlayer(..),
     GameStateT,
     GameState
 )
@@ -74,7 +74,7 @@ data CPlayer = CPlayer {
     _cName :: String,
     _cUUID :: UUID,
     _cChips :: Int,
-    _cCards :: Maybe [Card],
+    _cCards :: [Card],
     _cInPlay :: Bool,
     _cAllIn :: Bool,
     _cBet :: Int,

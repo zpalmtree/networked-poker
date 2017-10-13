@@ -27,11 +27,11 @@ getAction actions def = do
 
     lift $ send sock (toStrict . encode $ InputMsg actions)
     msg <- lift $ recv sock 4096
-    case (decodeOrFail $ fromStrict msg) of
+    case decodeOrFail $ fromStrict msg of
         Left (_, _, err) -> do
             lift . putStrLn $ "Error decoding message: " ++ err
             return def
-        Right (_, _, msg') -> if (msg' `elem` actions)
+        Right (_, _, msg') -> if msg' `elem` actions
             then return msg'
             else do
                 lift $ send (p^.socket) (toStrict $ encode BadInputMsg)

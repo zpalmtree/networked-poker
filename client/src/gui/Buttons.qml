@@ -11,32 +11,32 @@ RowLayout
 
     Action
     {
-        enabled: foldEnabled
+        enabled: bEnabled[0]
         Layout.leftMargin: 10
         text: "Fold"
     }
 
     Action
     {
-        enabled: checkEnabled
+        enabled: bEnabled[1]
         text: "Check"
     }
 
     Action
     {
-        enabled: callEnabled
+        enabled: bEnabled[2]
         text: "Call"
     }
 
     Action
     {
-        enabled: raiseEnabled
+        enabled: bEnabled[3]
         text: "Raise"
     }
 
     Action
     {
-        enabled: allInEnabled
+        enabled: bEnabled[4]
         Layout.rightMargin: 10
         text: "All In"
     }

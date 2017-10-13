@@ -28,12 +28,12 @@ data StatesNSignals = StatesNSignals {
     _pNamesS :: IORef [Text],
     _tCardsSig :: SignalKey (IO ()),
     _tCardsS :: IORef [Text],
-    _buttonsSig :: SignalKey (IO ()),
-    _buttonsS :: IORef [Bool],
-    _potSig :: SignalKey (IO ()),
-    _potS :: IORef Int,
-    _pEnabledSig :: SignalKey (IO ()),
-    _pEnabled :: IORef [Bool]
+    _bEnabledSig :: SignalKey (IO ()),
+    _bEnabledS :: IORef [Bool],
+    _potChipsSig :: SignalKey (IO ()),
+    _potChipsS :: IORef Int,
+    _pVisibleSig :: SignalKey (IO ()),
+    _pVisibleS :: IORef [Bool]
 }
 
 type CGameStateT a = StateT CGame IO a

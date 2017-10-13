@@ -7,31 +7,34 @@ module Output
     outputWinners,
     outputGameOver,
     outputPlayersRemoved,
-    outputHandValues
+    outputHandValues,
+    outputInitialGame
 )
 where
 
 import Data.UUID.Types (UUID)
 import Network.Socket.ByteString (send)
-import Control.Lens ((^.))
+import Control.Lens ((^.), (.=), (%=), zoom, filtered, traversed)
 import Data.Binary (encode)
 import Data.ByteString.Lazy (toStrict)
-import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.State (StateT, get, execStateT)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad (void)
+import Control.Monad (void, forM_)
 import Data.Maybe (fromJust)
 
 import Utilities.Player (getCurrentPlayerT, getCurrentPlayerUUID)
 
 import Lenses
     (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
-     handInfo, handValue)
+     handInfo, handValue, cUUID, cPlayerQueue, cPlayers, cCards, cIsMe,
+     cDealer)
 
 import Types 
     (Message(..), PlayerTurnMsg(..), ActionMsg(..), CardMsg(..),
      DealtCardsMsg(..), PotWinnersMsg(..), GameOverMsg(..),
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
-     GameStateT, Action, Player, Pot)
+     InitialGameMsg(..), GameStateT, Action, Player, Pot, ClientGame,
+     CPlayerQueue(..))
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -45,6 +48,41 @@ msgP msg p = do
 
     void . sendMsg $ p^.socket
 
+outputInitialGame :: ClientGame -> GameStateT ()
+outputInitialGame cgame = do
+    s <- get
+
+    forM_ (s^.playerQueue.players) $ \p -> do
+        newState <- lift $ execStateT (mkPersonalMsg p) cgame
+        let msg = MIsInitialGame $ InitialGameMsg newState
+        msgP msg p
+
+mkPersonalMsg :: Monad m => Player -> StateT ClientGame m ()
+mkPersonalMsg p = do
+    s <- get
+
+    zoom (cPlayerQueue.cPlayers.traversed.filtered isMe) $ do
+        cCards .= (p^.cards)
+        cIsMe .= True
+
+    let pos = myPos (s^.cPlayerQueue.cPlayers)
+
+    cPlayerQueue %= shift pos
+
+    where shift n cpq = let (a, b) = splitAt n (cpq^.cPlayers)
+                            new = b ++ a
+                            newDealer = (cpq^.cDealer + n) `rem` 
+                                        length (cpq^.cPlayers)
+
+                        in CPlayerQueue new newDealer
+
+          isMe cp = cp^.cUUID == p^.uuid
+
+          myPos [] = error "Couldn't find in myPos!"
+          myPos (x:xs)
+            | isMe x = 0
+            | otherwise = 1 + myPos xs
+        
 outputAction :: Action Int -> GameStateT ()
 outputAction a = do
     p <- getCurrentPlayerT
