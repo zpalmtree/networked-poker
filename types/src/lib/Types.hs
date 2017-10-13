@@ -36,7 +36,7 @@ module Types
 )
 where
 
-import Control.Monad.Trans.State (StateT(..), State)
+import Control.Monad.Trans.State (StateT(..))
 import Data.UUID.Types (UUID)
 import Control.Concurrent.MVar (MVar)
 import Network.Socket (Socket)
@@ -243,7 +243,7 @@ newtype InputMsg = InputMsg {
 
 type GameStateT a = StateT Game IO a
 
-type GameState a = State Game a
+type GameState m a = StateT Game m a
 
 -- INSTANCES
 

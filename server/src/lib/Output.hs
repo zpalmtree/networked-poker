@@ -22,7 +22,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad (void, forM_)
 import Data.Maybe (fromJust)
 
-import Utilities.Player (getCurrentPlayerT, getCurrentPlayerUUID)
+import Utilities.Player (getCurrentPlayer, getCurrentPlayerUUID)
 
 import Lenses
     (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
@@ -85,7 +85,7 @@ mkPersonalMsg p = do
         
 outputAction :: Action Int -> GameStateT ()
 outputAction a = do
-    p <- getCurrentPlayerT
+    p <- getCurrentPlayer
 
     let msg = MIsAction $ ActionMsg a (p^.uuid)
 

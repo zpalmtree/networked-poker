@@ -11,7 +11,6 @@ where
 import Data.Monoid (Sum(..), getSum)
 
 import Types (Game, Action(..), Pot(..), Player, GameState, GameStateT)
-import Utilities.Types (fromPure)
 import Control.Monad.Trans.State (get)
 import Control.Monad (when)
 import Safe (headNote)
@@ -21,7 +20,7 @@ import Data.UUID.Types (UUID)
 import Output (outputPlayerTurn, outputAction)
 
 import Utilities.Player
-    (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayerT)
+    (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayer)
 
 import Control.Lens 
     (traversed, zoom, ix, filtered, (-=), (+=), (.=), (^.), (^..), (%=))
@@ -34,7 +33,7 @@ import Lenses
 import Input
     (foldAllIn, checkAllIn, checkRaiseAllIn, foldCallAllIn, foldCallRaiseAllIn)
 
-makeBet :: Int -> GameState ()
+makeBet :: (Monad m) => Int -> GameState m ()
 makeBet amount = do
     when (amount < 0) $ error "Negative bet in makeBet!"
 
@@ -46,7 +45,7 @@ makeBet amount = do
 
     updateMaxBet (player^.bet)
 
-updateMaxBet :: Int -> GameState ()
+updateMaxBet :: (Monad m) => Int -> GameState m ()
 updateMaxBet n = do
     s <- get
     bets.currentBet .= max (s^.bets.currentBet) n
@@ -55,21 +54,21 @@ smallBlind :: GameStateT ()
 smallBlind = do
     outputAction SmallBlind
     s <- get
-    fromPure $ makeBet (s^.bets.smallBlindSize)
+    makeBet (s^.bets.smallBlindSize)
 
 bigBlind :: GameStateT ()
 bigBlind = do
     outputAction BigBlind
     s <- get
-    fromPure $ makeBet (s^.bets.bigBlindSize)
+    makeBet (s^.bets.bigBlindSize)
 
-gatherChips :: GameState Int
+gatherChips :: (Monad m) => GameState m Int
 gatherChips = do
     s <- get
     return $ sum (s^..bets.pots.traversed.pot)
            + sum (s^..playerQueue.players.traversed.bet)
 
-updatePotSimple :: GameState ()
+updatePotSimple :: (Monad m) => GameState m ()
 updatePotSimple = do
     s <- get
 
@@ -86,14 +85,14 @@ updatePotSimple = do
     playerQueue.players.traversed.bet .= 0
     bets.pots .= fixedPot
 
-updatePot :: GameState ()
+updatePot :: (Monad m) => GameState m ()
 updatePot = do
     s <- get
 
     -- want to use nice guard notation instead of tons of nested ifs
     updatePot' s
 
-updatePot' :: Game -> GameState ()
+updatePot' :: (Monad m) => Game -> GameState m ()
 updatePot' s
     | null eligible = return ()
     | sum (s^..playerQueue.players.traversed.bet) < 0 = error "Negative bets!"
@@ -108,7 +107,7 @@ updatePot' s
           sidePotSize = minimum $ eligible^..traversed.bet
           refundPlayer = headNote "in updatePot'!" eligible^.uuid
 
-refund :: UUID -> GameState ()
+refund :: (Monad m) => UUID -> GameState m ()
 refund uuid' = zoom eligible $ do
     p <- get
     chips += p^.bet
@@ -116,7 +115,7 @@ refund uuid' = zoom eligible $ do
     where hasUUID p = p^.uuid == uuid'
           eligible = playerQueue.players.traversed.filtered hasUUID
 
-addPot :: Int -> GameState ()
+addPot :: (Monad m) => Int -> GameState m ()
 addPot betSize = do
     s <- get
 
@@ -134,7 +133,7 @@ addPot betSize = do
 potEligible :: Player -> Bool
 potEligible p = p^.inPlay && p^.bet > 0
         
-takeOutPlayersPot :: Int -> GameState Int
+takeOutPlayersPot :: (Monad m) => Int -> GameState m Int
 takeOutPlayersPot betSize = do
     result <- zoom nonEligible $ do
         p <- get
@@ -152,7 +151,7 @@ takeOutPlayersPot betSize = do
     where nonEligible = playerQueue.players.traversed.filtered 
                         (not . potEligible)
 
-updateMinimumRaise :: Int -> GameState ()
+updateMinimumRaise :: (Monad m) => Int -> GameState m ()
 updateMinimumRaise raise' = do
     bets.minimumRaise .= raise'
     playerQueue.players.traversed.canReRaise .= True
@@ -197,20 +196,20 @@ promptAndUpdate f = do
 
     outputAction action
 
-    fromPure $ handleInput action
+    handleInput action
 
     playerQueue.players.ix 0.madeInitialBet .= True
 
 convertMaxRaise :: Action Int -> GameStateT (Action Int)
 convertMaxRaise a = do
-    p <- getCurrentPlayerT
+    p <- getCurrentPlayer
     case a of
         Raise n -> if (n - p^.bet) == p^.chips
                     then return AllIn
                     else return a
         _ -> return a
 
-handleInput :: Action Int -> GameState ()
+handleInput :: (Monad m) => Action Int -> GameState m ()
 handleInput action = case action of
     Fold -> fold
     Check -> return ()
@@ -219,10 +218,10 @@ handleInput action = case action of
     AllIn -> goAllIn
     _ -> error "Invalid input given in handleInput!"
 
-fold :: GameState ()
+fold :: (Monad m) => GameState m ()
 fold = playerQueue.players.ix 0.inPlay .= False
 
-raise :: Int -> GameState ()
+raise :: (Monad m) => Int -> GameState m ()
 raise amount = do
     s <- get
 
@@ -237,7 +236,7 @@ raise amount = do
             makeBet bet'
             updateMinimumRaise raise'
 
-call :: GameState ()
+call :: (Monad m) => GameState m ()
 call = do
     s <- get
     player <- getCurrentPlayer
@@ -245,7 +244,7 @@ call = do
 
 -- if it's a raise and it's at least the minimum bet, then let any previous
 -- raisers re-raise, plus update minimum raise
-goAllIn :: GameState ()
+goAllIn :: (Monad m) => GameState m ()
 goAllIn = do
     s <- get
 
@@ -260,7 +259,7 @@ goAllIn = do
     when (bet' > s^.bets.currentBet && raise' >= s^.bets.minimumRaise) $
         updateMinimumRaise raise'
 
-giveWinnings :: UUID -> GameState ()
+giveWinnings :: (Monad m) => UUID -> GameState m ()
 giveWinnings winnerUUID = do
     winnings <- gatherChips
     playerQueue.players.traversed.filtered isWinner.chips += winnings

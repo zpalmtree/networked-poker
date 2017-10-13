@@ -38,7 +38,7 @@ main = do
 
     putStrLn "Listening for connections..."
 
-    listen sock 5 -- maximum uuidber of queued connections, apparently set at 5
+    listen sock 5 -- maximum number of queued connections, apparently set at 5
                   -- for most OS's. Need to look into. Queued connections
                   -- should be accepted very fast? Loop is very simple.
 

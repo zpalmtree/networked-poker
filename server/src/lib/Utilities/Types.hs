@@ -1,17 +1,16 @@
 module Utilities.Types
 (
-    fromPure,
     mkCGame,
     mkGame
 )
 where
 
-import Control.Monad.Trans.State (StateT(..), runState, get)
+import Control.Monad.Trans.State (get)
 import Control.Concurrent.MVar (MVar)
 import Control.Lens ((^.))
 
 import Types 
-    (GameState, GameStateT, ClientGame(..), Game(..), PlayerQueue(..),
+    (GameStateT, ClientGame(..), Game(..), PlayerQueue(..),
      Cards(..), Bets(..), Stage(..), Player, Card(..), Value(..), Suit(..),
      CPlayerQueue(..), CPlayer(..))
 
@@ -19,9 +18,6 @@ import Lenses
     (stage, tableCards, bets, playerQueue, players, dealer, name, uuid, chips,
      inPlay, canReRaise, madeInitialBet, allIn, bet, cardInfo)
     
-fromPure :: GameState a -> GameStateT a
-fromPure f = StateT (return . runState f)
-
 mkCGame :: GameStateT ClientGame
 mkCGame = do
     s <- get

@@ -20,7 +20,7 @@ import Control.Monad (when, replicateM_, replicateM)
 import Safe (at)
 
 import Types (Card(..), Value, Suit(..), Stage(..), GameStateT)
-import Utilities.Player (numPlayersT)
+import Utilities.Player (numPlayers)
 import Output (outputPlayerCards)
 
 import Lenses 
@@ -28,7 +28,7 @@ import Lenses
 
 dealCards :: GameStateT ()
 dealCards = do
-    updateCards =<< numPlayersT
+    updateCards =<< numPlayers
     outputPlayerCards
 
 updateCards :: Int -> GameStateT ()

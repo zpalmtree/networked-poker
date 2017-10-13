@@ -13,14 +13,13 @@ import Safe (headNote)
 import Types (Game, Pot, Stage(..), Cards(..), GameStateT)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
 import Showdown (distributePot, calculateHandValues)
-import Utilities.Types (fromPure)
 
 import Utilities.Card 
     (dealCards, revealFlop, revealTurn, revealRiver, fullDeck)
 
 import Utilities.Player 
-    (nextPlayerT, getCurrentPlayerPure, removeOutPlayers, numInPlayPure, 
-     victorID, numAllInPure, nextDealerT)
+    (nextPlayer, getCurrentPlayerPure, removeOutPlayers, numInPlayPure, 
+     victorID, numAllInPure, nextDealer)
 
 import Lenses 
     (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet, allIn, pots, 
@@ -44,9 +43,9 @@ gameLoop = do
 postBlindsAndPlayRound :: GameStateT ()
 postBlindsAndPlayRound = do
     smallBlind
-    nextPlayerT
+    nextPlayer
     bigBlind
-    nextPlayerT
+    nextPlayer
     playRound
 
 playRound :: GameStateT ()
@@ -95,33 +94,33 @@ makeChoice s
         outputWinners winnerMapping
 
     | onlyOnePlayerLeft s = do
-        winnerID <- fromPure victorID
+        winnerID <- victorID
 
-        fromPure updatePot
+        updatePot
 
         let pot' = headNote "in makeChoice!" $ s^.bets.pots
             winner' = [winnerID]
 
         outputWinners [(pot', winner')]
 
-        fromPure $ giveWinnings winnerID
+        giveWinnings winnerID
 
     | maxOneNotAllIn s = do
         nextState
         playRound
 
     | notInPlay s = do
-        nextPlayerT
+        nextPlayer
         playRound 
 
     | inPlayCanCheck s = do
         promptBet True
-        nextPlayerT
+        nextPlayer
         playRound
 
     | notAllInAndUnmatched s = do
         promptBet False
-        nextPlayerT
+        nextPlayer
         playRound
 
     --already bet or all in
@@ -131,14 +130,14 @@ makeChoice s
 
 showdown :: GameStateT [(Pot, [UUID])]
 showdown = do
-    fromPure calculateHandValues
+    calculateHandValues
     s <- get
     getWinnersAndDistribute (s^.bets.pots)
 
 getWinnersAndDistribute :: [Pot] -> GameStateT [(Pot, [UUID])]
 getWinnersAndDistribute [] = return []
 getWinnersAndDistribute (p:ps) = do
-    winnerIDs <- fromPure $ distributePot p
+    winnerIDs <- distributePot p
     winnerIDs' <- getWinnersAndDistribute ps
     return $ (p, winnerIDs) : winnerIDs'
 
@@ -154,9 +153,9 @@ nextState = do
         currentBet .= 0
         minimumRaise .= (s^.bets.bigBlindSize)
 
-    nextPlayerT
+    nextPlayer
 
-    fromPure updatePot
+    updatePot
         
     case s^.stage of
         PreFlop -> do
@@ -179,7 +178,7 @@ nextRound :: GameStateT ()
 nextRound = do
     s <- get
 
-    removed <- fromPure removeOutPlayers 
+    removed <- removeOutPlayers 
 
     zoom (playerQueue.players.traversed) $ do
         inPlay .= True
@@ -199,7 +198,7 @@ nextRound = do
     roundDone .= False
     roundNumber += 1
 
-    nextPlayerT
-    nextDealerT
+    nextPlayer
+    nextDealer
 
     outputPlayersRemoved removed

@@ -5,16 +5,12 @@ module Utilities.Player
     numAllIn,
     numAllInPure,
     numPlayers,
-    numPlayersT,
     getCurrentPlayerPure,
     getCurrentPlayer,
-    getCurrentPlayerT,
     getPlayerByUUID,
     victorID,
     nextPlayer,
-    nextPlayerT,
     nextDealer,
-    nextDealerT,
     removeOutPlayers,
     leftOfDealer,
     mkNewPlayer,
@@ -32,8 +28,7 @@ import Data.UUID.Types (UUID)
 import Network.Socket (Socket)
 import System.Random (getStdRandom, random)
 
-import Utilities.Types (fromPure)
-import Types (Player(..), GameState, GameStateT, Game)
+import Types (Player(..), GameState, Game)
 
 import Lenses (inPlay, allIn, gameFinished, dealer, uuid, chips, players,
                playerQueue)
@@ -47,64 +42,52 @@ numAllInPure = numXPure allIn
 numXPure :: Getting Bool Player Bool -> Game -> Int
 numXPure lens s = length $ filter (^.lens) (s^.playerQueue.players)
 
-numInPlay :: GameState Int
+numInPlay :: (Monad m) => GameState m Int
 numInPlay = numX inPlay
 
-numAllIn :: GameState Int
+numAllIn :: (Monad m) => GameState m Int
 numAllIn = numX allIn
 
-numX :: Getting Bool Player Bool -> GameState Int
+numX :: (Monad m) => Getting Bool Player Bool -> GameState m Int
 numX lens = do
     s <- get
 
     return . length $ filter (^.lens) (s^.playerQueue.players)
 
-numPlayers :: GameState Int
+numPlayers :: (Monad m) => GameState m Int
 numPlayers = do
     s <- get
 
     return . length $ s^.playerQueue.players
 
-numPlayersT :: GameStateT Int
-numPlayersT = fromPure numPlayers
-
 getCurrentPlayerPure :: Game -> Player
 getCurrentPlayerPure s = s^.playerQueue.players ^?! _head
 
-getCurrentPlayer :: GameState Player
+getCurrentPlayer :: (Monad m) => GameState m Player
 getCurrentPlayer = do
     s <- get
 
     return $ s^.playerQueue.players ^?! _head
 
-getCurrentPlayerT :: GameStateT Player
-getCurrentPlayerT = fromPure getCurrentPlayer
-
-victorID :: GameState UUID
+victorID :: (Monad m) => GameState m UUID
 victorID = do
     s <- get
 
     return $ headNote "in victorID!" 
                       (filter (^.inPlay) (s^.playerQueue.players))^.uuid
 
-nextDealerT :: GameStateT ()
-nextDealerT = fromPure nextDealer
-
-nextDealer :: GameState ()
+nextDealer :: (Monad m) => GameState m ()
 nextDealer = do
     numPlayers' <- numPlayers
 
     playerQueue.dealer %= advance numPlayers'
     where advance n numPlayers' = n + 1 `rem` numPlayers'
 
-nextPlayer :: GameState ()
+nextPlayer :: (Monad m) => GameState m ()
 nextPlayer = playerQueue.players %= shift
     where shift x = tailNote "in nextPlayer!" x ++ [headNote "in nextPlayer!" x]
 
-nextPlayerT :: GameStateT ()
-nextPlayerT = fromPure nextPlayer
-
-removeOutPlayers :: GameState (Maybe [UUID])
+removeOutPlayers :: (Monad m) => GameState m (Maybe [UUID])
 removeOutPlayers = do
     s <- get
 
@@ -125,7 +108,7 @@ removeOutPlayers = do
 
     where remove = filter (\x -> x^.chips > 0)
 
-updateDealer :: [Player] -> GameState ()
+updateDealer :: (Monad m) => [Player] -> GameState m ()
 updateDealer old = do
     new <- get
 
@@ -135,14 +118,14 @@ find :: Eq a => [a] -> [a] -> Int
 find [] _ = 0
 find (x:xs) new = fromMaybe (find xs new) (elemIndex x new)
 
-flatten :: [a] -> GameState [a]
+flatten :: (Monad m) => [a] -> GameState m [a]
 flatten = flatten' 0
 
 flatten' :: Monad m => Int -> [a] -> m [a]
 flatten' offset p = let (end, beginning) = splitAt offset p
                     in  return $ beginning ++ end
 
-leftOfDealer :: [Player] -> GameState UUID
+leftOfDealer :: (Monad m) => [Player] -> GameState m UUID
 leftOfDealer subset = do
     s <- get
 
@@ -154,11 +137,8 @@ findNearestToDealer subset (p:ps)
     | p `elem` subset = p^.uuid
     | otherwise = findNearestToDealer subset ps
 
-getPlayerByUUID :: UUID -> GameStateT Player
-getPlayerByUUID = fromPure . getPlayerByUUIDPure
-
-getPlayerByUUIDPure :: UUID -> GameState Player
-getPlayerByUUIDPure uuid' = do
+getPlayerByUUID :: (Monad m) => UUID -> GameState m Player
+getPlayerByUUID uuid' = do
     s <- get
 
     unless (uuid' `elem` (s^..playerQueue.players.traversed.uuid)) $ 
@@ -173,7 +153,7 @@ mkNewPlayer name' sock = do
     uuid' <- getStdRandom random
     return $ Player sock name' uuid' 1000 [] True False 0 False Nothing True
 
-getCurrentPlayerUUID :: GameStateT UUID
+getCurrentPlayerUUID :: (Monad m) => GameState m UUID
 getCurrentPlayerUUID = do
-    p <- getCurrentPlayerT
+    p <- getCurrentPlayer
     return $ p^.uuid

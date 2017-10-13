@@ -10,7 +10,7 @@ where
 import Graphics.QML (SignalKey)
 import Data.Text (Text)
 import Data.IORef (IORef)
-import Control.Monad.Trans.State (StateT, State)
+import Control.Monad.Trans.State (StateT)
 
 import Types (ClientGame)
 
@@ -37,4 +37,4 @@ data StatesNSignals = StatesNSignals {
 }
 
 type CGameStateT a = StateT CGame IO a
-type CGameState a = State CGame a
+type CGameState m a = StateT CGame m a

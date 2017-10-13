@@ -41,7 +41,7 @@ topHand cards'
     | isPair cards' = bestPair cards'
     | otherwise = bestHighCard cards'
 
-calculateHandValues :: GameState ()
+calculateHandValues :: (Monad m) => GameState m ()
 calculateHandValues = do
     s <- get
     let cards' = s^.cardInfo.tableCards
@@ -62,7 +62,7 @@ sortHandValue p1 p2 = ordHand hand1 hand2
     where hand1 = fromJust $ p1^.handInfo
           hand2 = fromJust $ p2^.handInfo
 
-distributePot :: Pot -> GameState [UUID]
+distributePot :: (Monad m) => Pot -> GameState m [UUID]
 distributePot sidePot = do
     s <- get
 

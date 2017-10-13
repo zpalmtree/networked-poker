@@ -15,13 +15,13 @@ import Network.Socket.ByteString (send, recv)
 import Control.Monad.Trans.Class (lift)
 import Data.Binary (encode, decodeOrFail)
 
-import Utilities.Player (getCurrentPlayerT)
+import Utilities.Player (getCurrentPlayer)
 import Lenses (socket)
 import Types (GameStateT, Action(..), InputMsg(..), BadInputMsg(..))
 
 getAction :: [Action Int] -> Action Int -> GameStateT (Action Int)
 getAction actions def = do
-    p <- getCurrentPlayerT
+    p <- getCurrentPlayer
     
     let sock = p^.socket
 
