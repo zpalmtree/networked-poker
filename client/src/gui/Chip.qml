@@ -1,21 +1,22 @@
 import QtQuick 2.7
 
-Item {
+Item
+{
     width: 40
     height: 40
 
-    rotation: parent.rotation
-
-    Image {
+    Image
+    {
         source: "assets/chip.png"
         width: parent.width
         height: parent.height
     }
 
-    Text {
+    Text
+    {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-        text: "1000"
+        text: value
         color: "white"
         style: Text.Outline
         styleColor: "black"

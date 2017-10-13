@@ -15,6 +15,7 @@ cabal-version:  >= 1.10
 
 data-files:
     src/gui/Action.qml
+    src/gui/AllChipsAndCards.qml
     src/gui/assets/card-10-clubs.png
     src/gui/assets/card-10-diamonds.png
     src/gui/assets/card-10-hearts.png
@@ -72,6 +73,7 @@ data-files:
     src/gui/Board.qml
     src/gui/Buttons.qml
     src/gui/Card.qml
+    src/gui/CardsChipsPlayer.qml
     src/gui/Chip.qml
     src/gui/Main.qml
     src/gui/OnePlayer.qml

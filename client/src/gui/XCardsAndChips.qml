@@ -1,7 +1,14 @@
 import QtQuick 2.7
 import QtQuick.Layouts 1.3
 
-RowLayout {
+RowLayout
+{
+    property var cardArr1
+    property var cardArr2
+
+    property var chipVal1
+    property var chipVal2
+
     property var rotate
 
     rotation: rotate ? 180 : 0
@@ -11,12 +18,34 @@ RowLayout {
 
     spacing: 10
 
-    Card {}
-    Card {}
-    Chip {
-        Layout.rightMargin: 130
+    Repeater
+    {
+        model: 2
+
+        Card
+        {
+            source: cardArr1[index]
+        }
     }
-    Card {}
-    Card {}
-    Chip {}
+
+    Chip
+    {
+        Layout.rightMargin: 130
+        property int value: chipVal1
+    }
+
+    Repeater
+    {
+        model: 2
+        
+        Card
+        {
+            source: cardArr2[index]
+        }
+    }
+
+    Chip
+    {
+        property int value: chipVal2
+    }
 }

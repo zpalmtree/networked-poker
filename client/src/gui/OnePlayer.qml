@@ -1,6 +1,7 @@
 import QtQuick 2.7
 
-Column {
+Column
+{
     anchors.verticalCenter: parent.verticalCenter
 
     leftPadding: (anchors.left == parent.left) ? 20 : undefined

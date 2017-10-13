@@ -1,7 +1,10 @@
 import QtQuick 2.7
 import QtQuick.Layouts 1.3
 
-ColumnLayout {
+ColumnLayout
+{
+    property var chipVal
+    property var cardArr
     property var rotate
 
     rotation: rotate ? 180 : 0
@@ -14,14 +17,20 @@ ColumnLayout {
 
     spacing: 10
 
-    Repeater {
+    Repeater
+    {
         model: 2
-        Card {
+        Card
+        {
+            source: cardArr[index]
             rotation: 90
         }
     }
 
-    Chip {
+    Chip
+    {
+        property int value: chipVal
+        id: chip
         Layout.alignment: Qt.AlignCenter
     }
 }

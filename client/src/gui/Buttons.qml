@@ -1,35 +1,41 @@
 import QtQuick 2.7
 import QtQuick.Layouts 1.3
 
-RowLayout {
+RowLayout
+{
     height: 80
 
     anchors.bottom: parent.bottom
     anchors.right: parent.right
     anchors.left: parent.left
 
-    Action {
+    Action
+    {
         enabled: foldEnabled
         Layout.leftMargin: 10
         text: "Fold"
     }
 
-    Action {
+    Action
+    {
         enabled: checkEnabled
         text: "Check"
     }
 
-    Action {
+    Action
+    {
         enabled: callEnabled
         text: "Call"
     }
 
-    Action {
+    Action
+    {
         enabled: raiseEnabled
         text: "Raise"
     }
 
-    Action {
+    Action
+    {
         enabled: allInEnabled
         Layout.rightMargin: 10
         text: "All In"

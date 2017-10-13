@@ -1,43 +1,56 @@
 import QtQuick 2.7
 
-Item {
+Item
+{
     anchors.fill: parent
 
-    TwoPlayers {
+    property var playerNames: pNames
+
+    TwoPlayers
+    {
         anchors.bottom: parent.bottom
 
-        Player {
-            text: "Dave"
+        Player
+        {
+            text: playerNames[1]
         }
         
-        Player {
-            text: "Bob"
+        Player
+        {
+            text: playerNames[0]
         }
     }
 
-    TwoPlayers {
-        Player {
-            text: "Jim"
+    TwoPlayers
+    {
+        Player
+        {
+            text: playerNames[3]
         }
 
-        Player {
-            text: "Pete"
+        Player
+        {
+            text: playerNames[4]
         }
     }
 
-    OnePlayer {
+    OnePlayer
+    {
         anchors.left: parent.left
 
-        Player {
-            text: "Steve"
+        Player
+        {
+            text: playerNames[2]
         }
     }
 
-    OnePlayer {
+    OnePlayer
+    {
         anchors.right: parent.right
 
-        Player {
-            text: "Gary"
+        Player
+        {
+            text: playerNames[5]
         }
     }
 }

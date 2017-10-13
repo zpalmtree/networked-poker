@@ -1,6 +1,9 @@
 import QtQuick 2.7
 
-Row {
+Row
+{
+    property var tableCardsArray: tCards
+
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
 
@@ -8,8 +11,12 @@ Row {
 
     spacing: 10
 
-    Repeater {
+    Repeater
+    {
         model: 5
-        Card {}
+        Card
+        {
+            source: tableCardsArray[index]
+        }
     }
 }

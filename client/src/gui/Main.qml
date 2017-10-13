@@ -4,7 +4,8 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Controls.Styles 1.4
 
-Window {
+Window
+{
     id: mainWindow
 
     title: "Poker Client"
@@ -17,13 +18,11 @@ Window {
 
     Board {}
 
-    Players {}
-
-    PlayerCardsAndChips {}
-
     TableCards {}
 
     Pot {}
 
     Buttons {}
+
+    AllChipsAndCards {}
 }    

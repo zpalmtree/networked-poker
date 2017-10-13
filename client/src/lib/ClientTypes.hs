@@ -31,16 +31,16 @@ data PSignals = PSignals {
 }
 
 data CSignals = CSignals {
-    _tcard1ImgSig :: SignalKey (IO ()),
-    _tcard1ImgState :: IORef Text,
-    _tcard2ImgSig :: SignalKey (IO ()),
-    _tcard2ImgState :: IORef Text,
-    _tcard3ImgSig :: SignalKey (IO ()),
-    _tcard3ImgState :: IORef Text,
-    _tcard4ImgSig :: SignalKey (IO ()),
-    _tcard4ImgState :: IORef Text,
-    _tcard5ImgSig :: SignalKey (IO ()),
-    _tcard5ImgState :: IORef Text
+    _tCard1ImgSig :: SignalKey (IO ()),
+    _tCard1ImgState :: IORef Text,
+    _tCard2ImgSig :: SignalKey (IO ()),
+    _tCard2ImgState :: IORef Text,
+    _tCard3ImgSig :: SignalKey (IO ()),
+    _tCard3ImgState :: IORef Text,
+    _tCard4ImgSig :: SignalKey (IO ()),
+    _tCard4ImgState :: IORef Text,
+    _tCard5ImgSig :: SignalKey (IO ()),
+    _tCard5ImgState :: IORef Text
 }
 
 data CGame = CGame {

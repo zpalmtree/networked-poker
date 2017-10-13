@@ -1,6 +1,7 @@
 import QtQuick 2.7
 
-Row {
+Row
+{
     anchors.horizontalCenter: parent.horizontalCenter
 
     spacing: 250

@@ -1,6 +1,7 @@
 import QtQuick 2.7
 
-Rectangle {
+Rectangle
+{
     color: "green"
     border.color: "black"
     border.width: 5

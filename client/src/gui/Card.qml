@@ -1,6 +1,9 @@
 import QtQuick 2.7
 
-Rectangle {
+Rectangle
+{
+    property alias source: image.source
+
     color: "white"
     height: 80
     width: 60
@@ -9,8 +12,9 @@ Rectangle {
 
     rotation: parent.rotation
 
-    Image {
-        source: "assets/card-ace-spades.png"
+    Image
+    {
+        id: image
         width: parent.width
         height: parent.height
     }
