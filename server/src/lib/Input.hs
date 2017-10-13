@@ -41,13 +41,13 @@ getAction actions def = do
 
 --have to supply a dummy parameter to raise
 checkRaiseAllIn :: GameStateT (Action Int)
-checkRaiseAllIn = getAction [Check, Raise undefined, AllIn] Check
+checkRaiseAllIn = getAction [Check, Raise 0, AllIn] Check
 
 checkAllIn :: GameStateT (Action Int)
 checkAllIn = getAction [Check, AllIn] Check
 
 foldCallRaiseAllIn :: GameStateT (Action Int)
-foldCallRaiseAllIn = getAction [Fold, Call, Raise undefined, AllIn] Fold
+foldCallRaiseAllIn = getAction [Fold, Call, Raise 0, AllIn] Fold
 
 foldAllIn :: GameStateT (Action Int)
 foldAllIn = getAction [Fold, AllIn] Fold

@@ -166,7 +166,7 @@ getPlayerByUUIDPure uuid' = do
 
     let players' = filter (\p -> p^.uuid == uuid') (s^.playerQueue.players)
 
-    return $ head players'
+    return $ headNote "in getPlayerByUUIDPure!" players'
 
 mkNewPlayer :: String -> Socket -> IO Player
 mkNewPlayer name' sock = do

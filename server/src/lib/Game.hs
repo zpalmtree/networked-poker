@@ -8,6 +8,7 @@ import Control.Lens ((^.), (.=), (+=), traversed, zoom)
 import Control.Monad.Trans.State (get)
 import Control.Monad (unless)
 import Data.UUID.Types (UUID)
+import Safe (headNote)
 
 import Types (Game, Pot, Stage(..), Cards(..), GameStateT)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
@@ -98,7 +99,7 @@ makeChoice s
 
         fromPure updatePot
 
-        let pot' = head $ s^.bets.pots
+        let pot' = headNote "in makeChoice!" $ s^.bets.pots
             winner' = [winnerID]
 
         outputWinners [(pot', winner')]

@@ -88,7 +88,7 @@ seatPlayer sock name' unseated = do
 
         if length a == (gameSize - 1)
             then do
-                launchNewGame a unseated
+                launchNewGame (player : a) unseated
                 return []
             else return $ player : a
 
