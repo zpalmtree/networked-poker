@@ -94,7 +94,6 @@ library
   exposed-modules:
       CLenses
       ClientTypes
-      Utilities.ClientTypes
   other-modules:
       Paths_client
   default-language: Haskell2010

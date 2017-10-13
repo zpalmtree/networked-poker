@@ -29,8 +29,8 @@ module Types
     InputMsg(..),
     BadInputMsg(..),
     ClientGame(..),
-    ClientPlayerQueue(..),
-    ClientPlayer,
+    CPlayerQueue(..),
+    CPlayer,
     GameStateT,
     GameState
 )
@@ -70,18 +70,18 @@ data Player = Player {
     _canReRaise :: Bool
 } deriving (Eq)
 
-data ClientPlayer = ClientPlayer {
-    _clientName :: String,
-    _clientUUID :: UUID,
-    _clientChips :: Int,
-    _clientCards :: Maybe [Card],
-    _clientInPlay :: Bool,
-    _clientAllIn :: Bool,
-    _clientBet :: Int,
-    _clientMadeInitialBet :: Bool,
-    _clientHandValue :: Maybe (Hand Value Value),
-    _clientCanReRaise :: Bool,
-    _clientIsMe :: Bool
+data CPlayer = CPlayer {
+    _cName :: String,
+    _cUUID :: UUID,
+    _cChips :: Int,
+    _cCards :: Maybe [Card],
+    _cInPlay :: Bool,
+    _cAllIn :: Bool,
+    _cBet :: Int,
+    _cMadeInitialBet :: Bool,
+    _cHandValue :: Maybe (Hand Value Value),
+    _cCanReRaise :: Bool,
+    _cIsMe :: Bool
 } deriving (Generic)
 
 data Cards = Cards {
@@ -117,9 +117,9 @@ data PlayerQueue = PlayerQueue {
     _dealer :: Int
 } deriving (Eq)
 
-data ClientPlayerQueue = ClientPlayerQueue {
-    _clientPlayers :: [ClientPlayer],
-    _clientDealer :: Int
+data CPlayerQueue = CPlayerQueue {
+    _cPlayers :: [CPlayer],
+    _cDealer :: Int
 } deriving (Generic)
 
 data ActionMsg a = ActionMsg {
@@ -133,11 +133,11 @@ data PlayerHandInfo = PlayerHandInfo {
     _hand :: [Card]
 } deriving (Generic)
 
-data ClientGame = CGame {
-    _clientPlayerQueue :: ClientPlayerQueue,
-    _clientStage :: Stage,
-    _clientCommunityCards :: [Card],
-    _clientBets :: Bets
+data ClientGame = ClientGame {
+    _cPlayerQueue :: CPlayerQueue,
+    _cStage :: Stage,
+    _cCommunityCards :: [Card],
+    _cBets :: Bets
 } deriving (Generic)
 
 data Stage = PreFlop 
@@ -285,9 +285,9 @@ instance Binary (Action a)
 
 instance Binary ClientGame
 
-instance Binary ClientPlayer
+instance Binary CPlayer
 
-instance Binary ClientPlayerQueue
+instance Binary CPlayerQueue
 
 instance Binary Stage
 

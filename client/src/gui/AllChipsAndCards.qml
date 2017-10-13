@@ -16,12 +16,12 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
 
-            card1Img: cardArr[index][0]
-            card2Img: cardArr[index][1]
+            card1Img: pCards[index][0]
+            card2Img: pCards[index][1]
 
-            chipValue: chipArr[index]
+            chipValue: pChips[index]
 
-            playerName: nameArr[index]
+            playerName: pNames[index]
 
             indexNum: index
         }

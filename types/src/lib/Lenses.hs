@@ -8,7 +8,7 @@ import Types
     (Game, Player, Cards, Bets, Card, HandInfo, Pot, PlayerQueue, ClientGame,
      ActionMsg, PlayerTurnMsg, CardMsg, DealtCardsMsg, PotWinnersMsg,
      PlayersRemovedMsg, CardRevealMsg, PlayerHandInfo, InitialGameMsg,
-     ClientPlayerQueue, ClientPlayer)
+     CPlayerQueue, CPlayer)
 
 makeLenses ''Game
 makeLenses ''Player
@@ -28,5 +28,5 @@ makeLenses ''PlayersRemovedMsg
 makeLenses ''CardRevealMsg
 makeLenses ''PlayerHandInfo
 makeLenses ''InitialGameMsg
-makeLenses ''ClientPlayerQueue
-makeLenses ''ClientPlayer
+makeLenses ''CPlayerQueue
+makeLenses ''CPlayer
