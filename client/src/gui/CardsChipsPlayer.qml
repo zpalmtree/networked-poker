@@ -91,6 +91,7 @@ Item
         {
             return 180
         }
+        return 0
     }
 
     function getNameRotation()

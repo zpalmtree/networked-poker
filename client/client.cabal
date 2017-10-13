@@ -76,15 +76,9 @@ data-files:
     src/gui/CardsChipsPlayer.qml
     src/gui/Chip.qml
     src/gui/Main.qml
-    src/gui/OnePlayer.qml
     src/gui/Player.qml
-    src/gui/PlayerCardsAndChips.qml
-    src/gui/Players.qml
     src/gui/Pot.qml
     src/gui/TableCards.qml
-    src/gui/TwoPlayers.qml
-    src/gui/XCardsAndChips.qml
-    src/gui/YCardsAndChips.qml
 
 library
   hs-source-dirs:
