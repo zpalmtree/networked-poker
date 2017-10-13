@@ -16,6 +16,7 @@ import Control.Lens ((^.))
 import Control.Concurrent (forkIO)
 import Data.IORef (IORef, newIORef, readIORef)
 import Data.Text (pack)
+import Control.Exception (IOException, try)
 
 import qualified Data.ByteString as BS (ByteString)
 import qualified Data.ByteString.Lazy as BL (ByteString)
@@ -27,7 +28,7 @@ import Graphics.QML
 
 import Network.Socket 
     (Socket, getAddrInfo, socket, addrFamily, addrProtocol, addrSocketType, 
-     addrAddress, connect)
+     addrAddress, connect, withSocketsDo)
 
 import Paths_client (getDataFileName)
 
@@ -40,21 +41,28 @@ import Types
      PotWinnersMsg, GameOverMsg, PlayersRemovedMsg, CardRevealMsg)
 
 main :: IO ()
-main = do   
+main = withSocketsDo $ do   
     gui <- getDataFileName "src/gui/Main.qml"
     
     (rootClass, sigs) <- makeClass
 
     ctx <- newObject rootClass ()
 
-    (initialState, sock) <- initialSetup sigs
+    trySetup <- initialSetup sigs
 
-    forkIO $ evalStateT (ioLoop sock) initialState
+    case trySetup of
+        (Left err) -> do
+            putStrLn "Couldn't connect to server. Did you start it?"
+            print err
 
-    runEngineLoop defaultEngineConfig {
-        initialDocument = fileDocument gui,
-        contextObject = Just $ anyObjRef ctx
-    }
+        (Right (initialState, sock)) -> do
+
+            forkIO $ evalStateT (ioLoop sock) initialState
+
+            runEngineLoop defaultEngineConfig {
+                initialDocument = fileDocument gui,
+                contextObject = Just $ anyObjRef ctx
+            }
 
 --for some odd reason, eta reducing func prevents it from compiling
 {-# ANN makeClass "HLint: ignore Eta reduce" #-}
@@ -133,26 +141,30 @@ makeClass = do
           nsk :: IO (SignalKey (IO ()))
           nsk = newSignalKey
 
-initialSetup :: StatesNSignals -> IO (CGame, Socket)
+initialSetup :: StatesNSignals -> IO (Either IOException (CGame, Socket))
 initialSetup sigs = do
     addr:_ <- getAddrInfo Nothing (Just "127.0.0.1") (Just "2112")
     sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
 
-    connect sock (addrAddress addr)
+    connectSuccess <- try (connect sock (addrAddress addr))
 
-    name <- getName
-    
-    send sock (toStrict . encode $ name)
+    case connectSuccess of
+        Left err -> return $ Left err
+        Right _ -> do
 
-    msg <- recv sock 4096
+            name <- getName
+            
+            send sock (toStrict . encode $ name)
 
-    case decode msg of
-        Left (_, _, err) -> error err
-        Right (_, _, msg') -> case msg' of
-            MIsInitialGame m -> do
-                putStrLn "Recieved initial game..."
-                return (CGame (m^.clientGame) sigs, sock)
-            _ -> error "Invalid message recieved!"
+            msg <- recv sock 4096
+
+            case decode msg of
+                Left (_, _, err) -> error err
+                Right (_, _, msg') -> case msg' of
+                    MIsInitialGame m -> do
+                        putStrLn "Recieved initial game..."
+                        return $ Right (CGame (m^.clientGame) sigs, sock)
+                    _ -> error "Invalid message recieved!"
 
 getName :: IO String
 getName = do
