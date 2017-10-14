@@ -8,7 +8,8 @@ import ClientTypes (CGameStateT)
 
 import Types 
     (Message(..), ActionMsg, PlayerTurnMsg, CardMsg, DealtCardsMsg, 
-     PotWinnersMsg, GameOverMsg, PlayersRemovedMsg, CardRevealMsg)
+     PotWinnersMsg, GameOverMsg, PlayersRemovedMsg, CardRevealMsg, InputMsg,
+     BadInputMsg)
 
 handleMsg :: Message -> CGameStateT ()
 handleMsg msg = case msg of
@@ -20,6 +21,9 @@ handleMsg msg = case msg of
     MIsGameOver m -> handleGameOver m
     MIsPlayersRemoved m -> handlePlayersRemoved m
     MIsCardReveal m -> handleCardsRevealed m
+    MIsInput m -> handleInputRequest m
+    MIsBadInput m -> handleBadInput m
+    MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
 
 handleAction :: ActionMsg a -> CGameStateT ()
 handleAction = undefined
@@ -44,3 +48,9 @@ handlePlayersRemoved = undefined
 
 handleCardsRevealed :: CardRevealMsg -> CGameStateT ()
 handleCardsRevealed = undefined
+
+handleInputRequest :: InputMsg -> CGameStateT ()
+handleInputRequest = undefined
+
+handleBadInput :: BadInputMsg -> CGameStateT ()
+handleBadInput = undefined

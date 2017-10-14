@@ -97,8 +97,8 @@ library
   exposed-modules:
       CLenses
       ClientTypes
-      GUISetup
       HandleMessage
+      Setup
       Utilities
   other-modules:
       Paths_client

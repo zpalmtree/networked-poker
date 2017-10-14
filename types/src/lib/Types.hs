@@ -42,6 +42,7 @@ import Control.Concurrent.MVar (MVar)
 import Network.Socket (Socket)
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
+import Text.Printf (printf)
 
 -- DATA TYPES
 
@@ -151,7 +152,7 @@ data Suit = Heart
           | Spade 
           | Club 
           | Diamond 
-          deriving (Show, Bounded, Enum, Eq, Generic)
+          deriving (Bounded, Enum, Eq, Generic)
 
 data Value = Two 
            | Three 
@@ -166,7 +167,7 @@ data Value = Two
            | Queen 
            | King 
            | Ace 
-           deriving (Show, Bounded, Enum, Eq, Ord, Generic)
+           deriving (Bounded, Enum, Eq, Ord, Generic)
 
 data Action a = Fold 
               | Check 
@@ -304,3 +305,27 @@ instance Eq (Action a) where
     (==) SmallBlind SmallBlind = True
     (==) BigBlind BigBlind = True
     (==) _ _ = False
+
+instance Show Card where
+    show (Card v s) = printf "card-%s-%ss.png" (show v) (show s)
+
+instance Show Value where
+    show Two = "2"
+    show Three = "3"
+    show Four = "4"
+    show Five = "5"
+    show Six = "6"
+    show Seven = "7"
+    show Eight = "8"
+    show Nine = "9"
+    show Ten = "10"
+    show Jack = "jack"
+    show Queen = "queen"
+    show King = "king"
+    show Ace = "ace"
+
+instance Show Suit where
+    show Club = "club"
+    show Diamond = "diamond"
+    show Heart = "heart"
+    show Spade = "spade"

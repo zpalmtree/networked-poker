@@ -1,19 +1,20 @@
 {-# LANGUAGE GADTs, TypeFamilies #-}
 
-module GUISetup
+module Setup
 (
     initialSetup,
+    initialGUISetup,
     makeClass
 )
 where
 
 import Data.IORef (IORef, newIORef, readIORef)
 import Control.Exception (IOException, try)
-import Data.Text (pack)
+import Data.Text (Text, pack)
 import Network.Socket.ByteString (send, recv)
 import Data.ByteString.Lazy (toStrict)
 import Data.Binary (encode)
-import Control.Lens ((^.))
+import Control.Lens ((^.), (^..), traversed)
 
 import Network.Socket 
     (Socket, getAddrInfo, socket, addrFamily, addrSocketType, addrProtocol,
@@ -23,11 +24,12 @@ import Graphics.QML
     (Class, SignalKey, defPropertySigRO', newClass, newSignalKey)
 
 import ClientTypes (StatesNSignals(..), CGame(..))
-import Types (Message(..))
+import Types (Message(..), Card)
 import Utilities (getName, decode)
-import Lenses (clientGame)
+import Lenses (clientGame, cPlayerQueue, cPlayers, cCards, cChips, cName)
+import CLenses (game)
 
-import Paths_client (getDataFileName)
+import Paths_client (getDataFileName, getDataDir)
 
 --for some odd reason, eta reducing func prevents it from compiling
 {-# ANN makeClass "HLint: ignore Eta reduce" #-}
@@ -43,15 +45,15 @@ makeClass = do
 
     -- TABLE CARDS
     tCardsSig <- nsk
-    tCardsS <- newIORef $ replicate numCards cardBack
+    tCardsS <- newIORef $ replicate numTCards cardBack
 
     -- PLAYER CARDS
     pCardsSig <- nsk
-    pCardsS <- newIORef $ replicate numPlayers cards
+    pCardsS <- newIORef $ replicate maxPlayers cards
 
     -- PLAYER CHIPS
     pChipsSig <- nsk
-    pChipsS <- newIORef $ replicate numPlayers 1000 :: IO (IORef [Int])
+    pChipsS <- newIORef $ replicate maxPlayers 1000 :: IO (IORef [Int])
 
     -- POT CHIPS
     potChipsSig <- nsk
@@ -63,7 +65,7 @@ makeClass = do
 
     -- PLAYERS VISIBLE
     pVisibleSig <- nsk
-    pVisibleS <- newIORef $ replicate numPlayers True
+    pVisibleS <- newIORef $ replicate maxPlayers True
 
     -- can't have polymorphic lists
     let boolL   = [("bEnabled",     bEnabledSig,    bEnabledS),
@@ -98,10 +100,7 @@ makeClass = do
     return (rootClass, sNs)
 
     where defRead s _ = readIORef s
-          numPlayers = 6
-          numCards = 5
-          numButtons = 5
-          names = map pack ["Bob", "Dave", "Steve", "Jim", "Pete", "Gary"]
+          names = replicate maxPlayers (pack "")
 
           -- so I don't have to list the type every time
           nsk :: IO (SignalKey (IO ()))
@@ -131,3 +130,52 @@ initialSetup sigs = do
                         putStrLn "Recieved initial game..."
                         return $ Right (CGame (m^.clientGame) sigs, sock)
                     _ -> error "Invalid message recieved!"
+
+initialGUISetup :: CGame -> IO ()
+initialGUISetup cgame = do
+    dir <- getDataDir
+
+    -- can't seem to use allPlayers on names and chips - it thinks it's only
+    -- pointing to one thing - the cards?
+    let names = cgame^..game.cPlayerQueue.cPlayers.traversed.cName
+        chips = cgame^..game.cPlayerQueue.cPlayers.traversed.cChips
+        cards = map (convertCards dir) $ cgame^..allPlayers.cCards
+        allPlayers = game.cPlayerQueue.cPlayers.traversed
+        visible = getVisible (length $ cgame^.game.cPlayerQueue.cPlayers)
+
+    updateVisible cgame visible
+    updateNames cgame (map pack names)
+    updateChips cgame chips
+    updateCards cgame cards
+
+getVisible :: Int -> [Bool]
+getVisible n = replicate n True ++ replicate (maxPlayers - n) False
+
+maxPlayers :: Int
+maxPlayers = 6
+
+numTCards :: Int
+numTCards = 5
+
+numButtons :: Int
+numButtons = 5
+
+convertCards :: String -> [Card] -> [Text]
+convertCards dir cs = case cs of
+    [] -> map pack [cardBack, cardBack]
+    [a, b] -> map pack [show a, show b]
+    _ -> error "Invalid cards passed to convertCards!"
+    where cardBack = cardDir ++ "card-back.png"
+          cardDir = dir ++ "/src/gui/assets/"
+
+updateNames :: CGame -> [Text] -> IO ()
+updateNames = undefined
+
+updateChips :: CGame -> [Int] -> IO ()
+updateChips = undefined
+
+updateCards :: CGame -> [[Text]] -> IO ()
+updateCards = undefined
+
+updateVisible :: CGame -> [Bool] -> IO ()
+updateVisible = undefined

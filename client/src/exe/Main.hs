@@ -17,7 +17,7 @@ import Graphics.QML
 import ClientTypes (CGameStateT)
 import HandleMessage (handleMsg)
 import Utilities (decode)
-import GUISetup (initialSetup, makeClass)
+import Setup (initialSetup, initialGUISetup, makeClass)
 
 import Paths_client (getDataFileName)
 
@@ -38,13 +38,14 @@ main = withSocketsDo $ do
 
         (Right (initialState, sock)) -> do
 
+            initialGUISetup initialState
+
             forkIO $ evalStateT (ioLoop sock) initialState
 
             runEngineLoop defaultEngineConfig {
                 initialDocument = fileDocument gui,
                 contextObject = Just $ anyObjRef ctx
             }
-
 
 ioLoop :: Socket -> CGameStateT ()
 ioLoop sock = do
