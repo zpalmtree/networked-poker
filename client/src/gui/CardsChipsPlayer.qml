@@ -3,7 +3,7 @@ import QtQuick.Window 2.2
 
 Item
 {
-    property var chipValue
+    property var betValue
     property var playerName
     property var card1Img
     property var card2Img
@@ -156,7 +156,7 @@ Item
             Chip
             {
                 anchors.verticalCenter: parent.verticalCenter
-                property int value: chipValue
+                property int value: betValue
                 rotation: getChipRotation()
             }
         }

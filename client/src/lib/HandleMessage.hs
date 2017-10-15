@@ -4,12 +4,22 @@ module HandleMessage
 )
 where
 
+import Control.Lens ((^.), (.=), (-=), zoom, traversed, filtered)
+import Data.UUID.Types (UUID)
+import Control.Monad.Trans.State (get)
+
 import ClientTypes (CGameStateT)
+import CLenses (game)
+import GUIUpdate (updateBets, updateNames)
+
+import Lenses 
+    (player, action, currentBet, cPlayerQueue, cPlayers, cUUID, cBets,
+     cChips, cBet)
 
 import Types 
     (Message(..), ActionMsg, PlayerTurnMsg, CardMsg, DealtCardsMsg, 
      PotWinnersMsg, GameOverMsg, PlayersRemovedMsg, CardRevealMsg, InputMsg,
-     BadInputMsg)
+     BadInputMsg, Action(..))
 
 handleMsg :: Message -> CGameStateT ()
 handleMsg msg = case msg of
@@ -26,7 +36,34 @@ handleMsg msg = case msg of
     MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
 
 handleAction :: ActionMsg a -> CGameStateT ()
-handleAction = undefined
+handleAction a = case a^.action of
+    Fold -> fold (a^.player)
+    Check -> return ()
+    Call -> call (a^.player)
+    Raise n -> raise n (a^.player)
+    AllIn -> allIn (a^.player)
+    SmallBlind -> smallBlind (a^.player)
+    BigBlind -> bigBlind (a^.player)
+
+call :: UUID -> CGameStateT ()
+call u = do
+    s <- get
+
+    let currBet = s^.game.cBets.currentBet
+
+    zoom (game.cPlayerQueue.cPlayers.traversed.filtered (\p -> p^.cUUID == u)) $ do
+        p <- get
+        cChips -= (currBet - p^.cBet)
+        cBet .= currBet
+
+    updateBets
+    updateNames
+
+fold = undefined
+raise = undefined
+allIn = undefined
+smallBlind = undefined
+bigBlind = undefined
 
 handlePlayerTurn :: PlayerTurnMsg -> CGameStateT ()
 handlePlayerTurn = undefined

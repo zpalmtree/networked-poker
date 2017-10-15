@@ -14,5 +14,6 @@ Rectangle
         id: label
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
+        horizontalAlignment: Text.AlignHCenter
     }
 }

@@ -1,7 +1,7 @@
 module GUIUpdate
 (
     updateNames,
-    updateChips,
+    updateBets,
     updateCards,
     updateVisible
 )
@@ -11,47 +11,59 @@ import Data.Text (Text, pack)
 import Control.Lens ((^.), (^..), traversed)
 import Graphics.QML (fireSignal)
 import Data.IORef (writeIORef)
+import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
 
 import Constants (maxPlayers, cardBack)
-import ClientTypes (CGame)
+import ClientTypes (CGameStateT)
 import Types (Card)
-import Lenses (cPlayerQueue, cPlayers, cName, cChips, cCards)
+import Lenses (cPlayerQueue, cPlayers, cName, cChips, cCards, cBet)
 
 import CLenses 
     (game, qmlState, pVisibleS, pVisibleSig, ctx, pNamesS, pNamesSig,
-     pChipsS, pChipsSig, pCardsS, pCardsSig)
+     pBetsS, pBetsSig, pCardsS, pCardsSig)
 
-updateNames :: CGame -> IO ()
-updateNames cgame = do
-    let names = cgame^..game.cPlayerQueue.cPlayers.traversed.cName
-        padded = map pack $ pad names ""
+updateNames :: CGameStateT ()
+updateNames = do
+    s <- get
 
-    writeIORef (cgame^.qmlState.pNamesS) padded
-    fireSignal (cgame^.qmlState.pNamesSig) (cgame^.ctx)
+    let names = s^..game.cPlayerQueue.cPlayers.traversed.cName
+        chips = s^..game.cPlayerQueue.cPlayers.traversed.cChips
+        fullText = zipWith (\a b -> a ++ "\n" ++ show b) names chips
+        padded = map pack $ pad fullText ""
 
-updateChips :: CGame -> IO ()
-updateChips cgame = do
-    let chips = cgame^..game.cPlayerQueue.cPlayers.traversed.cChips
-        padded = pad chips 0
+    lift $ writeIORef (s^.qmlState.pNamesS) padded
+    lift $ fireSignal (s^.qmlState.pNamesSig) (s^.ctx)
 
-    writeIORef (cgame^.qmlState.pChipsS) padded
-    fireSignal (cgame^.qmlState.pChipsSig) (cgame^.ctx)
+updateBets :: CGameStateT ()
+updateBets = do
+    s <- get
 
-updateCards :: CGame -> IO ()
-updateCards cgame = do
-    let cards = cgame^..game.cPlayerQueue.cPlayers.traversed.cCards
+    let bets = s^..game.cPlayerQueue.cPlayers.traversed.cBet
+        padded = pad bets 0
+
+    lift $ writeIORef (s^.qmlState.pBetsS) padded
+    lift $ fireSignal (s^.qmlState.pBetsSig) (s^.ctx)
+
+updateCards :: CGameStateT ()
+updateCards = do
+    s <- get
+
+    let cards = s^..game.cPlayerQueue.cPlayers.traversed.cCards
         padded = map convertCards $ pad cards []
 
-    writeIORef (cgame^.qmlState.pCardsS) padded
-    fireSignal (cgame^.qmlState.pCardsSig) (cgame^.ctx)
+    lift $ writeIORef (s^.qmlState.pCardsS) padded
+    lift $ fireSignal (s^.qmlState.pCardsSig) (s^.ctx)
 
-updateVisible :: CGame -> IO ()
-updateVisible cgame = do
-    let visible = replicate (length $ cgame^.game.cPlayerQueue.cPlayers) True
+updateVisible :: CGameStateT ()
+updateVisible = do
+    s <- get
+
+    let visible = replicate (length $ s^.game.cPlayerQueue.cPlayers) True
         padded = pad visible False
 
-    writeIORef (cgame^.qmlState.pVisibleS) padded
-    fireSignal (cgame^.qmlState.pVisibleSig) (cgame^.ctx)
+    lift $ writeIORef (s^.qmlState.pVisibleS) padded
+    lift $ fireSignal (s^.qmlState.pVisibleSig) (s^.ctx)
 
 pad :: [a] -> a -> [a]
 pad xs def

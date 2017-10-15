@@ -38,7 +38,7 @@ main = withSocketsDo $ do
 
         (Right (initialState, sock)) -> do
 
-            initialGUISetup initialState
+            evalStateT initialGUISetup initialState
 
             forkIO $ evalStateT (ioLoop sock) initialState
 

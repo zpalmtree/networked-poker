@@ -23,11 +23,11 @@ import Network.Socket
 import Graphics.QML 
     (Class, SignalKey, ObjRef, defPropertySigRO', newClass, newSignalKey)
 
-import ClientTypes (StatesNSignals(..), CGame(..))
+import ClientTypes (StatesNSignals(..), CGame(..), CGameStateT)
 import Types (Message(..))
 import Utilities (getName, decode)
 import Lenses (clientGame)
-import GUIUpdate (updateNames, updateChips, updateCards, updateVisible)
+import GUIUpdate (updateNames, updateBets, updateCards, updateVisible)
 import Constants (maxPlayers, numTCards, numButtons, cardBack)
 
 --for some odd reason, eta reducing func prevents it from compiling
@@ -76,7 +76,7 @@ makeClass = do
 
         ints    = [("potValue",     potChipsSig,    potChipsS)]
 
-        intsL   = [("pChips",       pChipsSig,      pChipsS)]
+        intsL   = [("pBets",        pChipsSig,      pChipsS)]
 
     let func xs = map (\(x, y, z) -> defPropertySigRO' x y $ defRead z) xs
 
@@ -129,9 +129,9 @@ initialSetup sigs this = do
                         return $ Right (CGame (m^.clientGame) sigs this, sock)
                     _ -> error "Invalid message recieved!"
 
-initialGUISetup :: CGame -> IO ()
-initialGUISetup cgame = do
-    updateVisible cgame
-    updateNames cgame
-    updateChips cgame
-    updateCards cgame
+initialGUISetup :: CGameStateT ()
+initialGUISetup = do
+    updateVisible
+    updateNames
+    updateBets
+    updateCards

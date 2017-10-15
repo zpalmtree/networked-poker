@@ -23,8 +23,8 @@ data CGame = CGame {
 data StatesNSignals = StatesNSignals {
     _pCardsSig :: SignalKey (IO ()),
     _pCardsS :: IORef [[Text]],
-    _pChipsSig :: SignalKey (IO ()),
-    _pChipsS :: IORef [Int],
+    _pBetsSig :: SignalKey (IO ()),
+    _pBetsS :: IORef [Int],
     _pNamesSig :: SignalKey (IO ()),
     _pNamesS :: IORef [Text],
     _tCardsSig :: SignalKey (IO ()),
