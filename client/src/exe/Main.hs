@@ -29,7 +29,7 @@ main = withSocketsDo $ do
 
     ctx <- newObject rootClass ()
 
-    trySetup <- initialSetup sigs
+    trySetup <- initialSetup sigs ctx
 
     case trySetup of
         (Left err) -> do

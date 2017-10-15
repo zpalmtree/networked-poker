@@ -307,7 +307,7 @@ instance Eq (Action a) where
     (==) _ _ = False
 
 instance Show Card where
-    show (Card v s) = printf "card-%s-%ss.png" (show v) (show s)
+    show (Card v s) = printf "assets/card-%s-%ss.png" (show v) (show s)
 
 instance Show Value where
     show Two = "2"

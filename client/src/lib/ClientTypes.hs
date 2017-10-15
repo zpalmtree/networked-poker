@@ -7,7 +7,7 @@ module ClientTypes
 )
 where
 
-import Graphics.QML (SignalKey)
+import Graphics.QML (SignalKey, ObjRef)
 import Data.Text (Text)
 import Data.IORef (IORef)
 import Control.Monad.Trans.State (StateT)
@@ -16,7 +16,8 @@ import Types (ClientGame)
 
 data CGame = CGame {
     _game :: ClientGame,
-    _qmlState :: StatesNSignals
+    _qmlState :: StatesNSignals,
+    _ctx :: ObjRef ()
 }
 
 data StatesNSignals = StatesNSignals {

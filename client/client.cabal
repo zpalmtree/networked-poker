@@ -97,6 +97,8 @@ library
   exposed-modules:
       CLenses
       ClientTypes
+      Constants
+      GUIUpdate
       HandleMessage
       Setup
       Utilities
