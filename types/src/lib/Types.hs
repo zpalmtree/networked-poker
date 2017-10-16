@@ -236,6 +236,7 @@ newtype InitialGameMsg = InitialGameMsg {
     _clientGame :: ClientGame
 } deriving (Generic)
 
+-- a list of valid actions client can perform
 newtype InputMsg = InputMsg {
     _imsg :: [Action Int]
 } deriving (Generic)

@@ -8,6 +8,7 @@ Item
     property var card1Img
     property var card2Img
     property var indexNum
+    property var inPlay
 
     function getRotation()
     {
@@ -163,6 +164,7 @@ Item
 
         Player
         {
+            color: inPlay ? "black" : "grey"
             rotation: getNameRotation()
             anchors.left: parent.left
             anchors.leftMargin: 30

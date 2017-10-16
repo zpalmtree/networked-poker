@@ -22,6 +22,8 @@ Item {
             playerName: pNames[index]
 
             indexNum: index
+
+            inPlay: pInPlay[index]
         }
     }
 }

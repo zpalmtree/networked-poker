@@ -1,38 +1,44 @@
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+
 module HandleMessage
 (
     handleMsg
 )
 where
 
-import Control.Lens ((^.), (.=), (-=), zoom, traversed, filtered)
+
 import Data.UUID.Types (UUID)
 import Control.Monad.Trans.State (get)
 
-import ClientTypes (CGameStateT)
+import Control.Lens 
+    (Zoom, Zoomed, Lens', (^.), (.=), (-=), zoom, traversed, filtered)
+
+import ClientTypes (CGameStateT, CGame)
 import CLenses (game)
-import GUIUpdate (updateBets, updateNames)
+import GUIUpdate (updateBets, updateNames, updateInPlay)
 
 import Lenses 
     (player, action, currentBet, cPlayerQueue, cPlayers, cUUID, cBets,
-     cChips, cBet)
+     cChips, cBet, cInPlay, smallBlindSize, bigBlindSize, playerTurn,
+     allCards, playerCards, mapping, removed, infos, imsg)
 
 import Types 
-    (Message(..), ActionMsg, PlayerTurnMsg, CardMsg, DealtCardsMsg, 
+    (Message(..), Action(..), ActionMsg, PlayerTurnMsg, CardMsg, DealtCardsMsg, 
      PotWinnersMsg, GameOverMsg, PlayersRemovedMsg, CardRevealMsg, InputMsg,
-     BadInputMsg, Action(..))
+     BadInputMsg, CPlayer, Bets, Card, Pot, PlayerHandInfo)
 
 handleMsg :: Message -> CGameStateT ()
 handleMsg msg = case msg of
     MIsAction m -> handleAction m
-    MIsPlayerTurn m -> handlePlayerTurn m
-    MIsCard m -> handleNewCards m
-    MIsDealt m -> handleMyCards m
-    MIsPotWinners m -> handlePotWinners m
-    MIsGameOver m -> handleGameOver m
-    MIsPlayersRemoved m -> handlePlayersRemoved m
-    MIsCardReveal m -> handleCardsRevealed m
-    MIsInput m -> handleInputRequest m
-    MIsBadInput m -> handleBadInput m
+    MIsPlayerTurn m -> handlePlayerTurn (m^.playerTurn)
+    MIsCard m -> handleNewCards (m^.allCards)
+    MIsDealt m -> handleMyCards (m^.playerCards)
+    MIsPotWinners m -> handlePotWinners (m^.mapping)
+    MIsGameOver _ -> handleGameOver
+    MIsPlayersRemoved m -> handlePlayersRemoved (m^.removed)
+    MIsCardReveal m -> handleCardsRevealed (m^.infos)
+    MIsInput m -> handleInputRequest (m^.imsg)
+    MIsBadInput _ -> handleBadInput
     MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
 
 handleAction :: ActionMsg a -> CGameStateT ()
@@ -45,49 +51,102 @@ handleAction a = case a^.action of
     SmallBlind -> smallBlind (a^.player)
     BigBlind -> bigBlind (a^.player)
 
+updatePlayer :: (Applicative (Zoomed m1 a), Zoom m1 m CPlayer CGame) => 
+                 UUID -> m1 a -> m b -> m b
+updatePlayer u actions updates = do
+    zoom (game.cPlayerQueue.cPlayers.traversed.filtered isP) actions
+
+    updates
+    
+    where isP p = p^.cUUID == u
+
+fold :: UUID -> CGameStateT ()
+fold u = updatePlayer u actions updates
+    where actions = cInPlay .= False
+          updates = updateInPlay
+
 call :: UUID -> CGameStateT ()
 call u = do
     s <- get
 
     let currBet = s^.game.cBets.currentBet
 
-    zoom (game.cPlayerQueue.cPlayers.traversed.filtered (\p -> p^.cUUID == u)) $ do
+    zoom (game.cPlayerQueue.cPlayers.traversed.filtered isP) $ do
         p <- get
         cChips -= (currBet - p^.cBet)
         cBet .= currBet
 
     updateBets
     updateNames
+    where isP p = p^.cUUID == u
 
-fold = undefined
-raise = undefined
-allIn = undefined
-smallBlind = undefined
-bigBlind = undefined
+raise :: Int -> UUID -> CGameStateT ()
+raise n u = updatePlayer u actions updates
+    where actions = do
+            p <- get
+            cChips -= (n - p^.cBet)
+            cBet .= n
 
-handlePlayerTurn :: PlayerTurnMsg -> CGameStateT ()
+          updates = do
+            updateBets
+            updateNames
+
+allIn :: UUID -> CGameStateT ()
+allIn u = updatePlayer u actions updates
+    where actions = do
+            p <- get
+            cBet .= (p^.cChips + p^.cBet)
+            cChips .= 0
+
+          updates = do
+            updateBets
+            updateNames
+
+smallBlind :: UUID -> CGameStateT ()
+smallBlind u = blind u smallBlindSize
+
+bigBlind :: UUID -> CGameStateT ()
+bigBlind u = blind u bigBlindSize
+
+blind :: UUID -> Lens' Bets Int -> CGameStateT ()
+blind u lens = do
+    s <- get
+
+    let blindSize = s^.game.cBets.lens
+
+    zoom (game.cPlayerQueue.cPlayers.traversed.filtered isP) $ do
+        cChips -= blindSize
+        cBet .= blindSize
+
+    updateBets
+    updateNames
+    
+    where isP p = p^.cUUID == u
+
+handlePlayerTurn :: UUID -> CGameStateT ()
 handlePlayerTurn = undefined
 
-handleNewCards :: CardMsg -> CGameStateT ()
+handleNewCards :: [Card] -> CGameStateT ()
 handleNewCards = undefined
 
-handleMyCards :: DealtCardsMsg -> CGameStateT ()
+handleMyCards :: [Card] -> CGameStateT ()
 handleMyCards = undefined
 
-handlePotWinners :: PotWinnersMsg -> CGameStateT ()
+handlePotWinners :: [(Pot, [UUID])] -> CGameStateT ()
 handlePotWinners = undefined
 
-handleGameOver :: GameOverMsg -> CGameStateT ()
+handleGameOver :: CGameStateT ()
 handleGameOver = undefined
 
-handlePlayersRemoved :: PlayersRemovedMsg -> CGameStateT ()
+handlePlayersRemoved :: [UUID] -> CGameStateT ()
 handlePlayersRemoved = undefined
 
-handleCardsRevealed :: CardRevealMsg -> CGameStateT ()
+handleCardsRevealed :: [PlayerHandInfo] -> CGameStateT ()
 handleCardsRevealed = undefined
 
-handleInputRequest :: InputMsg -> CGameStateT ()
+--list of valid actions
+handleInputRequest :: [Action Int] -> CGameStateT ()
 handleInputRequest = undefined
 
-handleBadInput :: BadInputMsg -> CGameStateT ()
+handleBadInput :: CGameStateT ()
 handleBadInput = undefined

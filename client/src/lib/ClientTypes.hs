@@ -34,7 +34,9 @@ data StatesNSignals = StatesNSignals {
     _potChipsSig :: SignalKey (IO ()),
     _potChipsS :: IORef Int,
     _pVisibleSig :: SignalKey (IO ()),
-    _pVisibleS :: IORef [Bool]
+    _pVisibleS :: IORef [Bool],
+    _pInPlaySig :: SignalKey (IO ()),
+    _pInPlayS :: IORef [Bool]
 }
 
 type CGameStateT a = StateT CGame IO a

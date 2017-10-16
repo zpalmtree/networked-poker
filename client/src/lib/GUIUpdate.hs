@@ -3,7 +3,8 @@ module GUIUpdate
     updateNames,
     updateBets,
     updateCards,
-    updateVisible
+    updateVisible,
+    updateInPlay
 )
 where
 
@@ -17,11 +18,21 @@ import Control.Monad.Trans.Class (lift)
 import Constants (maxPlayers, cardBack)
 import ClientTypes (CGameStateT)
 import Types (Card)
-import Lenses (cPlayerQueue, cPlayers, cName, cChips, cCards, cBet)
+import Lenses (cPlayerQueue, cPlayers, cName, cChips, cCards, cBet, cInPlay)
 
 import CLenses 
     (game, qmlState, pVisibleS, pVisibleSig, ctx, pNamesS, pNamesSig,
-     pBetsS, pBetsSig, pCardsS, pCardsSig)
+     pBetsS, pBetsSig, pCardsS, pCardsSig, pInPlayS, pInPlaySig)
+
+updateInPlay :: CGameStateT ()
+updateInPlay = do
+    s <- get
+
+    let inPlay = s^..game.cPlayerQueue.cPlayers.traversed.cInPlay
+        padded = pad inPlay False
+
+    lift $ writeIORef (s^.qmlState.pInPlayS) padded
+    lift $ fireSignal (s^.qmlState.pInPlaySig) (s^.ctx)
 
 updateNames :: CGameStateT ()
 updateNames = do

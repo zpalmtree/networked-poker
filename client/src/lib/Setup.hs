@@ -64,9 +64,14 @@ makeClass = do
     pVisibleSig <- nsk
     pVisibleS <- newIORef $ replicate maxPlayers True
 
+    -- PLAYERS INPLAY
+    pInPlaySig <- nsk
+    pInPlayS <- newIORef $ replicate maxPlayers True
+
     -- can't have polymorphic lists
     let boolL   = [("bEnabled",     bEnabledSig,    bEnabledS),
-                   ("pVisible",     pVisibleSig,    pVisibleS)]
+                   ("pVisible",     pVisibleSig,    pVisibleS),
+                   ("pInPlay",      pInPlaySig,     pInPlayS)]
 
         text    = [("tCards",       tCardsSig,      tCardsS),
 
@@ -87,6 +92,7 @@ makeClass = do
                              bEnabledSig    bEnabledS
                              potChipsSig    potChipsS
                              pVisibleSig    pVisibleS
+                             pInPlaySig     pInPlayS
 
     rootClass <- newClass $ func boolL ++
                             func text ++ 

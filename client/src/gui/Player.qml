@@ -3,6 +3,7 @@ import QtQuick 2.7
 Rectangle
 {
     property alias text: label.text
+    property alias textColor: label.color
 
     height: 70
     width: 70
