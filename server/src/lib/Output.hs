@@ -4,7 +4,7 @@ module Output
     outputPlayerTurn,
     outputCards,
     outputPlayerCards,
-    outputWinners,
+    outputNewChips,
     outputGameOver,
     outputPlayersRemoved,
     outputHandValues,
@@ -14,7 +14,7 @@ where
 
 import Data.UUID.Types (UUID)
 import Network.Socket.ByteString (send)
-import Control.Lens ((^.), (.=), (%=), zoom, filtered, traversed)
+import Control.Lens ((^.), (^..), (.=), (%=), zoom, filtered, traversed)
 import Data.Binary (encode)
 import Data.ByteString.Lazy (toStrict)
 import Control.Monad.Trans.State (StateT, get, execStateT)
@@ -27,13 +27,13 @@ import Utilities.Player (getCurrentPlayer, getCurrentPlayerUUID)
 import Lenses
     (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
      handInfo, handValue, cUUID, cPlayerQueue, cPlayers, cCards, cIsMe,
-     cDealer)
+     cDealer, chips)
 
 import Types 
     (Message(..), PlayerTurnMsg(..), ActionMsg(..), CardMsg(..),
-     DealtCardsMsg(..), PotWinnersMsg(..), GameOverMsg(..),
+     DealtCardsMsg(..), NewChipsMsg(..), GameOverMsg(..),
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
-     InitialGameMsg(..), GameStateT, Action, Player, Pot, ClientGame,
+     InitialGameMsg(..), GameStateT, Action, Player, ClientGame,
      CPlayerQueue(..))
 
 msgAll :: Message -> GameStateT ()
@@ -115,9 +115,14 @@ outputPlayerCards = do
 
     where msg p = MIsDealt $ DealtCardsMsg (p^.cards)
 
-outputWinners :: [(Pot, [UUID])] -> GameStateT ()
-outputWinners potWinnerMap = msgAll . MIsPotWinners 
-                                    $ PotWinnersMsg potWinnerMap
+outputNewChips :: GameStateT ()
+outputNewChips = do
+    s <- get
+
+    let mapping = zipWith (,) (s^..playerQueue.players.traversed.uuid)
+                              (s^..playerQueue.players.traversed.chips)
+
+    msgAll . MIsNewChips $ NewChipsMsg mapping
 
 outputGameOver :: GameStateT ()
 outputGameOver = msgAll . MIsGameOver $ GameOverMsg

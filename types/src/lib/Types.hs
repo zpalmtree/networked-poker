@@ -20,7 +20,7 @@ module Types
     PlayerTurnMsg(..),
     CardMsg(..),
     DealtCardsMsg(..),
-    PotWinnersMsg(..),
+    NewChipsMsg(..),
     GameOverMsg(..),
     PlayersRemovedMsg(..),
     CardRevealMsg(..),
@@ -129,7 +129,7 @@ data ActionMsg a = ActionMsg {
 } deriving (Generic)
 
 data PlayerHandInfo = PlayerHandInfo {
-    _id :: UUID,
+    _person :: UUID,
     _rank :: Hand Value Value,
     _hand :: [Card]
 } deriving (Generic)
@@ -193,7 +193,7 @@ data Message = MIsAction (ActionMsg Int)
              | MIsPlayerTurn PlayerTurnMsg
              | MIsCard CardMsg
              | MIsDealt DealtCardsMsg
-             | MIsPotWinners PotWinnersMsg
+             | MIsNewChips NewChipsMsg
              | MIsGameOver GameOverMsg
              | MIsPlayersRemoved PlayersRemovedMsg
              | MIsCardReveal CardRevealMsg
@@ -220,8 +220,8 @@ newtype DealtCardsMsg = DealtCardsMsg {
     _playerCards :: [Card]
 } deriving (Generic)
 
-newtype PotWinnersMsg = PotWinnersMsg {
-    _mapping :: [(Pot, [UUID])]
+newtype NewChipsMsg = NewChipsMsg {
+    _mapping :: [(UUID, Int)]
 } deriving (Generic)
 
 newtype PlayersRemovedMsg = PlayersRemovedMsg {
@@ -257,7 +257,7 @@ instance Binary CardMsg
 
 instance Binary DealtCardsMsg
 
-instance Binary PotWinnersMsg
+instance Binary NewChipsMsg
 
 instance Binary GameOverMsg
 

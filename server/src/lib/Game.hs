@@ -7,8 +7,6 @@ where
 import Control.Lens ((^.), (.=), (+=), traversed, zoom)
 import Control.Monad.Trans.State (get)
 import Control.Monad (unless)
-import Data.UUID.Types (UUID)
-import Safe (headNote)
 
 import Types (Game, Pot, Stage(..), Cards(..), GameStateT)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
@@ -27,7 +25,7 @@ import Lenses
      roundDone, roundNumber, playerQueue, players)
 
 import Output
-    (outputHandValues, outputWinners, outputCards, outputPlayersRemoved)
+    (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved)
 
 gameLoop :: GameStateT ()
 gameLoop = do
@@ -89,21 +87,18 @@ notAllInAndUnmatched s = not (p^.allIn) && p^.bet < s^.bets.currentBet
 makeChoice :: Game -> GameStateT ()
 makeChoice s
     | inShowdown s = do
-        winnerMapping <- showdown
+        showdown
         outputHandValues
-        outputWinners winnerMapping
+        outputNewChips
 
     | onlyOnePlayerLeft s = do
         winnerID <- victorID
 
         updatePot
 
-        let pot' = headNote "in makeChoice!" $ s^.bets.pots
-            winner' = [winnerID]
-
-        outputWinners [(pot', winner')]
-
         giveWinnings winnerID
+
+        outputNewChips
 
     | maxOneNotAllIn s = do
         nextState
@@ -128,18 +123,17 @@ makeChoice s
         nextState
         playRound
 
-showdown :: GameStateT [(Pot, [UUID])]
+showdown :: GameStateT ()
 showdown = do
     calculateHandValues
     s <- get
     getWinnersAndDistribute (s^.bets.pots)
 
-getWinnersAndDistribute :: [Pot] -> GameStateT [(Pot, [UUID])]
-getWinnersAndDistribute [] = return []
+getWinnersAndDistribute :: [Pot] -> GameStateT ()
+getWinnersAndDistribute [] = return ()
 getWinnersAndDistribute (p:ps) = do
-    winnerIDs <- distributePot p
-    winnerIDs' <- getWinnersAndDistribute ps
-    return $ (p, winnerIDs) : winnerIDs'
+    distributePot p
+    getWinnersAndDistribute ps
 
 nextState :: GameStateT ()
 nextState = do

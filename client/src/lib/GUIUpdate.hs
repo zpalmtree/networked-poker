@@ -4,7 +4,8 @@ module GUIUpdate
     updateBets,
     updateCards,
     updateVisible,
-    updateInPlay
+    updateInPlay,
+    updateButtons
 )
 where
 
@@ -18,11 +19,15 @@ import Control.Monad.Trans.Class (lift)
 import Constants (maxPlayers, cardBack)
 import ClientTypes (CGameStateT)
 import Types (Card)
-import Lenses (cPlayerQueue, cPlayers, cName, cChips, cCards, cBet, cInPlay)
+
+import Lenses 
+    (cPlayerQueue, cPlayers, cName, cChips, cCards, cBet, cInPlay,
+     cCommunityCards)
 
 import CLenses 
     (game, qmlState, pVisibleS, pVisibleSig, ctx, pNamesS, pNamesSig,
-     pBetsS, pBetsSig, pCardsS, pCardsSig, pInPlayS, pInPlaySig)
+     pBetsS, pBetsSig, pCardsS, pCardsSig, pInPlayS, pInPlaySig, tCardsSig,
+     tCardsS, bEnabledSig, bEnabledS)
 
 updateInPlay :: CGameStateT ()
 updateInPlay = do
@@ -61,10 +66,15 @@ updateCards = do
     s <- get
 
     let cards = s^..game.cPlayerQueue.cPlayers.traversed.cCards
-        padded = map convertCards $ pad cards []
+        paddedPCards = map convertCards $ pad cards []
+        tableCards = map convertCard $ s^.game.cCommunityCards
+        paddedTCards = pad tableCards cardBack
 
-    lift $ writeIORef (s^.qmlState.pCardsS) padded
+    lift $ writeIORef (s^.qmlState.pCardsS) paddedPCards
     lift $ fireSignal (s^.qmlState.pCardsSig) (s^.ctx)
+
+    lift $ writeIORef (s^.qmlState.tCardsS) paddedTCards
+    lift $ fireSignal (s^.qmlState.tCardsSig) (s^.ctx)
 
 updateVisible :: CGameStateT ()
 updateVisible = do
@@ -76,14 +86,24 @@ updateVisible = do
     lift $ writeIORef (s^.qmlState.pVisibleS) padded
     lift $ fireSignal (s^.qmlState.pVisibleSig) (s^.ctx)
 
+updateButtons :: [Bool] -> CGameStateT ()
+updateButtons bs = do
+    s <- get 
+
+    lift $ writeIORef (s^.qmlState.bEnabledS) bs
+    lift $ fireSignal (s^.qmlState.bEnabledSig) (s^.ctx)
+
 pad :: [a] -> a -> [a]
 pad xs def
     | length xs > maxPlayers = error "Too long list passed to pad!"
     | otherwise = xs ++ replicate (maxPlayers - len) def
     where len = length xs
 
+convertCard :: Card -> Text
+convertCard c = pack $ show c
+
 convertCards :: [Card] -> [Text]
 convertCards cs = case cs of
     [] -> [cardBack, cardBack]
-    [a, b] -> map pack [show a, show b]
+    [a, b] -> [convertCard a, convertCard b]
     _ -> error "Invalid cards passed to convertCards!"

@@ -9,22 +9,26 @@ where
 
 import Data.UUID.Types (UUID)
 import Control.Monad.Trans.State (get)
+import Data.List (sort)
 
 import Control.Lens 
     (Zoom, Zoomed, Lens', (^.), (.=), (-=), zoom, traversed, filtered)
 
 import ClientTypes (CGameStateT, CGame)
 import CLenses (game)
-import GUIUpdate (updateBets, updateNames, updateInPlay)
+
+import GUIUpdate 
+    (updateBets, updateNames, updateInPlay, updateCards, updateButtons,
+     updateVisible)
 
 import Lenses 
     (player, action, currentBet, cPlayerQueue, cPlayers, cUUID, cBets,
      cChips, cBet, cInPlay, smallBlindSize, bigBlindSize, playerTurn,
-     allCards, playerCards, mapping, removed, infos, imsg)
+     allCards, playerCards, mapping, removed, infos, imsg, cCommunityCards,
+     cCards, cIsMe, hand, person)
 
 import Types 
-    (Message(..), Action(..), ActionMsg, CPlayer, Bets, Card, Pot, 
-     PlayerHandInfo)
+    (Message(..), Action(..), ActionMsg, CPlayer, Bets, Card, PlayerHandInfo)
 
 handleMsg :: Message -> CGameStateT ()
 handleMsg msg = case msg of
@@ -32,7 +36,7 @@ handleMsg msg = case msg of
     MIsPlayerTurn m -> handlePlayerTurn (m^.playerTurn)
     MIsCard m -> handleNewCards (m^.allCards)
     MIsDealt m -> handleMyCards (m^.playerCards)
-    MIsPotWinners m -> handlePotWinners (m^.mapping)
+    MIsNewChips m -> handleNewChips (m^.mapping)
     MIsGameOver _ -> handleGameOver
     MIsPlayersRemoved m -> handlePlayersRemoved (m^.removed)
     MIsCardReveal m -> handleCardsRevealed (m^.infos)
@@ -122,30 +126,77 @@ blind u lens = do
     
     where isP p = p^.cUUID == u
 
+--need to make gui hint current player, maybe yellow outline or something
 handlePlayerTurn :: UUID -> CGameStateT ()
 handlePlayerTurn = undefined
 
 handleNewCards :: [Card] -> CGameStateT ()
-handleNewCards = undefined
+handleNewCards cs = do
+    game.cCommunityCards .= cs
+    updateCards
 
 handleMyCards :: [Card] -> CGameStateT ()
-handleMyCards = undefined
+handleMyCards cs = do
+    zoom (game.cPlayerQueue.cPlayers.traversed.filtered (^.cIsMe)) $ do
+        cCards .= cs
 
-handlePotWinners :: [(Pot, [UUID])] -> CGameStateT ()
-handlePotWinners = undefined
+    updateCards
 
+handleNewChips :: [(UUID, Int)] -> CGameStateT ()
+handleNewChips = undefined
+
+--need to show message box, then kill game once confirmed
+--return to caller? in a different thread...
 handleGameOver :: CGameStateT ()
 handleGameOver = undefined
 
 handlePlayersRemoved :: [UUID] -> CGameStateT ()
-handlePlayersRemoved = undefined
+handlePlayersRemoved ids = do
+    s <- get
+
+    game.cPlayerQueue.cPlayers .= filter isIn (s^.game.cPlayerQueue.cPlayers)
+
+    updateNames
+    updateBets
+    updateCards
+    updateVisible
+
+    where isIn x = x^.cUUID `notElem` ids
 
 handleCardsRevealed :: [PlayerHandInfo] -> CGameStateT ()
-handleCardsRevealed = undefined
+handleCardsRevealed [] = updateCards
+handleCardsRevealed (p:ps) = do
+    zoom (game.cPlayerQueue.cPlayers.traversed.filtered isP) $ do
+        cCards .= p^.hand
+
+    handleCardsRevealed ps
+
+    where isP x = x^.cUUID == p^.person
 
 --list of valid actions
 handleInputRequest :: [Action Int] -> CGameStateT ()
-handleInputRequest = undefined
+handleInputRequest as = do
+    let boolList = buttonMap 0 $ sort $ map actionButtonMap as
+    
+    updateButtons boolList
+
+buttonMap :: Int -> [Int] -> [Bool]
+buttonMap _ [] = []
+buttonMap n full@(x:xs)
+    | n >= 5 = []
+    | n == x = True : buttonMap (n+1) xs
+    | otherwise = False : buttonMap (n+1) full
+
+actionButtonMap :: Action Int -> Int
+actionButtonMap a = case a of
+    Fold -> 0
+    Check -> 1
+    Call -> 2
+    Raise _ -> 3
+    AllIn -> 4
+    _ -> error "Unexpected action in actionButtonMap!"
 
 handleBadInput :: CGameStateT ()
-handleBadInput = undefined
+handleBadInput = error $ 
+    "Server reported it recieved invalid data! Ensure you have the latest " ++
+    "version of both client and server"
