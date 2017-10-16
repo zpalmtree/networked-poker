@@ -23,9 +23,8 @@ import Lenses
      allCards, playerCards, mapping, removed, infos, imsg)
 
 import Types 
-    (Message(..), Action(..), ActionMsg, PlayerTurnMsg, CardMsg, DealtCardsMsg, 
-     PotWinnersMsg, GameOverMsg, PlayersRemovedMsg, CardRevealMsg, InputMsg,
-     BadInputMsg, CPlayer, Bets, Card, Pot, PlayerHandInfo)
+    (Message(..), Action(..), ActionMsg, CPlayer, Bets, Card, Pot, 
+     PlayerHandInfo)
 
 handleMsg :: Message -> CGameStateT ()
 handleMsg msg = case msg of
