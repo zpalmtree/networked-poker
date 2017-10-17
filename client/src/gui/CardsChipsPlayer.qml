@@ -9,6 +9,7 @@ Item
     property var card2Img
     property var indexNum
     property var inPlay
+    property var borderEnabled
 
     function getRotation()
     {
@@ -164,11 +165,12 @@ Item
 
         Player
         {
-            color: inPlay ? "black" : "grey"
+            color: inPlay ? "white" : "grey"
             rotation: getNameRotation()
             anchors.left: parent.left
             anchors.leftMargin: 30
             text: playerName
+            border.width: borderEnabled ? 3 : 0
         }
     }
 }

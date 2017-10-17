@@ -29,7 +29,6 @@ module Types
     InputMsg(..),
     BadInputMsg(..),
     ClientGame(..),
-    CPlayerQueue(..),
     CPlayer(..),
     GameStateT,
     GameState
@@ -118,11 +117,6 @@ data PlayerQueue = PlayerQueue {
     _dealer :: Int
 } deriving (Eq)
 
-data CPlayerQueue = CPlayerQueue {
-    _cPlayers :: [CPlayer],
-    _cDealer :: Int
-} deriving (Generic)
-
 data ActionMsg a = ActionMsg {
     _action :: Action a,
     _player :: UUID
@@ -135,7 +129,9 @@ data PlayerHandInfo = PlayerHandInfo {
 } deriving (Generic)
 
 data ClientGame = ClientGame {
-    _cPlayerQueue :: CPlayerQueue,
+    _cPlayers :: [CPlayer],
+    _cDealer :: UUID,
+    _cCurrentPlayer :: UUID,
     _cStage :: Stage,
     _cCommunityCards :: [Card],
     _cBets :: Bets
@@ -288,8 +284,6 @@ instance Binary (Action a)
 instance Binary ClientGame
 
 instance Binary CPlayer
-
-instance Binary CPlayerQueue
 
 instance Binary Stage
 

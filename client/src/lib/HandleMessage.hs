@@ -19,13 +19,13 @@ import CLenses (game)
 
 import GUIUpdate 
     (updateBets, updateNames, updateInPlay, updateCards, updateButtons,
-     updateVisible)
+     updateVisible, updateCurrentPlayer)
 
 import Lenses 
-    (player, action, currentBet, cPlayerQueue, cPlayers, cUUID, cBets,
+    (player, action, currentBet, cPlayers, cUUID, cBets,
      cChips, cBet, cInPlay, smallBlindSize, bigBlindSize, playerTurn,
      allCards, playerCards, mapping, removed, infos, imsg, cCommunityCards,
-     cCards, cIsMe, hand, person)
+     cCards, cIsMe, hand, person, cCurrentPlayer)
 
 import Types 
     (Message(..), Action(..), ActionMsg, CPlayer, Bets, Card, PlayerHandInfo)
@@ -57,7 +57,7 @@ handleAction a = case a^.action of
 updatePlayer :: (Applicative (Zoomed m1 a), Zoom m1 m CPlayer CGame) => 
                  UUID -> m1 a -> m b -> m b
 updatePlayer u actions updates = do
-    zoom (game.cPlayerQueue.cPlayers.traversed.filtered isP) actions
+    zoom (game.cPlayers.traversed.filtered isP) actions
 
     updates
     
@@ -74,7 +74,7 @@ call u = do
 
     let currBet = s^.game.cBets.currentBet
 
-    zoom (game.cPlayerQueue.cPlayers.traversed.filtered isP) $ do
+    zoom (game.cPlayers.traversed.filtered isP) $ do
         p <- get
         cChips -= (currBet - p^.cBet)
         cBet .= currBet
@@ -117,7 +117,7 @@ blind u lens = do
 
     let blindSize = s^.game.cBets.lens
 
-    zoom (game.cPlayerQueue.cPlayers.traversed.filtered isP) $ do
+    zoom (game.cPlayers.traversed.filtered isP) $ do
         cChips -= blindSize
         cBet .= blindSize
 
@@ -126,9 +126,11 @@ blind u lens = do
     
     where isP p = p^.cUUID == u
 
---need to make gui hint current player, maybe yellow outline or something
 handlePlayerTurn :: UUID -> CGameStateT ()
-handlePlayerTurn = undefined
+handlePlayerTurn u = do
+    game.cCurrentPlayer .= u
+
+    updateCurrentPlayer
 
 handleNewCards :: [Card] -> CGameStateT ()
 handleNewCards cs = do
@@ -137,13 +139,24 @@ handleNewCards cs = do
 
 handleMyCards :: [Card] -> CGameStateT ()
 handleMyCards cs = do
-    zoom (game.cPlayerQueue.cPlayers.traversed.filtered (^.cIsMe)) $ do
+    zoom (game.cPlayers.traversed.filtered (^.cIsMe)) $
         cCards .= cs
 
     updateCards
 
 handleNewChips :: [(UUID, Int)] -> CGameStateT ()
-handleNewChips = undefined
+handleNewChips [] = do
+    updateNames
+    updateBets
+
+handleNewChips ((u,n):xs) = do
+    zoom (game.cPlayers.traversed.filtered isP) $ do
+        cChips .= n        
+        cBet .= 0
+
+    handleNewChips xs
+
+    where isP p = p^.cUUID == u
 
 --need to show message box, then kill game once confirmed
 --return to caller? in a different thread...
@@ -154,7 +167,7 @@ handlePlayersRemoved :: [UUID] -> CGameStateT ()
 handlePlayersRemoved ids = do
     s <- get
 
-    game.cPlayerQueue.cPlayers .= filter isIn (s^.game.cPlayerQueue.cPlayers)
+    game.cPlayers .= filter isIn (s^.game.cPlayers)
 
     updateNames
     updateBets
@@ -166,7 +179,7 @@ handlePlayersRemoved ids = do
 handleCardsRevealed :: [PlayerHandInfo] -> CGameStateT ()
 handleCardsRevealed [] = updateCards
 handleCardsRevealed (p:ps) = do
-    zoom (game.cPlayerQueue.cPlayers.traversed.filtered isP) $ do
+    zoom (game.cPlayers.traversed.filtered isP) $
         cCards .= p^.hand
 
     handleCardsRevealed ps
@@ -176,7 +189,7 @@ handleCardsRevealed (p:ps) = do
 --list of valid actions
 handleInputRequest :: [Action Int] -> CGameStateT ()
 handleInputRequest as = do
-    let boolList = buttonMap 0 $ sort $ map actionButtonMap as
+    let boolList = buttonMap 0 . sort $ map actionButtonMap as
     
     updateButtons boolList
 

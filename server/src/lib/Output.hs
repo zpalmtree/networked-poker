@@ -26,15 +26,13 @@ import Utilities.Player (getCurrentPlayer, getCurrentPlayerUUID)
 
 import Lenses
     (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
-     handInfo, handValue, cUUID, cPlayerQueue, cPlayers, cCards, cIsMe,
-     cDealer, chips)
+     handInfo, handValue, cUUID, cPlayers, cCards, cIsMe, chips)
 
 import Types 
     (Message(..), PlayerTurnMsg(..), ActionMsg(..), CardMsg(..),
      DealtCardsMsg(..), NewChipsMsg(..), GameOverMsg(..),
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
-     InitialGameMsg(..), GameStateT, Action, Player, ClientGame,
-     CPlayerQueue(..))
+     InitialGameMsg(..), GameStateT, Action, Player, ClientGame)
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -61,20 +59,16 @@ mkPersonalMsg :: Monad m => Player -> StateT ClientGame m ()
 mkPersonalMsg p = do
     s <- get
 
-    zoom (cPlayerQueue.cPlayers.traversed.filtered isMe) $ do
+    zoom (cPlayers.traversed.filtered isMe) $ do
         cCards .= (p^.cards)
         cIsMe .= True
 
-    let pos = myPos (s^.cPlayerQueue.cPlayers)
+    let pos = myPos (s^.cPlayers)
 
-    cPlayerQueue %= shift pos
+    cPlayers %= shift pos
 
-    where shift n cpq = let (a, b) = splitAt n (cpq^.cPlayers)
-                            new = b ++ a
-                            newDealer = (cpq^.cDealer + n) `rem` 
-                                        length (cpq^.cPlayers)
-
-                        in CPlayerQueue new newDealer
+    where shift n ps = let (a, b) = splitAt n ps
+                       in b ++ a
 
           isMe cp = cp^.cUUID == p^.uuid
 
@@ -119,8 +113,8 @@ outputNewChips :: GameStateT ()
 outputNewChips = do
     s <- get
 
-    let mapping = zipWith (,) (s^..playerQueue.players.traversed.uuid)
-                              (s^..playerQueue.players.traversed.chips)
+    let mapping = zip (s^..playerQueue.players.traversed.uuid)
+                      (s^..playerQueue.players.traversed.chips)
 
     msgAll . MIsNewChips $ NewChipsMsg mapping
 

@@ -24,6 +24,8 @@ Item {
             indexNum: index
 
             inPlay: pInPlay[index]
+
+            borderEnabled: pCurrentPlayer[index]
         }
     }
 }

@@ -12,7 +12,7 @@ import Control.Lens ((^.))
 import Types 
     (GameStateT, ClientGame(..), Game(..), PlayerQueue(..),
      Cards(..), Bets(..), Stage(..), Player, Card(..), Value(..), Suit(..),
-     CPlayerQueue(..), CPlayer(..))
+     CPlayer(..))
 
 import Lenses 
     (stage, tableCards, bets, playerQueue, players, dealer, name, uuid, chips,
@@ -22,10 +22,14 @@ mkCGame :: GameStateT ClientGame
 mkCGame = do
     s <- get
 
-    let cgame = ClientGame cPQ (s^.stage) (s^.cardInfo.tableCards) (s^.bets)
+    let cgame = ClientGame players' dealer' currentPlayer (s^.stage) 
+                           (s^.cardInfo.tableCards) (s^.bets)
 
-        cPQ = CPlayerQueue (map cP (s^.playerQueue.players)) 
-                           (s^.playerQueue.dealer)
+        dealer' = ((s^.playerQueue.players) !! (s^.playerQueue.dealer))^.uuid
+
+        currentPlayer = head (s^.playerQueue.players)^.uuid
+
+        players' = map cP (s^.playerQueue.players)
 
         -- have to fill in cards later, can't tell everyone what everyones
         -- cards are, same with isMe

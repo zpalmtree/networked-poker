@@ -5,7 +5,8 @@ module GUIUpdate
     updateCards,
     updateVisible,
     updateInPlay,
-    updateButtons
+    updateButtons,
+    updateCurrentPlayer
 )
 where
 
@@ -15,25 +16,27 @@ import Graphics.QML (fireSignal)
 import Data.IORef (writeIORef)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
+import Data.List (elemIndex)
+import Data.Maybe (fromJust)
 
 import Constants (maxPlayers, cardBack)
 import ClientTypes (CGameStateT)
 import Types (Card)
 
 import Lenses 
-    (cPlayerQueue, cPlayers, cName, cChips, cCards, cBet, cInPlay,
-     cCommunityCards)
+    (cPlayers, cName, cChips, cCards, cBet, cInPlay, cCommunityCards,
+     cCurrentPlayer, cUUID)
 
 import CLenses 
     (game, qmlState, pVisibleS, pVisibleSig, ctx, pNamesS, pNamesSig,
      pBetsS, pBetsSig, pCardsS, pCardsSig, pInPlayS, pInPlaySig, tCardsSig,
-     tCardsS, bEnabledSig, bEnabledS)
+     tCardsS, bEnabledSig, bEnabledS, pCurrentPlayerSig, pCurrentPlayerS)
 
 updateInPlay :: CGameStateT ()
 updateInPlay = do
     s <- get
 
-    let inPlay = s^..game.cPlayerQueue.cPlayers.traversed.cInPlay
+    let inPlay = s^..game.cPlayers.traversed.cInPlay
         padded = pad inPlay False
 
     lift $ writeIORef (s^.qmlState.pInPlayS) padded
@@ -43,8 +46,8 @@ updateNames :: CGameStateT ()
 updateNames = do
     s <- get
 
-    let names = s^..game.cPlayerQueue.cPlayers.traversed.cName
-        chips = s^..game.cPlayerQueue.cPlayers.traversed.cChips
+    let names = s^..game.cPlayers.traversed.cName
+        chips = s^..game.cPlayers.traversed.cChips
         fullText = zipWith (\a b -> a ++ "\n" ++ show b) names chips
         padded = map pack $ pad fullText ""
 
@@ -55,7 +58,7 @@ updateBets :: CGameStateT ()
 updateBets = do
     s <- get
 
-    let bets = s^..game.cPlayerQueue.cPlayers.traversed.cBet
+    let bets = s^..game.cPlayers.traversed.cBet
         padded = pad bets 0
 
     lift $ writeIORef (s^.qmlState.pBetsS) padded
@@ -65,7 +68,7 @@ updateCards :: CGameStateT ()
 updateCards = do
     s <- get
 
-    let cards = s^..game.cPlayerQueue.cPlayers.traversed.cCards
+    let cards = s^..game.cPlayers.traversed.cCards
         paddedPCards = map convertCards $ pad cards []
         tableCards = map convertCard $ s^.game.cCommunityCards
         paddedTCards = pad tableCards cardBack
@@ -80,7 +83,7 @@ updateVisible :: CGameStateT ()
 updateVisible = do
     s <- get
 
-    let visible = replicate (length $ s^.game.cPlayerQueue.cPlayers) True
+    let visible = replicate (length $ s^.game.cPlayers) True
         padded = pad visible False
 
     lift $ writeIORef (s^.qmlState.pVisibleS) padded
@@ -92,6 +95,19 @@ updateButtons bs = do
 
     lift $ writeIORef (s^.qmlState.bEnabledS) bs
     lift $ fireSignal (s^.qmlState.bEnabledSig) (s^.ctx)
+
+updateCurrentPlayer :: CGameStateT ()
+updateCurrentPlayer = do
+    s <- get
+
+    let index = fromJust $ elemIndex (s^.game.cCurrentPlayer)
+                                     (s^..game.cPlayers.traversed.cUUID)
+
+        bools = replicate index False ++ [True]
+        padded = pad bools False
+
+    lift $ writeIORef (s^.qmlState.pCurrentPlayerS) padded
+    lift $ fireSignal (s^.qmlState.pCurrentPlayerSig) (s^.ctx)
 
 pad :: [a] -> a -> [a]
 pad xs def

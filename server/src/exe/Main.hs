@@ -5,8 +5,9 @@ module Main
 where
 
 import Network.Socket 
-    (Socket, SockAddr, getAddrInfo, socket, addrFamily, addrProtocol,
-     addrSocketType, bind, addrAddress, listen, accept, isReadable)
+    (Socket, SockAddr, SocketOption(..), getAddrInfo, socket, addrFamily,
+     addrSocketType, bind, addrAddress, listen, accept, isReadable,
+     addrProtocol, isSupportedSocketOption, setSocketOption)
 
 import Data.ByteString.Lazy (ByteString, fromStrict)
 import Network.Socket.ByteString (recv)
@@ -18,6 +19,7 @@ import Data.Binary (decodeOrFail)
 import Data.Binary.Get (ByteOffset)
 import Control.Monad.Trans.State (evalStateT)
 import Control.Monad.Trans.Class (lift)
+import System.IO.Error (tryIOError)
 
 import Utilities.Player (mkNewPlayer)
 import Utilities.Card (dealCards)
@@ -34,17 +36,33 @@ main = do
     -- need to pick a good port at some point
     addr:_ <- getAddrInfo Nothing (Just "127.0.0.1") (Just "2112")
     sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
-    bind sock (addrAddress addr)
 
-    putStrLn "Listening for connections..."
+    -- c api -> 1 = true, 0 = false
+    let reuse = if isSupportedSocketOption ReuseAddr
+                    then 1
+                    else 0
 
-    listen sock 5 -- maximum number of queued connections, apparently set at 5
-                  -- for most OS's. Need to look into. Queued connections
-                  -- should be accepted very fast? Loop is very simple.
+    setSocketOption sock ReuseAddr reuse
 
-    unseated <- newMVar []
+    maybeBound <- tryIOError $ bind sock (addrAddress addr)
 
-    forever $ listenForConnections sock unseated -- quit server with ctrl+c
+    case maybeBound of
+        Left _ -> putStrLn $ 
+            "Socket already bound. Ensure you aren't running another " ++
+            "copy of the server."
+
+        _ -> do
+
+            putStrLn "Listening for connections..."
+
+            -- maximum number of queued connections, apparently set at 5 for
+            -- most OS's. Need to look into. Queued connections should be
+            -- accepted very fast? Loop is very simple.
+            listen sock 5
+
+            unseated <- newMVar []
+
+            forever $ listenForConnections sock unseated
 
 listenForConnections :: Socket -> MVar [Player] -> IO ()
 listenForConnections localSock unseated = do

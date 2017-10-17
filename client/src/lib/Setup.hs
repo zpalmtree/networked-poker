@@ -27,8 +27,10 @@ import ClientTypes (StatesNSignals(..), CGame(..), CGameStateT)
 import Types (Message(..))
 import Utilities (getName, decode)
 import Lenses (clientGame)
-import GUIUpdate (updateNames, updateBets, updateCards, updateVisible)
 import Constants (maxPlayers, numTCards, numButtons, cardBack)
+
+import GUIUpdate 
+    (updateNames, updateBets, updateCards, updateVisible, updateCurrentPlayer)
 
 --for some odd reason, eta reducing func prevents it from compiling
 {-# ANN makeClass "HLint: ignore Eta reduce" #-}
@@ -68,31 +70,37 @@ makeClass = do
     pInPlaySig <- nsk
     pInPlayS <- newIORef $ replicate maxPlayers True
 
+    --CURRENT PLAYER BORDER
+    pCurrentPlayerSig <- nsk
+    pCurrentPlayerS <- newIORef $ replicate maxPlayers False
+
     -- can't have polymorphic lists
-    let boolL   = [("bEnabled",     bEnabledSig,    bEnabledS),
-                   ("pVisible",     pVisibleSig,    pVisibleS),
-                   ("pInPlay",      pInPlaySig,     pInPlayS)]
+    let boolL   = [("bEnabled",         bEnabledSig,        bEnabledS),
+                   ("pVisible",         pVisibleSig,        pVisibleS),
+                   ("pInPlay",          pInPlaySig,         pInPlayS),
+                   ("pCurrentPlayer",   pCurrentPlayerSig,  pCurrentPlayerS)]
 
-        text    = [("tCards",       tCardsSig,      tCardsS),
+        text    = [("tCards",           tCardsSig,          tCardsS),
 
-                   ("pNames",       pNamesSig,      pNamesS)]
+                   ("pNames",           pNamesSig,          pNamesS)]
 
-        textL   = [("pCards",       pCardsSig,      pCardsS)]
+        textL   = [("pCards",           pCardsSig,          pCardsS)]
 
-        ints    = [("potValue",     potChipsSig,    potChipsS)]
+        ints    = [("potValue",         potChipsSig,        potChipsS)]
 
-        intsL   = [("pBets",        pChipsSig,      pChipsS)]
+        intsL   = [("pBets",            pChipsSig,          pChipsS)]
 
     let func xs = map (\(x, y, z) -> defPropertySigRO' x y $ defRead z) xs
 
-        sNs = StatesNSignals pCardsSig      pCardsS
-                             pChipsSig      pChipsS
-                             pNamesSig      pNamesS
-                             tCardsSig      tCardsS
-                             bEnabledSig    bEnabledS
-                             potChipsSig    potChipsS
-                             pVisibleSig    pVisibleS
-                             pInPlaySig     pInPlayS
+        sNs = StatesNSignals pCardsSig          pCardsS
+                             pChipsSig          pChipsS
+                             pNamesSig          pNamesS
+                             tCardsSig          tCardsS
+                             bEnabledSig        bEnabledS
+                             potChipsSig        potChipsS
+                             pVisibleSig        pVisibleS
+                             pInPlaySig         pInPlayS
+                             pCurrentPlayerSig  pCurrentPlayerS
 
     rootClass <- newClass $ func boolL ++
                             func text ++ 
@@ -141,3 +149,4 @@ initialGUISetup = do
     updateNames
     updateBets
     updateCards
+    updateCurrentPlayer

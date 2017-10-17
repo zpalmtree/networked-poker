@@ -10,6 +10,8 @@ Rectangle
 
     radius: 10
 
+    border.color: "yellow"
+
     Text
     {
         id: label
