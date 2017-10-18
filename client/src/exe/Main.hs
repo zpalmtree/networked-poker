@@ -53,5 +53,12 @@ ioLoop sock = do
     case msg of
         Left (_, _, err) -> error err
         Right (_, _, msg') -> do
-            handleMsg msg'
+            maybeMsg <- handleMsg msg'
+
+            case maybeMsg of
+                Nothing -> return ()
+                Just msg'' -> do
+                    --send blah blah
+                    return ()
+
             ioLoop sock

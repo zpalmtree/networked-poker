@@ -8,6 +8,7 @@ module Setup
 )
 where
 
+import Control.Concurrent.MVar (newEmptyMVar)
 import Data.IORef (IORef, newIORef, readIORef)
 import Control.Exception (IOException, try)
 import Network.Socket.ByteString (send, recv)
@@ -21,13 +22,14 @@ import Network.Socket
      connect, addrAddress)
 
 import Graphics.QML 
-    (Class, SignalKey, ObjRef, defPropertySigRO', newClass, newSignalKey)
+    (Class, SignalKey, ObjRef, defPropertySigRO', newClass, newSignalKey, defMethod')
 
 import ClientTypes (StatesNSignals(..), CGame(..), CGameStateT)
 import Types (Message(..))
 import Utilities (getName, decode)
 import Lenses (clientGame)
 import Constants (maxPlayers, numTCards, numButtons, cardBack)
+import HandleClick (handleFold, handleCheck, handleCall, handleRaise, handleAllIn)
 
 import GUIUpdate 
     (updateNames, updateBets, updateCards, updateVisible, updateCurrentPlayer)
@@ -90,6 +92,8 @@ makeClass = do
 
         intsL   = [("pBets",            pChipsSig,          pChipsS)]
 
+    m <- newEmptyMVar
+
     let func xs = map (\(x, y, z) -> defPropertySigRO' x y $ defRead z) xs
 
         sNs = StatesNSignals pCardsSig          pCardsS
@@ -101,12 +105,20 @@ makeClass = do
                              pVisibleSig        pVisibleS
                              pInPlaySig         pInPlayS
                              pCurrentPlayerSig  pCurrentPlayerS
+                             m
+
+        funcs = [defMethod' "fold" (handleFold sNs),
+                 defMethod' "check" (handleCheck sNs),
+                 defMethod' "call" (handleCall sNs),
+                 defMethod' "raise" (handleRaise sNs),
+                 defMethod' "allIn" (handleAllIn sNs)]
 
     rootClass <- newClass $ func boolL ++
                             func text ++ 
                             func textL ++ 
                             func ints ++ 
-                            func intsL
+                            func intsL ++
+                            funcs
 
     return (rootClass, sNs)
 

@@ -9,13 +9,15 @@ where
 
 import Data.UUID.Types (UUID)
 import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
 import Data.List (sort)
+import Control.Concurrent.MVar (takeMVar)
 
 import Control.Lens 
     (Zoom, Zoomed, Lens', (^.), (.=), (-=), zoom, traversed, filtered)
 
 import ClientTypes (CGameStateT, CGame)
-import CLenses (game)
+import CLenses (game, qmlState, actionMade)
 
 import GUIUpdate 
     (updateBets, updateNames, updateInPlay, updateCards, updateButtons,
@@ -30,19 +32,20 @@ import Lenses
 import Types 
     (Message(..), Action(..), ActionMsg, CPlayer, Bets, Card, PlayerHandInfo)
 
-handleMsg :: Message -> CGameStateT ()
+handleMsg :: Message -> CGameStateT (Maybe (Action Int))
 handleMsg msg = case msg of
-    MIsAction m -> handleAction m
-    MIsPlayerTurn m -> handlePlayerTurn (m^.playerTurn)
-    MIsCard m -> handleNewCards (m^.allCards)
-    MIsDealt m -> handleMyCards (m^.playerCards)
-    MIsNewChips m -> handleNewChips (m^.mapping)
-    MIsGameOver _ -> handleGameOver
-    MIsPlayersRemoved m -> handlePlayersRemoved (m^.removed)
-    MIsCardReveal m -> handleCardsRevealed (m^.infos)
+    MIsAction m -> def $ handleAction m
+    MIsPlayerTurn m -> def $ handlePlayerTurn (m^.playerTurn)
+    MIsCard m -> def $ handleNewCards (m^.allCards)
+    MIsDealt m -> def $ handleMyCards (m^.playerCards)
+    MIsNewChips m -> def $ handleNewChips (m^.mapping)
+    MIsGameOver _ -> def $ handleGameOver
+    MIsPlayersRemoved m -> def $ handlePlayersRemoved (m^.removed)
+    MIsCardReveal m -> def $ handleCardsRevealed (m^.infos)
     MIsInput m -> handleInputRequest (m^.imsg)
-    MIsBadInput _ -> handleBadInput
+    MIsBadInput _ -> def $ handleBadInput
     MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
+    where def f = f >> return Nothing
 
 handleAction :: ActionMsg a -> CGameStateT ()
 handleAction a = case a^.action of
@@ -187,11 +190,18 @@ handleCardsRevealed (p:ps) = do
     where isP x = x^.cUUID == p^.person
 
 --list of valid actions
-handleInputRequest :: [Action Int] -> CGameStateT ()
+handleInputRequest :: [Action Int] -> CGameStateT (Maybe (Action Int))
 handleInputRequest as = do
     let boolList = buttonMap 0 . sort $ map actionButtonMap as
     
     updateButtons boolList
+    
+    s <- get
+    
+    -- this will block until the user clicks a button and the MVar gets updated
+    action' <- lift $ takeMVar (s^.qmlState.actionMade)
+
+    return $ Just action'
 
 buttonMap :: Int -> [Int] -> [Bool]
 buttonMap _ [] = []

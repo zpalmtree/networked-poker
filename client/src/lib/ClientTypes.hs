@@ -7,12 +7,13 @@ module ClientTypes
 )
 where
 
+import Control.Concurrent.MVar (MVar)
 import Graphics.QML (SignalKey, ObjRef)
 import Data.Text (Text)
 import Data.IORef (IORef)
 import Control.Monad.Trans.State (StateT)
 
-import Types (ClientGame)
+import Types (ClientGame, Action)
 
 data CGame = CGame {
     _game :: ClientGame,
@@ -38,7 +39,8 @@ data StatesNSignals = StatesNSignals {
     _pInPlaySig :: SignalKey (IO ()),
     _pInPlayS :: IORef [Bool],
     _pCurrentPlayerSig :: SignalKey (IO ()),
-    _pCurrentPlayerS :: IORef [Bool]
+    _pCurrentPlayerS :: IORef [Bool],
+    _actionMade :: MVar (Action Int)
 }
 
 type CGameStateT a = StateT CGame IO a

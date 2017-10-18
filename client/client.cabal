@@ -99,6 +99,7 @@ library
       ClientTypes
       Constants
       GUIUpdate
+      HandleClick
       HandleMessage
       Setup
       Utilities
