@@ -16,6 +16,7 @@ import Data.ByteString.Lazy (toStrict)
 import Data.Binary (encode)
 import Control.Lens ((^.))
 import Data.Text (pack)
+import System.Log.Logger (infoM)
 
 import Network.Socket 
     (Socket, getAddrInfo, socket, addrFamily, addrSocketType, addrProtocol,
@@ -151,8 +152,10 @@ initialSetup sigs this = do
                 Left (_, _, err) -> error err
                 Right (_, _, msg') -> case msg' of
                     MIsInitialGame m -> do
-                        putStrLn "Recieved initial game..."
+                        infoM "Prog.initialSetup" "Recieved initial game"
+
                         return $ Right (CGame (m^.clientGame) sigs this, sock)
+
                     _ -> error "Invalid message recieved!"
 
 initialGUISetup :: CGameStateT ()

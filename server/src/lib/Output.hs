@@ -8,7 +8,9 @@ module Output
     outputGameOver,
     outputPlayersRemoved,
     outputHandValues,
-    outputInitialGame
+    outputInitialGame,
+    outputInputRequest,
+    outputBadInput
 )
 where
 
@@ -21,6 +23,8 @@ import Control.Monad.Trans.State (StateT, get, execStateT)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (void, forM_)
 import Data.Maybe (fromJust)
+import System.Log.Logger (infoM)
+import Text.Printf (printf)
 
 import Utilities.Player (getCurrentPlayer, getCurrentPlayerUUID)
 
@@ -32,7 +36,8 @@ import Types
     (Message(..), PlayerTurnMsg(..), ActionMsg(..), CardMsg(..),
      DealtCardsMsg(..), NewChipsMsg(..), GameOverMsg(..),
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
-     InitialGameMsg(..), GameStateT, Action, Player, ClientGame)
+     InitialGameMsg(..), GameStateT, Action, Player, ClientGame, InputMsg(..),
+     BadInputMsg(..))
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -45,6 +50,25 @@ msgP msg p = do
     let sendMsg sock = lift $ send sock (toStrict $ encode msg)
 
     void . sendMsg $ p^.socket
+
+    lift . infoM "Prog.msgP" $ printf "Sending message (%s) to %s\n" (show msg) 
+                                      (show $ p^.uuid)
+
+outputBadInput :: GameStateT ()
+outputBadInput = do
+    p <- getCurrentPlayer
+
+    let msg = MIsBadInput BadInputMsg
+
+    msgP msg p
+
+outputInputRequest :: [Action Int] -> GameStateT ()
+outputInputRequest actions = do
+    p <- getCurrentPlayer
+
+    let msg = MIsInput $ InputMsg actions
+
+    msgP msg p
 
 outputInitialGame :: ClientGame -> GameStateT ()
 outputInitialGame cgame = do

@@ -18,6 +18,7 @@ dependencies:
 - network
 - binary
 - bytestring
+- hslogger
 library:
     source-dirs: src/lib
     dependencies:

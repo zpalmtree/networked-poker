@@ -12,6 +12,7 @@ import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Data.List (sort)
 import Control.Concurrent.MVar (takeMVar)
+import System.Log.Logger (infoM)
 
 import Control.Lens 
     (Zoom, Zoomed, Lens', (^.), (.=), (-=), zoom, traversed, filtered)
@@ -33,18 +34,21 @@ import Types
     (Message(..), Action(..), ActionMsg, CPlayer, Bets, Card, PlayerHandInfo)
 
 handleMsg :: Message -> CGameStateT (Maybe (Action Int))
-handleMsg msg = case msg of
-    MIsAction m -> def $ handleAction m
-    MIsPlayerTurn m -> def $ handlePlayerTurn (m^.playerTurn)
-    MIsCard m -> def $ handleNewCards (m^.allCards)
-    MIsDealt m -> def $ handleMyCards (m^.playerCards)
-    MIsNewChips m -> def $ handleNewChips (m^.mapping)
-    MIsGameOver _ -> def $ handleGameOver
-    MIsPlayersRemoved m -> def $ handlePlayersRemoved (m^.removed)
-    MIsCardReveal m -> def $ handleCardsRevealed (m^.infos)
-    MIsInput m -> handleInputRequest (m^.imsg)
-    MIsBadInput _ -> def $ handleBadInput
-    MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
+handleMsg msg = do
+    lift . infoM "Prog.handleMsg" $ "Recieved message: " ++ show msg
+
+    case msg of
+        MIsAction m -> def $ handleAction m
+        MIsPlayerTurn m -> def $ handlePlayerTurn (m^.playerTurn)
+        MIsCard m -> def $ handleNewCards (m^.allCards)
+        MIsDealt m -> def $ handleMyCards (m^.playerCards)
+        MIsNewChips m -> def $ handleNewChips (m^.mapping)
+        MIsGameOver _ -> def handleGameOver
+        MIsPlayersRemoved m -> def $ handlePlayersRemoved (m^.removed)
+        MIsCardReveal m -> def $ handleCardsRevealed (m^.infos)
+        MIsInput m -> handleInputRequest (m^.imsg)
+        MIsBadInput _ -> def handleBadInput
+        MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
     where def f = f >> return Nothing
 
 handleAction :: ActionMsg a -> CGameStateT ()

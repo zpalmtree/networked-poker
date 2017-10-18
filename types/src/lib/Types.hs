@@ -82,7 +82,7 @@ data CPlayer = CPlayer {
     _cHandValue :: Maybe (Hand Value Value),
     _cCanReRaise :: Bool,
     _cIsMe :: Bool
-} deriving (Generic)
+} deriving (Generic, Show)
 
 data Cards = Cards {
     _tableCards :: [Card],
@@ -95,7 +95,7 @@ data Bets = Bets {
     _smallBlindSize :: Int,
     _bigBlindSize :: Int,
     _minimumRaise :: Int
-} deriving (Eq, Generic)
+} deriving (Eq, Generic, Show)
 
 data Card = Card {
     _value :: Value,
@@ -110,7 +110,7 @@ data HandInfo = HandInfo {
 data Pot = Pot {
     _pot :: Int,
     _playerUUIDs :: [UUID]
-} deriving (Eq, Generic)
+} deriving (Eq, Generic, Show)
 
 data PlayerQueue = PlayerQueue {
     _players :: [Player],
@@ -120,13 +120,13 @@ data PlayerQueue = PlayerQueue {
 data ActionMsg a = ActionMsg {
     _action :: Action a,
     _player :: UUID
-} deriving (Generic)
+} deriving (Generic, Show)
 
 data PlayerHandInfo = PlayerHandInfo {
     _person :: UUID,
     _rank :: Hand Value Value,
     _hand :: [Card]
-} deriving (Generic)
+} deriving (Generic, Show)
 
 data ClientGame = ClientGame {
     _cPlayers :: [CPlayer],
@@ -135,7 +135,7 @@ data ClientGame = ClientGame {
     _cStage :: Stage,
     _cCommunityCards :: [Card],
     _cBets :: Bets
-} deriving (Generic)
+} deriving (Generic, Show)
 
 data Stage = PreFlop 
            | Flop 
@@ -183,7 +183,7 @@ data Hand a b = HighCard a
               | FullHouse a b 
               | FourOfAKind a
               | StraightFlush a b
-              deriving (Eq, Ord, Generic)
+              deriving (Eq, Ord, Generic, Show)
 
 data Message = MIsAction (ActionMsg Int)
              | MIsPlayerTurn PlayerTurnMsg
@@ -196,46 +196,46 @@ data Message = MIsAction (ActionMsg Int)
              | MIsInitialGame InitialGameMsg
              | MIsInput InputMsg
              | MIsBadInput BadInputMsg
-             deriving (Generic)
+             deriving (Generic, Show)
 
-data GameOverMsg = GameOverMsg deriving (Generic)
+data GameOverMsg = GameOverMsg deriving (Generic, Show)
 
-data BadInputMsg = BadInputMsg deriving (Generic)
+data BadInputMsg = BadInputMsg deriving (Generic, Show)
 
 -- NEWTYPES
 
 newtype CardMsg = CardMsg {
     _allCards :: [Card]
-} deriving (Generic)
+} deriving (Generic, Show)
 
 newtype PlayerTurnMsg = PlayerTurnMsg {
     _playerTurn :: UUID
-} deriving (Generic)
+} deriving (Generic, Show)
 
 newtype DealtCardsMsg = DealtCardsMsg {
     _playerCards :: [Card]
-} deriving (Generic)
+} deriving (Generic, Show)
 
 newtype NewChipsMsg = NewChipsMsg {
     _mapping :: [(UUID, Int)]
-} deriving (Generic)
+} deriving (Generic, Show)
 
 newtype PlayersRemovedMsg = PlayersRemovedMsg {
     _removed :: [UUID]
-} deriving (Generic)
+} deriving (Generic, Show)
 
 newtype CardRevealMsg = CardRevealMsg {
     _infos :: [PlayerHandInfo]
-} deriving (Generic)
+} deriving (Generic, Show)
 
 newtype InitialGameMsg = InitialGameMsg {
     _clientGame :: ClientGame
-} deriving (Generic)
+} deriving (Generic, Show)
 
 -- a list of valid actions client can perform
 newtype InputMsg = InputMsg {
     _imsg :: [Action Int]
-} deriving (Generic)
+} deriving (Generic, Show)
 
 -- TYPES
 

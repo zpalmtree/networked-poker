@@ -10,32 +10,47 @@ where
 
 import Text.Printf (printf)
 import Control.Lens ((^.))
-import Data.ByteString.Lazy (toStrict, fromStrict)
-import Network.Socket.ByteString (send, recv)
+import Data.ByteString.Lazy (fromStrict)
+import Network.Socket.ByteString (recv)
 import Control.Monad.Trans.Class (lift)
-import Data.Binary (encode, decodeOrFail)
+import Data.Binary (decodeOrFail)
+import System.Log.Logger (warningM, infoM)
 
 import Utilities.Player (getCurrentPlayer)
 import Lenses (socket)
-import Types (GameStateT, Action(..), InputMsg(..), BadInputMsg(..))
+import Types (GameStateT, Action(..))
+import Output (outputInputRequest, outputBadInput)
 
 getAction :: [Action Int] -> Action Int -> GameStateT (Action Int)
 getAction actions def = do
     p <- getCurrentPlayer
-    
-    let sock = p^.socket
 
-    lift $ send sock (toStrict . encode $ InputMsg actions)
-    msg <- lift $ recv sock 4096
+    outputInputRequest actions
+
+    lift $ infoM "Prog.getAction" "Waiting for a response from client"
+
+    msg <- lift $ recv (p^.socket) 4096
+
+    lift $ infoM "Prog.getAction" "Recieved response from client"
+
     case decodeOrFail $ fromStrict msg of
         Left (_, _, err) -> do
-            lift . putStrLn $ "Error decoding message: " ++ err
+            lift . warningM "Prog.getAction" 
+                 $ "Error decoding message: " ++ err ++ ", folding player."
             return def
         Right (_, _, msg') -> if msg' `elem` actions
-            then return msg'
+            then do
+                lift . infoM "Prog.getAction" $
+                       printf "Recieved message %s from client\n" (show msg')
+
+                return msg'
+
             else do
-                lift $ send (p^.socket) (toStrict $ encode BadInputMsg)
-                lift . putStrLn $ printf badInput (show actions) (show msg')
+                outputBadInput
+
+                lift . warningM "Prog.getAction" $ 
+                       printf badInput (show actions) (show msg')
+
                 return def
     where badInput = "Message recieved invalid, expected one of %s, got %s"
 

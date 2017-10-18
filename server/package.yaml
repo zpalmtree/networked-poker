@@ -13,6 +13,7 @@ dependencies:
 - transformers
 - safe
 - uuid-types
+- hslogger
 library:
     source-dirs: src/lib
     dependencies:

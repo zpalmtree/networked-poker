@@ -24,6 +24,7 @@ library
     , transformers
     , safe
     , uuid-types
+    , hslogger
     , network
     , bytestring
     , binary
@@ -56,6 +57,7 @@ executable server
     , transformers
     , safe
     , uuid-types
+    , hslogger
     , server
     , types
     , network
