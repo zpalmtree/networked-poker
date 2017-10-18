@@ -22,6 +22,7 @@ RowLayout
         enabled: bEnabled[1]
         text: "Check"
         onClicked: check
+
     }
 
     Action

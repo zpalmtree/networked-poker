@@ -4,12 +4,15 @@ module Main
 )
 where
 
-import Network.Socket.ByteString (recv)
+import Network.Socket.ByteString (recv, send)
 import Control.Monad.Trans.State (evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Control.Concurrent (forkIO)
 import Network.Socket (Socket, withSocketsDo)
 import System.Environment (getArgs)
+import Data.Binary (encode)
+import Data.ByteString.Lazy (toStrict)
+import Control.Monad (void)
 
 import System.Log.Logger
     (Priority(..), updateGlobalLogger, rootLoggerName, setLevel, infoM)
@@ -69,17 +72,19 @@ main = withSocketsDo $ do
 
 ioLoop :: Socket -> CGameStateT ()
 ioLoop sock = do
-    msg <- lift $ decode <$> recv sock 4096
-    case msg of
+    maybeMsg <- lift $ decode <$> recv sock 4096
+    case maybeMsg of
         Left (_, _, err) -> error err
-        Right (_, _, msg') -> do
-            maybeMsg <- handleMsg msg'
+        Right (_, _, msg) -> do
+            maybeAction <- handleMsg msg
 
-            case maybeMsg of
+            case maybeAction of
                 Nothing -> return ()
-                Just msg'' -> do
+                Just action -> do
                     lift $ infoM "Prog.main" "Sending message to server"
-                    --send blah blah
-                    return ()
+
+                    let actionMsg = toStrict $ encode action
+
+                    void . lift $ send sock actionMsg
 
             ioLoop sock

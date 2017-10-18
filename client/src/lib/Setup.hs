@@ -1,5 +1,3 @@
-{-# LANGUAGE GADTs, TypeFamilies #-}
-
 module Setup
 (
     initialSetup,
@@ -23,7 +21,8 @@ import Network.Socket
      connect, addrAddress)
 
 import Graphics.QML 
-    (Class, SignalKey, ObjRef, defPropertySigRO', newClass, newSignalKey, defMethod')
+    (Class, ObjRef, defPropertySigRO', newClass, newSignalKey, 
+     defMethod')
 
 import ClientTypes (StatesNSignals(..), CGame(..), CGameStateT)
 import Types (Message(..))
@@ -35,69 +34,49 @@ import HandleClick (handleFold, handleCheck, handleCall, handleRaise, handleAllI
 import GUIUpdate 
     (updateNames, updateBets, updateCards, updateVisible, updateCurrentPlayer)
 
---for some odd reason, eta reducing func prevents it from compiling
-{-# ANN makeClass "HLint: ignore Eta reduce" #-}
 makeClass :: IO (Class (), StatesNSignals)
 makeClass = do
     let cards = replicate 2 cardBack
 
     -- BUTTONS
-    bEnabledSig <- nsk
+    bEnabledSig <- newSignalKey
     bEnabledS <- newIORef $ replicate numButtons False
 
     -- TABLE CARDS
-    tCardsSig <- nsk
+    tCardsSig <- newSignalKey
     tCardsS <- newIORef $ replicate numTCards cardBack
 
     -- PLAYER CARDS
-    pCardsSig <- nsk
+    pCardsSig <- newSignalKey
     pCardsS <- newIORef $ replicate maxPlayers cards
 
     -- PLAYER CHIPS
-    pChipsSig <- nsk
+    pChipsSig <- newSignalKey
     pChipsS <- newIORef $ replicate maxPlayers 0 :: IO (IORef [Int])
 
     -- POT CHIPS
-    potChipsSig <- nsk
+    potChipsSig <- newSignalKey
     potChipsS <- newIORef (0 :: Int)
 
     -- PLAYER NAMES
-    pNamesSig <- nsk
+    pNamesSig <- newSignalKey
     pNamesS <- newIORef names
 
     -- PLAYERS VISIBLE
-    pVisibleSig <- nsk
+    pVisibleSig <- newSignalKey
     pVisibleS <- newIORef $ replicate maxPlayers True
 
     -- PLAYERS INPLAY
-    pInPlaySig <- nsk
+    pInPlaySig <- newSignalKey
     pInPlayS <- newIORef $ replicate maxPlayers True
 
     --CURRENT PLAYER BORDER
-    pCurrentPlayerSig <- nsk
+    pCurrentPlayerSig <- newSignalKey
     pCurrentPlayerS <- newIORef $ replicate maxPlayers False
-
-    -- can't have polymorphic lists
-    let boolL   = [("bEnabled",         bEnabledSig,        bEnabledS),
-                   ("pVisible",         pVisibleSig,        pVisibleS),
-                   ("pInPlay",          pInPlaySig,         pInPlayS),
-                   ("pCurrentPlayer",   pCurrentPlayerSig,  pCurrentPlayerS)]
-
-        text    = [("tCards",           tCardsSig,          tCardsS),
-
-                   ("pNames",           pNamesSig,          pNamesS)]
-
-        textL   = [("pCards",           pCardsSig,          pCardsS)]
-
-        ints    = [("potValue",         potChipsSig,        potChipsS)]
-
-        intsL   = [("pBets",            pChipsSig,          pChipsS)]
 
     m <- newEmptyMVar
 
-    let func xs = map (\(x, y, z) -> defPropertySigRO' x y $ defRead z) xs
-
-        sNs = StatesNSignals pCardsSig          pCardsS
+    let sNs = StatesNSignals pCardsSig          pCardsS
                              pChipsSig          pChipsS
                              pNamesSig          pNamesS
                              tCardsSig          tCardsS
@@ -108,27 +87,27 @@ makeClass = do
                              pCurrentPlayerSig  pCurrentPlayerS
                              m
 
-        funcs = [defMethod' "fold" (handleFold sNs),
-                 defMethod' "check" (handleCheck sNs),
-                 defMethod' "call" (handleCall sNs),
-                 defMethod' "raise" (handleRaise sNs),
-                 defMethod' "allIn" (handleAllIn sNs)]
-
-    rootClass <- newClass $ func boolL ++
-                            func text ++ 
-                            func textL ++ 
-                            func ints ++ 
-                            func intsL ++
-                            funcs
+    rootClass <- newClass [
+        defPropertySigRO' "bEnabled" bEnabledSig $ defRead bEnabledS,
+        defPropertySigRO' "pVisible" pVisibleSig $ defRead pVisibleS,
+        defPropertySigRO' "pInPlay" pInPlaySig $ defRead pInPlayS,
+        defPropertySigRO' "pCurrentPlayer" pCurrentPlayerSig 
+                        $ defRead pCurrentPlayerS,
+        defPropertySigRO' "tCards" tCardsSig $ defRead tCardsS,
+        defPropertySigRO' "pNames" pNamesSig $ defRead pNamesS,
+        defPropertySigRO' "pCards" pCardsSig $ defRead pCardsS,
+        defPropertySigRO' "potValue" potChipsSig $ defRead potChipsS,
+        defPropertySigRO' "pBets" pChipsSig $ defRead pChipsS,
+        defMethod' "fold" (handleFold sNs),
+        defMethod' "check" (handleCheck sNs),
+        defMethod' "call" (handleCall sNs),
+        defMethod' "raise" (handleRaise sNs),
+        defMethod' "allIn" (handleAllIn sNs)]
 
     return (rootClass, sNs)
 
     where defRead s _ = readIORef s
           names = replicate maxPlayers (pack "")
-
-          -- so I don't have to list the type every time
-          nsk :: IO (SignalKey (IO ()))
-          nsk = newSignalKey
 
 initialSetup :: StatesNSignals -> ObjRef () 
              -> IO (Either IOException (CGame, Socket))
