@@ -8,36 +8,43 @@ module HandleClick
 )
 where
 
-import Graphics.QML (ObjRef)
+import Graphics.QML (ObjRef, fireSignal)
 import Control.Concurrent.MVar (tryPutMVar)
+import Data.IORef (writeIORef)
 import Control.Lens ((^.))
 import Control.Monad (unless)
 import System.Log.Logger (infoM)
 
 import ClientTypes (StatesNSignals)
-import CLenses (actionMade)
+import CLenses (actionMade, bEnabledS, bEnabledSig)
 import Types (Action(..))
+import Constants (numButtons)
 
-handleAction :: StatesNSignals -> Action Int -> String -> IO ()
-handleAction sNs action name = do
-    infoM "Prog.handleAction" $ "User chose to " ++ show action
+pushAction :: Action Int -> String -> StatesNSignals -> ObjRef () -> IO ()
+pushAction action name sNs this = do
+    infoM "Prog.pushAction" $ "User chose to " ++ show action
 
     success <- tryPutMVar (sNs^.actionMade) action
     unless success .
         error $ "Couldn't put MVar in " ++ name ++ "!"
 
+    let bools = replicate numButtons False
+
+    writeIORef (sNs^.bEnabledS) bools
+    fireSignal (sNs^.bEnabledSig) this
+
 handleFold :: StatesNSignals -> ObjRef () -> IO ()
-handleFold sNs _ = handleAction sNs Fold "handleFold"
+handleFold = pushAction Fold "handleFold"
 
 handleCheck :: StatesNSignals -> ObjRef () -> IO ()
-handleCheck sNs _ = handleAction sNs Check "handleCheck"
+handleCheck = pushAction Check "handleCheck"
 
 handleCall :: StatesNSignals -> ObjRef () -> IO ()
-handleCall sNs _ = handleAction sNs Call "handleCall"
+handleCall = pushAction Call "handleCall" 
 
 --need to make some gui element appear here with valid raise values
 handleRaise :: StatesNSignals -> ObjRef () -> IO ()
 handleRaise = undefined
 
 handleAllIn :: StatesNSignals -> ObjRef () -> IO ()
-handleAllIn sNs _ = handleAction sNs AllIn "handleAllIn"
+handleAllIn = pushAction AllIn "handleAllIn"
