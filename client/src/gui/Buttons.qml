@@ -14,14 +14,14 @@ RowLayout
         enabled: bEnabled[0]
         Layout.leftMargin: 10
         text: "Fold"
-        onClicked: fold
+        onClicked: fold()
     }
 
     Action
     {
         enabled: bEnabled[1]
         text: "Check"
-        onClicked: check
+        onClicked: check()
 
     }
 
@@ -29,14 +29,14 @@ RowLayout
     {
         enabled: bEnabled[2]
         text: "Call"
-        onClicked: call
+        onClicked: call()
     }
 
     Action
     {
         enabled: bEnabled[3]
         text: "Raise"
-        onClicked: raise
+        onClicked: raise()
     }
 
     Action
@@ -44,6 +44,6 @@ RowLayout
         enabled: bEnabled[4]
         Layout.rightMargin: 10
         text: "All In"
-        onClicked: allIn
+        onClicked: allIn()
     }
 }
