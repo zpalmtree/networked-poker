@@ -11,19 +11,20 @@ import Control.Lens ((^.))
 
 import Types 
     (GameStateT, ClientGame(..), Game(..), PlayerQueue(..),
-     Cards(..), Bets(..), Stage(..), Player, Card(..), Value(..), Suit(..),
-     CPlayer(..))
+     Cards(..), CBets(..), Stage(..), Player, Card(..), Value(..), Suit(..),
+     CPlayer(..), Bets(..))
 
 import Lenses 
     (stage, tableCards, bets, playerQueue, players, dealer, name, uuid, chips,
-     inPlay, canReRaise, madeInitialBet, allIn, bet, cardInfo)
+     inPlay, canReRaise, madeInitialBet, allIn, bet, cardInfo, currentBet,
+     smallBlindSize, bigBlindSize, minimumRaise)
     
 mkCGame :: GameStateT ClientGame
 mkCGame = do
     s <- get
 
     let cgame = ClientGame players' dealer' currentPlayer (s^.stage) 
-                           (s^.cardInfo.tableCards) (s^.bets)
+                           (s^.cardInfo.tableCards) cbets'
 
         dealer' = ((s^.playerQueue.players) !! (s^.playerQueue.dealer))^.uuid
 
@@ -36,6 +37,9 @@ mkCGame = do
         cP p = CPlayer (p^.name) (p^.uuid) (p^.chips) [] (p^.inPlay)
                        (p^.allIn) (p^.bet) (p^.madeInitialBet) Nothing
                        (p^.canReRaise) False
+
+        cbets' = CBets 0 (s^.bets.currentBet) (s^.bets.smallBlindSize) 
+                         (s^.bets.bigBlindSize) (s^.bets.minimumRaise)
 
     return cgame
 

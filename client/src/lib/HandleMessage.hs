@@ -15,23 +15,23 @@ import Control.Concurrent.MVar (takeMVar)
 import System.Log.Logger (infoM)
 
 import Control.Lens 
-    (Zoom, Zoomed, Lens', (^.), (.=), (-=), zoom, traversed, filtered)
+    (Zoom, Zoomed, Lens', (^.), (^..), (.=), (-=), zoom, traversed, filtered)
 
 import ClientTypes (CGameStateT, CGame)
 import CLenses (game, qmlState, actionMade)
 
 import GUIUpdate 
     (updateBets, updateNames, updateInPlay, updateCards, updateButtons,
-     updateVisible, updateCurrentPlayer)
+     updateVisible, updateCurrentPlayer, updatePot)
 
 import Lenses 
-    (player, action, currentBet, cPlayers, cUUID, cBets,
-     cChips, cBet, cInPlay, smallBlindSize, bigBlindSize, playerTurn,
+    (player, action, cCurrentBet, cPlayers, cUUID, cBets,
+     cChips, cBet, cInPlay, cSmallBlindSize, cBigBlindSize, playerTurn,
      allCards, playerCards, mapping, removed, infos, imsg, cCommunityCards,
-     cCards, cIsMe, hand, person, cCurrentPlayer)
+     cCards, cIsMe, hand, person, cCurrentPlayer, cPot)
 
 import Types 
-    (Message(..), Action(..), ActionMsg, CPlayer, Bets, Card, PlayerHandInfo)
+    (Message(..), Action(..), ActionMsg, CPlayer, Card, PlayerHandInfo, CBets)
 
 handleMsg :: Message -> CGameStateT (Maybe (Action Int))
 handleMsg msg = do
@@ -49,6 +49,7 @@ handleMsg msg = do
         MIsInput m -> handleInputRequest (m^.imsg)
         MIsBadInput _ -> def handleBadInput
         MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
+        MIsGatherChips _ -> def handleGatherChips
     where def f = f >> return Nothing
 
 handleAction :: ActionMsg a -> CGameStateT ()
@@ -79,7 +80,7 @@ call :: UUID -> CGameStateT ()
 call u = do
     s <- get
 
-    let currBet = s^.game.cBets.currentBet
+    let currBet = s^.game.cBets.cCurrentBet
 
     zoom (game.cPlayers.traversed.filtered isP) $ do
         p <- get
@@ -113,12 +114,12 @@ allIn u = updatePlayer u actions updates
             updateNames
 
 smallBlind :: UUID -> CGameStateT ()
-smallBlind u = blind u smallBlindSize
+smallBlind u = blind u cSmallBlindSize
 
 bigBlind :: UUID -> CGameStateT ()
-bigBlind u = blind u bigBlindSize
+bigBlind u = blind u cBigBlindSize
 
-blind :: UUID -> Lens' Bets Int -> CGameStateT ()
+blind :: UUID -> Lens' CBets Int -> CGameStateT ()
 blind u lens = do
     s <- get
 
@@ -227,3 +228,16 @@ handleBadInput :: CGameStateT ()
 handleBadInput = error $ 
     "Server reported it recieved invalid data! Ensure you have the latest " ++
     "version of both client and server"
+
+handleGatherChips :: CGameStateT ()
+handleGatherChips = do
+    s <- get
+
+    let bets = sum $ s^..game.cPlayers.traversed.cBet
+
+    game.cPlayers.traversed.cBet .= 0
+
+    game.cBets.cPot .= bets
+
+    updateBets
+    updatePot

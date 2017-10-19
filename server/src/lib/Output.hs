@@ -10,7 +10,8 @@ module Output
     outputHandValues,
     outputInitialGame,
     outputInputRequest,
-    outputBadInput
+    outputBadInput,
+    outputGatherChips
 )
 where
 
@@ -37,7 +38,7 @@ import Types
      DealtCardsMsg(..), NewChipsMsg(..), GameOverMsg(..),
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
      InitialGameMsg(..), GameStateT, Action, Player, ClientGame, InputMsg(..),
-     BadInputMsg(..))
+     BadInputMsg(..), GatherChipsMsg(..))
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -162,3 +163,6 @@ outputHandValues = do
     where mkHandInfo p = PlayerHandInfo (p^.uuid) 
                                         (fromJust (p^.handInfo)^.handValue)
                                         (p^.cards)
+
+outputGatherChips :: GameStateT ()
+outputGatherChips = msgAll . MIsGatherChips $ GatherChipsMsg

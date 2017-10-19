@@ -16,8 +16,7 @@ import Control.Monad (when)
 import Safe (headNote)
 import Data.UUID.Types (UUID)
 
-
-import Output (outputPlayerTurn, outputAction)
+import Output (outputPlayerTurn, outputAction, outputGatherChips)
 
 import Utilities.Player
     (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayer)
@@ -85,14 +84,16 @@ updatePotSimple = do
     playerQueue.players.traversed.bet .= 0
     bets.pots .= fixedPot
 
-updatePot :: (Monad m) => GameState m ()
+updatePot :: GameStateT ()
 updatePot = do
     s <- get
 
     -- want to use nice guard notation instead of tons of nested ifs
     updatePot' s
 
-updatePot' :: (Monad m) => Game -> GameState m ()
+    outputGatherChips
+
+updatePot' :: Game -> GameStateT ()
 updatePot' s
     | null eligible = return ()
     | sum (s^..playerQueue.players.traversed.bet) < 0 = error "Negative bets!"

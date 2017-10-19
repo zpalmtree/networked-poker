@@ -28,8 +28,10 @@ module Types
     InitialGameMsg(..),
     InputMsg(..),
     BadInputMsg(..),
+    GatherChipsMsg(..),
     ClientGame(..),
     CPlayer(..),
+    CBets(..),
     GameStateT,
     GameState
 )
@@ -95,7 +97,15 @@ data Bets = Bets {
     _smallBlindSize :: Int,
     _bigBlindSize :: Int,
     _minimumRaise :: Int
-} deriving (Eq, Generic, Show)
+}
+
+data CBets = CBets {
+    _cPot :: Int,
+    _cCurrentBet :: Int,
+    _cSmallBlindSize :: Int,
+    _cBigBlindSize :: Int,
+    _cMinimumRaise :: Int
+} deriving (Generic, Show)
 
 data Card = Card {
     _value :: Value,
@@ -134,7 +144,7 @@ data ClientGame = ClientGame {
     _cCurrentPlayer :: UUID,
     _cStage :: Stage,
     _cCommunityCards :: [Card],
-    _cBets :: Bets
+    _cBets :: CBets
 } deriving (Generic, Show)
 
 data Stage = PreFlop 
@@ -196,11 +206,14 @@ data Message = MIsAction (ActionMsg Int)
              | MIsInitialGame InitialGameMsg
              | MIsInput InputMsg
              | MIsBadInput BadInputMsg
+             | MIsGatherChips GatherChipsMsg
              deriving (Generic, Show)
 
 data GameOverMsg = GameOverMsg deriving (Generic, Show)
 
 data BadInputMsg = BadInputMsg deriving (Generic, Show)
+
+data GatherChipsMsg = GatherChipsMsg deriving (Generic, Show)
 
 -- NEWTYPES
 
@@ -269,6 +282,8 @@ instance Binary InputMsg
 
 instance Binary BadInputMsg
 
+instance Binary GatherChipsMsg
+
 instance (Binary a, Binary b) => Binary (Hand a b)
 
 instance Binary Pot
@@ -287,7 +302,7 @@ instance Binary CPlayer
 
 instance Binary Stage
 
-instance Binary Bets
+instance Binary CBets
 
 instance Binary Message
 

@@ -6,7 +6,8 @@ module GUIUpdate
     updateVisible,
     updateInPlay,
     updateButtons,
-    updateCurrentPlayer
+    updateCurrentPlayer,
+    updatePot
 )
 where
 
@@ -25,12 +26,13 @@ import Types (Card)
 
 import Lenses 
     (cPlayers, cName, cChips, cCards, cBet, cInPlay, cCommunityCards,
-     cCurrentPlayer, cUUID)
+     cCurrentPlayer, cUUID, cBets, cPot)
 
 import CLenses 
     (game, qmlState, pVisibleS, pVisibleSig, ctx, pNamesS, pNamesSig,
      pBetsS, pBetsSig, pCardsS, pCardsSig, pInPlayS, pInPlaySig, tCardsSig,
-     tCardsS, bEnabledSig, bEnabledS, pCurrentPlayerSig, pCurrentPlayerS)
+     tCardsS, bEnabledSig, bEnabledS, pCurrentPlayerSig, pCurrentPlayerS,
+     potChipsS, potChipsSig)
 
 updateInPlay :: CGameStateT ()
 updateInPlay = do
@@ -63,6 +65,15 @@ updateBets = do
 
     lift $ writeIORef (s^.qmlState.pBetsS) padded
     lift $ fireSignal (s^.qmlState.pBetsSig) (s^.ctx)
+
+updatePot :: CGameStateT ()
+updatePot = do
+    s <- get
+
+    let pot = s^.game.cBets.cPot
+
+    lift $ writeIORef (s^.qmlState.potChipsS) pot
+    lift $ fireSignal (s^.qmlState.potChipsSig) (s^.ctx)
 
 updateCards :: CGameStateT ()
 updateCards = do
