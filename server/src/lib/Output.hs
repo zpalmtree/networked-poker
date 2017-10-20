@@ -11,7 +11,8 @@ module Output
     outputInitialGame,
     outputInputRequest,
     outputBadInput,
-    outputGatherChips
+    outputGatherChips,
+    outputResetCards
 )
 where
 
@@ -38,7 +39,7 @@ import Types
      DealtCardsMsg(..), NewChipsMsg(..), GameOverMsg(..),
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
      InitialGameMsg(..), GameStateT, Action, Player, ClientGame, InputMsg(..),
-     BadInputMsg(..), GatherChipsMsg(..))
+     BadInputMsg(..), GatherChipsMsg(..), ResetCardsMsg(..))
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -166,3 +167,6 @@ outputHandValues = do
 
 outputGatherChips :: GameStateT ()
 outputGatherChips = msgAll . MIsGatherChips $ GatherChipsMsg
+
+outputResetCards :: GameStateT ()
+outputResetCards = msgAll . MIsResetCards $ ResetCardsMsg

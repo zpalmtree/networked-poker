@@ -112,6 +112,11 @@ handleMsg (Right (_, _, msg)) sock addr unseated = do
 
 seatPlayer :: Socket -> String -> MVar [Player] -> IO ()
 seatPlayer sock name' unseated = do
+    args <- getArgs
+
+    let numPlayers | "--fullgame" `elem` args = maxPlayers
+                   | otherwise = minPlayers
+
     player <- mkNewPlayer name' sock
 
     -- this will block if unseated is empty, make sure to set it to [] instead
@@ -120,14 +125,17 @@ seatPlayer sock name' unseated = do
                printf "There are %d players waiting to be seated" 
                       (length a + 1)
 
-        if length a == (gameSize - 1)
+        if length a == (numPlayers - 1)
             then do
                 launchNewGame (player : a) unseated
                 return []
             else return $ player : a
 
-gameSize :: Int
-gameSize = 2
+maxPlayers :: Int
+maxPlayers = 6
+
+minPlayers :: Int
+minPlayers = 2
 
 launchNewGame :: [Player] -> MVar [Player] -> IO ()
 launchNewGame players' playerChan = do
