@@ -29,6 +29,7 @@ module Types
     InputMsg(..),
     BadInputMsg(..),
     GatherChipsMsg(..),
+    ResetCardsMsg(..),
     ClientGame(..),
     CPlayer(..),
     CBets(..),
@@ -207,6 +208,7 @@ data Message = MIsAction (ActionMsg Int)
              | MIsInput InputMsg
              | MIsBadInput BadInputMsg
              | MIsGatherChips GatherChipsMsg
+             | MIsResetCards ResetCardsMsg
              deriving (Generic, Show)
 
 data GameOverMsg = GameOverMsg deriving (Generic, Show)
@@ -214,6 +216,8 @@ data GameOverMsg = GameOverMsg deriving (Generic, Show)
 data BadInputMsg = BadInputMsg deriving (Generic, Show)
 
 data GatherChipsMsg = GatherChipsMsg deriving (Generic, Show)
+
+data ResetCardsMsg = ResetCardsMsg deriving (Generic, Show)
 
 -- NEWTYPES
 
@@ -258,53 +262,31 @@ type GameState m a = StateT Game m a
 
 -- INSTANCES
 
-instance Binary (ActionMsg a)
-
 instance Binary PlayerTurnMsg
-
 instance Binary CardMsg
-
 instance Binary DealtCardsMsg
-
 instance Binary NewChipsMsg
-
 instance Binary GameOverMsg
-
 instance Binary PlayersRemovedMsg
-
 instance Binary CardRevealMsg
-
 instance Binary PlayerHandInfo
-
 instance Binary InitialGameMsg
-
 instance Binary InputMsg
-
 instance Binary BadInputMsg
-
 instance Binary GatherChipsMsg
-
-instance (Binary a, Binary b) => Binary (Hand a b)
-
+instance Binary ResetCardsMsg
 instance Binary Pot
-
 instance Binary Card
-
-instance Binary Suit
-
 instance Binary Value
-
+instance Binary Suit
 instance Binary (Action a)
-
 instance Binary ClientGame
-
 instance Binary CPlayer
-
 instance Binary Stage
-
 instance Binary CBets
-
 instance Binary Message
+instance Binary (ActionMsg a)
+instance (Binary a, Binary b) => Binary (Hand a b)
 
 instance Eq (Action a) where
     (==) Fold Fold = True

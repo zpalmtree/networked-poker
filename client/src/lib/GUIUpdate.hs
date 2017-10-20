@@ -20,7 +20,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.List (elemIndex)
 import Data.Maybe (fromJust)
 
-import Constants (maxPlayers, cardBack)
+import Constants (maxPlayers, cardBack, numTCards)
 import ClientTypes (CGameStateT)
 import Types (Card)
 
@@ -39,7 +39,7 @@ updateInPlay = do
     s <- get
 
     let inPlay = s^..game.cPlayers.traversed.cInPlay
-        padded = pad inPlay False
+        padded = padMaxP inPlay False
 
     lift $ writeIORef (s^.qmlState.pInPlayS) padded
     lift $ fireSignal (s^.qmlState.pInPlaySig) (s^.ctx)
@@ -51,7 +51,7 @@ updateNames = do
     let names = s^..game.cPlayers.traversed.cName
         chips = s^..game.cPlayers.traversed.cChips
         fullText = zipWith (\a b -> a ++ "\n" ++ show b) names chips
-        padded = map pack $ pad fullText ""
+        padded = map pack $ padMaxP fullText ""
 
     lift $ writeIORef (s^.qmlState.pNamesS) padded
     lift $ fireSignal (s^.qmlState.pNamesSig) (s^.ctx)
@@ -61,7 +61,7 @@ updateBets = do
     s <- get
 
     let bets = s^..game.cPlayers.traversed.cBet
-        padded = pad bets 0
+        padded = padMaxP bets 0
 
     lift $ writeIORef (s^.qmlState.pBetsS) padded
     lift $ fireSignal (s^.qmlState.pBetsSig) (s^.ctx)
@@ -80,9 +80,9 @@ updateCards = do
     s <- get
 
     let cards = s^..game.cPlayers.traversed.cCards
-        paddedPCards = map convertCards $ pad cards []
+        paddedPCards = map convertCards $ padMaxP cards []
         tableCards = map convertCard $ s^.game.cCommunityCards
-        paddedTCards = pad tableCards cardBack
+        paddedTCards = padTCards tableCards cardBack
 
     lift $ writeIORef (s^.qmlState.pCardsS) paddedPCards
     lift $ fireSignal (s^.qmlState.pCardsSig) (s^.ctx)
@@ -95,7 +95,7 @@ updateVisible = do
     s <- get
 
     let visible = replicate (length $ s^.game.cPlayers) True
-        padded = pad visible False
+        padded = padMaxP visible False
 
     lift $ writeIORef (s^.qmlState.pVisibleS) padded
     lift $ fireSignal (s^.qmlState.pVisibleSig) (s^.ctx)
@@ -115,15 +115,21 @@ updateCurrentPlayer = do
                                      (s^..game.cPlayers.traversed.cUUID)
 
         bools = replicate index False ++ [True]
-        padded = pad bools False
+        padded = padMaxP bools False
 
     lift $ writeIORef (s^.qmlState.pCurrentPlayerS) padded
     lift $ fireSignal (s^.qmlState.pCurrentPlayerSig) (s^.ctx)
 
-pad :: [a] -> a -> [a]
-pad xs def
-    | length xs > maxPlayers = error "Too long list passed to pad!"
-    | otherwise = xs ++ replicate (maxPlayers - len) def
+padMaxP :: [a] -> a -> [a]
+padMaxP = pad maxPlayers
+
+padTCards :: [a] -> a -> [a]
+padTCards = pad numTCards
+
+pad :: Int -> [a] -> a -> [a]
+pad maxLen xs def
+    | length xs > maxLen = error "Too long list passed to pad!"
+    | otherwise = xs ++ replicate (maxLen - len) def
     where len = length xs
 
 convertCard :: Card -> Text

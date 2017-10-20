@@ -25,7 +25,8 @@ import Lenses
      roundDone, roundNumber, playerQueue, players)
 
 import Output
-    (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved)
+    (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved,
+     outputResetCards)
 
 gameLoop :: GameStateT ()
 gameLoop = do
@@ -196,3 +197,4 @@ nextRound = do
     nextDealer
 
     outputPlayersRemoved removed
+    outputResetCards
