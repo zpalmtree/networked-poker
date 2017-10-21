@@ -1,9 +1,17 @@
 flags: {}
 extra-package-dbs: []
+extra-deps: 
+- hsqml-0.3.5.0
 packages:
 - ai
 - client
 - server
-extra-deps: [poker-eval-0.3.1]
+- types
 resolver: lts-9.6
 install-ghc: true
+ghc-options:
+    client: -O0
+    client: -threaded
+    server: -O0
+    ai: -O0
+    types: -O0

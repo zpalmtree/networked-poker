@@ -1,0 +1,13 @@
+name: ai
+version: '0.1.0.0'
+synopsis: An ai to play poker
+category: Game
+author: ZedPea
+maintainer: z.palmer@openmailbox.org
+license: BSD3
+dependencies:
+- base >=4.9 && <=4.11
+executables:
+  ai:
+    main: Main.hs
+    source-dirs: src

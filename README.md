@@ -1,20 +1,20 @@
 # networked-poker
-[![Build Status](https://travis-ci.org/ZedPea/networked-poker.svg?branch=master)](https://travis-ci.org/ZedPea/networked-poker)
+[![Build Status](https://travis-ci.org/ZedPea/networked-poker.svg?branch=gui)](https://travis-ci.org/ZedPea/networked-poker)
 
 A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against.
 
-Local server gameplay is pretty good, just started adding network support and initial network work on the client.
+Working on the client GUI, then the networking.
 
 ## Installation
 
 #### Install prerequistes
-You need stack installed.
+You need stack and QtQuick installed.
 
 ##### Debian based:
-`sudo apt-get install haskell-stack`
+`sudo apt-get install haskell-stack qtdeclarative5-dev`
 
 ##### Arch based:
-`sudo pacman -S stack`
+`sudo pacman -S stack qt5-quickcontrols qt5-quickcontrols`
 
 #### Clone the repository
 
@@ -25,12 +25,6 @@ You need stack installed.
 #### Compile and install
 
 `stack install`
-
-If you want to try the functional local game, run instead
-
-`stack install --flag server:debug`
-
-It is currently non functional.
 
 Then either add ~/.local/bin to your path and run the executable of your choice:
 
@@ -44,14 +38,32 @@ Or, run
 `stack exec client`
 `stack exec server`
 
-## Tests
+## Thanks
 
-#### Install prerequisites
-You need poker-eval/libpoker-eval installed. 
+#### Cards
+Icons made by Aussiesim - http://game-icons.net/tags/board.html
 
-It seems the source for poker-eval is down, but it can be found at https://github.com/atinm/poker-eval
+They fall under the CC 3.0 license - https://creativecommons.org/licenses/by/3.0/
 
-You might need to manually move the lib to /lib/ from /usr/local/lib/ for stack to find it.
-#### Running
+Icons were cropped and resized.
 
-`stack test`
+##### Card modifications
+
+Remove black borders:
+
+`mogrify -bordercolor black -border 1x1 -alpha set -channel RGBA -fuzz 80% -fill none -floodfill +0+0 black -shave 1x1 -trim +repage *.png`
+
+Replace black with red where necessary:
+
+`find . \( -iname "*diamonds*" -or -iname "*hearts*" \) -exec mogrify -format png -fill red -opaque black -fuzz 80% {} \;`
+
+Resize:
+
+`mogrify -resize 60x80\! *.png`
+
+#### Card Back and Poker Chip
+Icons made by Kenney.nl - https://opengameart.org/content/boardgame-pack
+
+They fall under the CC0 1.0 license - https://creativecommons.org/licenses/by/1.0/
+
+Icons were resized.
