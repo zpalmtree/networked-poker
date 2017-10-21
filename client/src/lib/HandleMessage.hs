@@ -15,7 +15,8 @@ import Control.Concurrent.MVar (takeMVar)
 import System.Log.Logger (infoM)
 
 import Control.Lens 
-    (Zoom, Zoomed, Lens', (^.), (^..), (.=), (-=), zoom, traversed, filtered)
+    (Zoom, Zoomed, Lens', (^.), (^..), (.=), (-=), (+=), zoom, traversed, 
+     filtered)
 
 import ClientTypes (CGameStateT, CGame)
 import CLenses (game, qmlState, actionMade)
@@ -93,26 +94,34 @@ call u = do
     where isP p = p^.cUUID == u
 
 raise :: Int -> UUID -> CGameStateT ()
-raise n u = updatePlayer u actions updates
-    where actions = do
-            p <- get
-            cChips -= (n - p^.cBet)
-            cBet .= n
+raise n u = do
+    zoom (game.cPlayers.traversed.filtered isP) $ do
+        p <- get
+        cChips -= (n - p^.cBet)
+        cBet .= n
 
-          updates = do
-            updateBets
-            updateNames
+    game.cBets.cCurrentBet .= n
+
+    updateBets
+    updateNames
+
+    where isP p = p^.cUUID == u
 
 allIn :: UUID -> CGameStateT ()
-allIn u = updatePlayer u actions updates
-    where actions = do
-            p <- get
-            cBet .= (p^.cChips + p^.cBet)
-            cChips .= 0
+allIn u = do
+    zoom (game.cPlayers.traversed.filtered isP) $ do
+        p <- get
+        cBet .= (p^.cChips + p^.cBet)
+        cChips .= 0
 
-          updates = do
-            updateBets
-            updateNames
+    s <- get
+
+    game.cBets.cCurrentBet .= maximum (s^..game.cPlayers.traversed.cBet)
+
+    updateBets
+    updateNames
+
+    where isP p = p^.cUUID == u
 
 smallBlind :: UUID -> CGameStateT ()
 smallBlind u = blind u cSmallBlindSize
@@ -129,6 +138,8 @@ blind u lens = do
     zoom (game.cPlayers.traversed.filtered isP) $ do
         cChips -= blindSize
         cBet .= blindSize
+
+    game.cBets.cCurrentBet .= blindSize
 
     updateBets
     updateNames
@@ -238,7 +249,7 @@ handleGatherChips = do
 
     game.cPlayers.traversed.cBet .= 0
 
-    game.cBets.cPot .= bets
+    game.cBets.cPot += bets
 
     updateBets
     updatePot

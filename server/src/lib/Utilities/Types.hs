@@ -45,7 +45,7 @@ mkCGame = do
 
 mkGame :: [Player] -> MVar [Player] -> Game
 mkGame players' playerChan = game'
-    where pq = PlayerQueue players' 0
+    where pq = PlayerQueue players' (length players' - 1)
           cards' = Cards [] fullDeck
           bets' = Bets [] 0 smallBlind bigBlind bigBlind
           smallBlind = 10

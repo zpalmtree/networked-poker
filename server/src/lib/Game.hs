@@ -4,9 +4,11 @@ module Game
 )
 where
 
-import Control.Lens ((^.), (.=), (+=), traversed, zoom)
+import Control.Lens ((^.), (.=), (+=), (^..), traversed, zoom)
 import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad (unless)
+import System.Log.Logger (debugM)
 
 import Types (Game, Pot, Stage(..), Cards(..), GameStateT)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
@@ -17,12 +19,12 @@ import Utilities.Card
 
 import Utilities.Player 
     (nextPlayer, getCurrentPlayerPure, removeOutPlayers, numInPlayPure, 
-     victorID, numAllInPure, nextDealer)
+     victorID, numAllInPure, nextDealer, resetDealer, getCurrentPlayer)
 
 import Lenses 
     (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet, allIn, pots, 
      stage, canReRaise, minimumRaise, bigBlindSize, handInfo, cardInfo, 
-     roundDone, roundNumber, playerQueue, players)
+     roundDone, roundNumber, playerQueue, players, dealer, name)
 
 import Output
     (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved,
@@ -30,6 +32,14 @@ import Output
 
 gameLoop :: GameStateT ()
 gameLoop = do
+    s <- get
+
+    lift $ debugM "Prog.gameLoop" $ "dealer = " ++ (show $ s^.playerQueue.dealer)
+    lift $ debugM "Prog.gameLoop" $ "pointing at player " ++ ((s^..playerQueue.players.traversed.name) !! (s^.playerQueue.dealer))
+    p <- getCurrentPlayer
+    lift $ debugM "Prog.gameLoop" $ "currentPlayer = " ++ (p^.name)
+
+
     postBlindsAndPlayRound
     nextRound
 
@@ -148,7 +158,12 @@ nextState = do
         currentBet .= 0
         minimumRaise .= (s^.bets.bigBlindSize)
 
-    nextPlayer
+    resetDealer
+
+    lift $ debugM "Prog.gameLoop" $ "dealer = " ++ (show $ s^.playerQueue.dealer)
+    lift $ debugM "Prog.gameLoop" $ "pointing at player " ++ ((s^..playerQueue.players.traversed.name) !! (s^.playerQueue.dealer))
+    p <- getCurrentPlayer
+    lift $ debugM "Prog.gameLoop" $ "currentPlayer = " ++ (p^.name)
 
     updatePot
         
@@ -193,8 +208,11 @@ nextRound = do
     roundDone .= False
     roundNumber += 1
 
-    nextPlayer
     nextDealer
+    resetDealer
+
+    lift $ debugM "Prog.gameLoop" $ "dealer = " ++ (show $ s^.playerQueue.dealer)
+    lift $ debugM "Prog.gameLoop" $ "pointing at player " ++ ((s^..playerQueue.players.traversed.name) !! (s^.playerQueue.dealer))
 
     outputPlayersRemoved removed
     outputResetCards

@@ -11,6 +11,7 @@ module Utilities.Player
     victorID,
     nextPlayer,
     nextDealer,
+    resetDealer,
     removeOutPlayers,
     leftOfDealer,
     mkNewPlayer,
@@ -22,7 +23,7 @@ import Control.Lens (Getting, (^.), (^?!), (%=), (.=), (^..), _head, traversed)
 import Control.Monad.Trans.State (get)
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
-import Control.Monad (when, unless)
+import Control.Monad (when, unless, replicateM_)
 import Safe (headNote, tailNote)
 import Data.UUID.Types (UUID)
 import Network.Socket (Socket)
@@ -75,6 +76,28 @@ victorID = do
 
     return $ headNote "in victorID!" 
                       (filter (^.inPlay) (s^.playerQueue.players))^.uuid
+
+-- this function resets the current player to the one left of the dealer
+-- imagine there are 6 players. the dealer is pointing at player 4, so left
+-- of the dealer is player 5. He goes first next round. To find out how many
+-- times we need to shift him to get him to the front of the queue, we take
+-- the number of players (6) minus (the dealer (3) + 1) - remember arrays
+-- are 0 indexed, so if dealer is pointing at 4, actual value is 3.
+-- so we need to shift the player twice, once to position 6, then once
+-- to loop around to position 1.
+-- we then set the dealer to numPlayers(6) - 1. Pointing at player 6,
+-- who was player 4.
+resetDealer :: (Monad m) => GameState m ()
+resetDealer = do
+    s <- get
+
+    numPlayers' <- numPlayers
+
+    let shift = (numPlayers' - 1) - (s^.playerQueue.dealer)
+
+    replicateM_ shift nextPlayer 
+
+    playerQueue.dealer .= (numPlayers' - 1)
 
 nextDealer :: (Monad m) => GameState m ()
 nextDealer = do
