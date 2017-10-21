@@ -12,12 +12,13 @@ module Output
     outputInputRequest,
     outputBadInput,
     outputGatherChips,
-    outputResetCards
+    outputResetRound
 )
 where
 
 import Data.UUID.Types (UUID)
 import Network.Socket.ByteString (send)
+import Control.Concurrent (threadDelay)
 import Control.Lens ((^.), (^..), (.=), (%=), zoom, filtered, traversed)
 import Data.Binary (encode)
 import Data.ByteString.Lazy (toStrict)
@@ -39,7 +40,7 @@ import Types
      DealtCardsMsg(..), NewChipsMsg(..), GameOverMsg(..),
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
      InitialGameMsg(..), GameStateT, Action, Player, ClientGame, InputMsg(..),
-     BadInputMsg(..), GatherChipsMsg(..), ResetCardsMsg(..))
+     BadInputMsg(..), GatherChipsMsg(..), ResetRoundMsg(..))
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -161,12 +162,17 @@ outputHandValues = do
 
     msgAll . MIsCardReveal $ CardRevealMsg details
 
+    --need to let players digest the other players cards
+    lift $ threadDelay (oneSecond * 5)
+
     where mkHandInfo p = PlayerHandInfo (p^.uuid) 
                                         (fromJust (p^.handInfo)^.handValue)
                                         (p^.cards)
 
+          oneSecond = 1000000
+
 outputGatherChips :: GameStateT ()
 outputGatherChips = msgAll . MIsGatherChips $ GatherChipsMsg
 
-outputResetCards :: GameStateT ()
-outputResetCards = msgAll . MIsResetCards $ ResetCardsMsg
+outputResetRound :: GameStateT ()
+outputResetRound = msgAll . MIsResetRound $ ResetRoundMsg

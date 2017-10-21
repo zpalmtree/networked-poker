@@ -51,7 +51,7 @@ handleMsg msg = do
         MIsBadInput _ -> def handleBadInput
         MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
         MIsGatherChips _ -> def handleGatherChips
-        MIsResetCards _ -> def handleResetCards
+        MIsResetRound _ -> def handleResetRound
     where def f = f >> return Nothing
 
 handleAction :: ActionMsg a -> CGameStateT ()
@@ -254,9 +254,13 @@ handleGatherChips = do
     updateBets
     updatePot
 
-handleResetCards :: CGameStateT ()
-handleResetCards = do
+handleResetRound :: CGameStateT ()
+handleResetRound = do
     game.cPlayers.traversed.cCards .= []
     game.cCommunityCards .= []
+    game.cBets.cPot .= 0
+    game.cPlayers.traversed.cBet .= 0
 
     updateCards
+    updateBets
+    updatePot
