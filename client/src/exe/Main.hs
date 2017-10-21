@@ -10,9 +10,11 @@ import Control.Monad.Trans.Class (lift)
 import Control.Concurrent (forkIO)
 import Network.Socket (Socket, withSocketsDo)
 import System.Environment (getArgs)
-import Data.Binary (encode)
-import Data.ByteString.Lazy (toStrict)
+import Data.Binary (encode, decodeOrFail)
+import qualified Data.ByteString as BS (ByteString)
+import qualified Data.ByteString.Lazy as BL (toStrict, null, fromStrict)
 import Control.Monad (void)
+import Prelude hiding (null)
 
 import System.Log.Logger
     (Priority(..), updateGlobalLogger, rootLoggerName, setLevel, infoM)
@@ -23,7 +25,6 @@ import Graphics.QML
 
 import ClientTypes (CGameStateT)
 import HandleMessage (handleMsg)
-import Utilities (decode)
 import Setup (initialSetup, initialGUISetup, makeClass)
 
 import Paths_client (getDataFileName)
@@ -72,19 +73,24 @@ main = withSocketsDo $ do
 
 ioLoop :: Socket -> CGameStateT ()
 ioLoop sock = do
-    maybeMsg <- lift $ decode <$> recv sock 4096
-    case maybeMsg of
-        Left (_, _, err) -> error err
-        Right (_, _, msg) -> do
-            maybeAction <- handleMsg msg
+    msg <- lift $ recv sock 4096
+    decode msg sock
 
-            case maybeAction of
-                Nothing -> return ()
-                Just action -> do
-                    lift $ infoM "Prog.main" "Sending message to server"
+decode :: BS.ByteString -> Socket -> CGameStateT ()
+decode input sock = case decodeOrFail $ BL.fromStrict input of
+    Left (_, _, err) -> error err
+    Right (unconsumed, _, msg) -> do
+        maybeAction <- handleMsg msg
+        case maybeAction of
+            Nothing -> return ()
+            Just action -> do
+                lift . infoM "Prog.decode" $
+                    "Sending message to server: " ++ show action
 
-                    let actionMsg = toStrict $ encode action
+                let actionMsg = BL.toStrict $ encode action
+                
+                void . lift $ send sock actionMsg
 
-                    void . lift $ send sock actionMsg
-
-            ioLoop sock
+        if BL.null unconsumed
+            then ioLoop sock
+            else decode (BL.toStrict unconsumed) sock
