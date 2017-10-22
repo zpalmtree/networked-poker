@@ -30,6 +30,7 @@ module Types
     BadInputMsg(..),
     GatherChipsMsg(..),
     ResetRoundMsg(..),
+    MinRaiseMsg(..),
     ClientGame(..),
     CPlayer(..),
     CBets(..),
@@ -209,6 +210,7 @@ data Message = MIsAction (ActionMsg Int)
              | MIsBadInput BadInputMsg
              | MIsGatherChips GatherChipsMsg
              | MIsResetRound ResetRoundMsg
+             | MIsMinRaise MinRaiseMsg
              deriving (Generic, Show)
 
 data GameOverMsg = GameOverMsg deriving (Generic, Show)
@@ -254,6 +256,10 @@ newtype InputMsg = InputMsg {
     _imsg :: [Action Int]
 } deriving (Generic, Show)
 
+newtype MinRaiseMsg = MinRaiseMsg {
+    _minRaise :: Int
+} deriving (Generic, Show)
+
 -- TYPES
 
 type GameStateT a = StateT Game IO a
@@ -275,6 +281,7 @@ instance Binary InputMsg
 instance Binary BadInputMsg
 instance Binary GatherChipsMsg
 instance Binary ResetRoundMsg
+instance Binary MinRaiseMsg
 instance Binary Pot
 instance Binary Card
 instance Binary Value

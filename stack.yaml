@@ -7,7 +7,7 @@ packages:
 - client
 - server
 - types
-resolver: lts-9.6
+resolver: lts-9.9
 install-ghc: true
 ghc-options:
     client: -O0

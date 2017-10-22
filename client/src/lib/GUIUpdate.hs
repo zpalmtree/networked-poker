@@ -7,7 +7,8 @@ module GUIUpdate
     updateInPlay,
     updateButtons,
     updateCurrentPlayer,
-    updatePot
+    updatePot,
+    updateRaiseWindow
 )
 where
 
@@ -26,13 +27,13 @@ import Types (Card)
 
 import Lenses 
     (cPlayers, cName, cChips, cCards, cBet, cInPlay, cCommunityCards,
-     cCurrentPlayer, cUUID, cBets, cPot)
+     cCurrentPlayer, cUUID, cBets, cPot, cMinimumRaise, cIsMe)
 
 import CLenses 
     (game, qmlState, pVisibleS, pVisibleSig, ctx, pNamesS, pNamesSig,
      pBetsS, pBetsSig, pCardsS, pCardsSig, pInPlayS, pInPlaySig, tCardsSig,
      tCardsS, bEnabledSig, bEnabledS, pCurrentPlayerSig, pCurrentPlayerS,
-     potChipsS, potChipsSig)
+     potChipsS, potChipsSig, slideMinS, slideMaxS, slideMinSig, slideMaxSig)
 
 updateInPlay :: CGameStateT ()
 updateInPlay = do
@@ -140,3 +141,15 @@ convertCards cs = case cs of
     [] -> [cardBack, cardBack]
     [a, b] -> [convertCard a, convertCard b]
     _ -> error "Invalid cards passed to convertCards!"
+
+updateRaiseWindow :: CGameStateT ()
+updateRaiseWindow = do
+    s <- get
+
+    let me = head $ filter (^.cIsMe) (s^.game.cPlayers)
+
+    lift $ writeIORef (s^.qmlState.slideMinS) (s^.game.cBets.cMinimumRaise)
+    lift $ writeIORef (s^.qmlState.slideMaxS) (me^.cBet + me^.cChips)
+
+    lift $ fireSignal (s^.qmlState.slideMinSig) (s^.ctx)
+    lift $ fireSignal (s^.qmlState.slideMaxSig) (s^.ctx)

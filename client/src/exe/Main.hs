@@ -11,10 +11,9 @@ import Control.Concurrent (forkIO)
 import Network.Socket (Socket, withSocketsDo)
 import System.Environment (getArgs)
 import Data.Binary (encode, decodeOrFail)
+import Control.Monad (void, when)
 import qualified Data.ByteString as BS (ByteString)
 import qualified Data.ByteString.Lazy as BL (toStrict, null, fromStrict)
-import Control.Monad (void)
-import Prelude hiding (null)
 
 import System.Log.Logger
     (Priority(..), updateGlobalLogger, rootLoggerName, setLevel, infoM)
@@ -38,6 +37,9 @@ main = withSocketsDo $ do
               | "--info" `elem` args = INFO
               | otherwise = WARNING
 
+    let networkEnabled | "--guionly" `elem` args = False
+                       | otherwise = True
+
     updateGlobalLogger rootLoggerName (setLevel level)
 
     gui <- getDataFileName "src/gui/Main.qml"
@@ -46,30 +48,32 @@ main = withSocketsDo $ do
 
     ctx <- newObject rootClass ()
 
-    infoM "Prog.main" "Getting initial state"
+    when networkEnabled $ do
 
-    trySetup <- initialSetup sigs ctx
+        infoM "Prog.main" "Getting initial state"
 
-    case trySetup of
-        (Left err) -> error $ 
-            "Couldn't connect to server. Did you start it?" ++ show err
+        trySetup <- initialSetup sigs ctx
 
-        (Right (initialState, sock)) -> do
+        case trySetup of
+            (Left err) -> error $ 
+                "Couldn't connect to server. Did you start it?" ++ show err
 
-            infoM "Prog.main" "Setting up GUI"
+            (Right (initialState, sock)) -> do
 
-            evalStateT initialGUISetup initialState
+                infoM "Prog.main" "Setting up GUI"
 
-            infoM "Prog.main" "Entering network loop"
+                evalStateT initialGUISetup initialState
 
-            forkIO $ evalStateT (ioLoop sock) initialState
+                infoM "Prog.main" "Entering network loop"
 
-            infoM "Prog.main" "Running GUI"
+                void . forkIO $ evalStateT (ioLoop sock) initialState
 
-            runEngineLoop defaultEngineConfig {
-                initialDocument = fileDocument gui,
-                contextObject = Just $ anyObjRef ctx
-            }
+    infoM "Prog.main" "Running GUI"
+
+    runEngineLoop defaultEngineConfig {
+        initialDocument = fileDocument gui,
+        contextObject = Just $ anyObjRef ctx
+    }
 
 ioLoop :: Socket -> CGameStateT ()
 ioLoop sock = do

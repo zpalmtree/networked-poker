@@ -3,15 +3,19 @@ import QtQuick.Layouts 1.3
 
 RowLayout
 {
+    id: buttons
+
     height: 80
 
     anchors.bottom: parent.bottom
     anchors.right: parent.right
     anchors.left: parent.left
 
+    property var allEnabled: true
+
     Action
     {
-        enabled: bEnabled[0]
+        enabled: bEnabled[0] && allEnabled
         Layout.leftMargin: 10
         text: "Fold"
         onClicked: fold()
@@ -19,29 +23,28 @@ RowLayout
 
     Action
     {
-        enabled: bEnabled[1]
+        enabled: bEnabled[1] && allEnabled
         text: "Check"
         onClicked: check()
-
     }
 
     Action
     {
-        enabled: bEnabled[2]
+        enabled: bEnabled[2] && allEnabled
         text: "Call"
         onClicked: call()
     }
 
     Action
     {
-        enabled: bEnabled[3]
+        enabled: bEnabled[3] && allEnabled
         text: "Raise"
-        onClicked: raise()
+        onClicked: allEnabled = false, raiseWindow.visible = true
     }
 
     Action
     {
-        enabled: bEnabled[4]
+        enabled: bEnabled[4] && allEnabled
         Layout.rightMargin: 10
         text: "All In"
         onClicked: allIn()
