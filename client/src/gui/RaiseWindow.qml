@@ -46,8 +46,9 @@ Rectangle
     {
         id: slide
         snapMode: Slider.SnapAlways
-        from: 0
-        to: 100
+        from: slideMin
+        to: slideMax
+        value: from
         stepSize: 1
         anchors.centerIn: parent
     }
@@ -56,6 +57,7 @@ Rectangle
     {
         // have to make it an int - the slider occasionaly gets real values
         // because of floating point math i guess, so we just cast it to an int
+        id: slideValue
         property int intSliderValue: slide.value
         text: intSliderValue
         anchors.centerIn: parent
@@ -110,7 +112,7 @@ Rectangle
             Layout.fillHeight: true
             text: "OK"
             onClicked: raiseWindow.visible = false, 
-                       raise(slide.intSliderValue);
+                       raiseN(slideValue.intSliderValue)
         }
     }
 }

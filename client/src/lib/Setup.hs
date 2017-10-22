@@ -74,6 +74,12 @@ makeClass = do
     pCurrentPlayerSig <- newSignalKey
     pCurrentPlayerS <- newIORef $ replicate maxPlayers False
 
+    --SLIDE VALUES
+    slideMinSig <- newSignalKey
+    slideMaxSig <- newSignalKey
+    slideMinS <- newIORef 0
+    slideMaxS <- newIORef 0
+
     m <- newEmptyMVar
 
     let sNs = StatesNSignals pCardsSig          pCardsS
@@ -85,6 +91,8 @@ makeClass = do
                              pVisibleSig        pVisibleS
                              pInPlaySig         pInPlayS
                              pCurrentPlayerSig  pCurrentPlayerS
+                             slideMinSig        slideMinS
+                             slideMaxSig        slideMaxS
                              m
 
     rootClass <- newClass [
@@ -98,10 +106,13 @@ makeClass = do
         defPropertySigRO' "pCards" pCardsSig $ defRead pCardsS,
         defPropertySigRO' "potValue" potChipsSig $ defRead potChipsS,
         defPropertySigRO' "pBets" pChipsSig $ defRead pChipsS,
+        defPropertySigRO' "slideMin" slideMinSig $ defRead slideMinS,
+        defPropertySigRO' "slideMax" slideMaxSig $ defRead slideMaxS,
+
         defMethod' "fold" (handleFold sNs),
         defMethod' "check" (handleCheck sNs),
         defMethod' "call" (handleCall sNs),
-        defMethod' "raise" (handleRaise sNs),
+        defMethod' "raiseN" (handleRaise sNs),
         defMethod' "allIn" (handleAllIn sNs)]
 
     return (rootClass, sNs)

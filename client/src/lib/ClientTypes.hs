@@ -40,6 +40,10 @@ data StatesNSignals = StatesNSignals {
     _pInPlayS :: IORef [Bool],
     _pCurrentPlayerSig :: SignalKey (IO ()),
     _pCurrentPlayerS :: IORef [Bool],
+    _slideMinSig :: SignalKey (IO ()),
+    _slideMinS :: IORef Int,
+    _slideMaxSig :: SignalKey (IO ()),
+    _slideMaxS :: IORef Int,
     _actionMade :: MVar (Action Int)
 }
 

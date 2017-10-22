@@ -13,6 +13,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.List (sort)
 import Control.Concurrent.MVar (takeMVar)
 import System.Log.Logger (infoM)
+import Control.Monad (when)
 
 import Control.Lens 
     (Zoom, Zoomed, Lens', (^.), (^..), (.=), (-=), (+=), zoom, traversed, 
@@ -23,13 +24,14 @@ import CLenses (game, qmlState, actionMade)
 
 import GUIUpdate 
     (updateBets, updateNames, updateInPlay, updateCards, updateButtons,
-     updateVisible, updateCurrentPlayer, updatePot)
+     updateVisible, updateCurrentPlayer, updatePot, updateRaiseWindow)
 
 import Lenses 
     (player, action, cCurrentBet, cPlayers, cUUID, cBets,
      cChips, cBet, cInPlay, cSmallBlindSize, cBigBlindSize, playerTurn,
      allCards, playerCards, mapping, removed, infos, imsg, cCommunityCards,
-     cCards, cIsMe, hand, person, cCurrentPlayer, cPot)
+     cCards, cIsMe, hand, person, cCurrentPlayer, cPot, minRaise, 
+     cMinimumRaise)
 
 import Types 
     (Message(..), Action(..), ActionMsg, CPlayer, Card, PlayerHandInfo, CBets)
@@ -52,6 +54,7 @@ handleMsg msg = do
         MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
         MIsGatherChips _ -> def handleGatherChips
         MIsResetRound _ -> def handleResetRound
+        MIsMinRaise m -> def $ handleMinRaise (m^.minRaise)
     where def f = f >> return Nothing
 
 handleAction :: ActionMsg a -> CGameStateT ()
@@ -209,10 +212,13 @@ handleCardsRevealed (p:ps) = do
 --list of valid actions
 handleInputRequest :: [Action Int] -> CGameStateT (Maybe (Action Int))
 handleInputRequest as = do
-    let boolList = buttonMap 0 . sort $ map actionButtonMap as
+    let actions = map actionButtonMap as
+        boolList = buttonMap 0 $ sort actions
+    
+    when (raiseVal `elem` actions) updateRaiseWindow
     
     updateButtons boolList
-    
+
     s <- get
     
     -- this will block until the user clicks a button and the MVar gets updated
@@ -229,12 +235,27 @@ buttonMap n full@(x:xs)
 
 actionButtonMap :: Action Int -> Int
 actionButtonMap a = case a of
-    Fold -> 0
-    Check -> 1
-    Call -> 2
-    Raise _ -> 3
-    AllIn -> 4
+    Fold -> foldVal
+    Check -> checkVal
+    Call -> callVal
+    Raise _ -> raiseVal
+    AllIn -> allInVal
     _ -> error "Unexpected action in actionButtonMap!"
+
+foldVal :: Int
+foldVal = 0
+
+checkVal :: Int
+checkVal = 1
+
+callVal :: Int
+callVal = 2
+
+raiseVal :: Int
+raiseVal = 3
+
+allInVal :: Int
+allInVal = 4
 
 handleBadInput :: CGameStateT ()
 handleBadInput = error $ 
@@ -264,3 +285,6 @@ handleResetRound = do
     updateCards
     updateBets
     updatePot
+
+handleMinRaise :: Int -> CGameStateT ()
+handleMinRaise newRaise = game.cBets.cMinimumRaise .= newRaise

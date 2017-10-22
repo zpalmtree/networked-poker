@@ -43,8 +43,8 @@ handleCall :: StatesNSignals -> ObjRef () -> IO ()
 handleCall = pushAction Call "handleCall" 
 
 --need to make some gui element appear here with valid raise values
-handleRaise :: StatesNSignals -> ObjRef () -> IO ()
-handleRaise = undefined
+handleRaise :: StatesNSignals -> ObjRef () -> Int -> IO ()
+handleRaise sNs this n = pushAction (Raise n) "handleRaise" sNs this
 
 handleAllIn :: StatesNSignals -> ObjRef () -> IO ()
 handleAllIn = pushAction AllIn "handleAllIn"
