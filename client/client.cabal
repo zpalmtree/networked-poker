@@ -78,6 +78,7 @@ data-files:
     src/gui/Main.qml
     src/gui/Player.qml
     src/gui/Pot.qml
+    src/gui/RaiseWindow.qml
     src/gui/TableCards.qml
 
 library

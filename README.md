@@ -38,6 +38,16 @@ Or, run
 `stack exec client`
 `stack exec server`
 
+#### Flags
+
+`--debug` Enables debug output, for both client and server.
+
+`--info` Does the same, but with a little less output.
+
+`--guionly` On the client launches just the GUI and doesn't do any networking. Helpful for fast prototyping of the GUI.
+
+`--fullgame` On the server launches the game with 6 players instead of 2.
+
 ## Thanks
 
 #### Cards
