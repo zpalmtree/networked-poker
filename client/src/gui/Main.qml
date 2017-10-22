@@ -18,9 +18,9 @@ Window
 
     Pot {}
 
-    Buttons {}
+    Buttons {id: buttons}
 
     AllChipsAndCards {}
 
-    RaiseWindow {}
+    RaiseWindow {id: raiseWindow}
 }    

@@ -7,6 +7,8 @@ Rectangle
 {
     id: raiseWindow
 
+    visible: false
+
     function getWindowXOffset()
     {
         return (Window.width - 1000) / 2
@@ -98,7 +100,8 @@ Rectangle
             Layout.fillWidth: true
             Layout.fillHeight: true
             text: "Cancel"
-            onClicked: raiseWindow.visible = false
+            onClicked: raiseWindow.visible = false,
+                       buttons.allEnabled = true
         }
 
         Button
@@ -107,7 +110,7 @@ Rectangle
             Layout.fillHeight: true
             text: "OK"
             onClicked: raiseWindow.visible = false, 
-                       raiseValue(slide.intSliderValue);
+                       raise(slide.intSliderValue);
         }
     }
 }
