@@ -1,5 +1,5 @@
 # networked-poker
-[![Build Status](https://travis-ci.org/ZedPea/networked-poker.svg?branch=gui)](https://travis-ci.org/ZedPea/networked-poker)
+[![Build Status](https://travis-ci.org/ZedPea/networked-poker.svg)](https://travis-ci.org/ZedPea/networked-poker)
 
 A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against.
 
