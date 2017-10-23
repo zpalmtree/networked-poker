@@ -31,7 +31,7 @@ import Lenses
      cChips, cBet, cInPlay, cSmallBlindSize, cBigBlindSize, playerTurn,
      allCards, playerCards, mapping, removed, infos, imsg, cCommunityCards,
      cCards, cIsMe, hand, person, cCurrentPlayer, cPot, minRaise, 
-     cMinimumRaise)
+     cMinimumRaise, cBigBlindSize)
 
 import Types 
     (Message(..), Action(..), ActionMsg, CPlayer, Card, PlayerHandInfo, CBets)
@@ -54,6 +54,7 @@ handleMsg msg = do
         MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
         MIsGatherChips _ -> def handleGatherChips
         MIsResetRound _ -> def handleResetRound
+        MIsNextState _ -> def handleNextState
         MIsMinRaise m -> def $ handleMinRaise (m^.minRaise)
     where def f = f >> return Nothing
 
@@ -277,9 +278,12 @@ handleGatherChips = do
 
 handleResetRound :: CGameStateT ()
 handleResetRound = do
+    s <- get
+
     game.cPlayers.traversed.cCards .= []
     game.cCommunityCards .= []
     game.cBets.cPot .= 0
+    game.cBets.cMinimumRaise .= (s^.game.cBets.cBigBlindSize)
     game.cPlayers.traversed.cBet .= 0
 
     updateCards
@@ -288,3 +292,10 @@ handleResetRound = do
 
 handleMinRaise :: Int -> CGameStateT ()
 handleMinRaise newRaise = game.cBets.cMinimumRaise .= newRaise
+
+handleNextState :: CGameStateT ()
+handleNextState = do
+    s <- get
+
+    game.cBets.cMinimumRaise .= s^.game.cBets.cBigBlindSize
+    game.cBets.cCurrentBet .= 0

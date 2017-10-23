@@ -12,9 +12,11 @@ import Data.Monoid (Sum(..), getSum)
 
 import Types (Game, Action(..), Pot(..), Player, GameState, GameStateT)
 import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad (when)
 import Safe (headNote)
 import Data.UUID.Types (UUID)
+import System.Log.Logger (warningM)
 
 import Output 
     (outputPlayerTurn, outputAction, outputGatherChips, outputUpdateMinRaise)
@@ -27,8 +29,8 @@ import Control.Lens
 
 import Lenses 
     (bets, currentBet, chips, bet, smallBlindSize, bigBlindSize, pots, pot, 
-     inPlay, uuid, allIn, minimumRaise, canReRaise, madeInitialBet, playerQueue, 
-     players)
+     inPlay, uuid, allIn, minimumRaise, canReRaise, madeInitialBet, players,
+     playerQueue)
 
 import Input
     (foldAllIn, checkAllIn, checkRaiseAllIn, foldCallAllIn, foldCallRaiseAllIn)
@@ -175,6 +177,9 @@ promptBet' s canCheck
     -- must go all in if they want to raise
     | canCheck && cantRaise = promptAndUpdate checkAllIn
 
+    -- not enough chips to make minimum raise
+    | cantRaise = promptAndUpdate foldCallAllIn
+
     -- matches current bet, so can check or raise
     | canCheck = promptAndUpdate checkRaiseAllIn
 
@@ -189,7 +194,7 @@ promptBet' s canCheck
 
     where player = getCurrentPlayerPure s
           totalChips = player^.bet + player^.chips
-          cantRaise = player^.chips < s^.bets.minimumRaise
+          cantRaise = player^.chips < (s^.bets.minimumRaise + s^.bets.currentBet)
 
 promptAndUpdate :: GameStateT (Action Int) -> GameStateT ()
 promptAndUpdate f = do
@@ -213,13 +218,20 @@ convertMaxRaise a = do
         _ -> return a
 
 handleInput :: Action Int -> GameStateT ()
-handleInput action = case action of
-    Fold -> fold
-    Check -> return ()
-    Call -> call
-    (Raise n) -> raise n
-    AllIn -> goAllIn
-    _ -> error "Invalid input given in handleInput!"
+handleInput action = do
+    p <- getCurrentPlayer
+
+    case action of
+        Fold -> fold
+        Check -> return ()
+        Call -> call
+        (Raise n) -> if (n - p^.bet) > p^.chips
+            then do
+                lift $ warningM "Prog.handleInput" "Raise > number of chips!"
+                fold
+            else raise n
+        AllIn -> goAllIn
+        _ -> error "Invalid input given in handleInput!"
 
 fold :: (Monad m) => GameState m ()
 fold = playerQueue.players.ix 0.inPlay .= False

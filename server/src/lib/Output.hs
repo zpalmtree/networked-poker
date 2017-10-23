@@ -13,7 +13,8 @@ module Output
     outputBadInput,
     outputGatherChips,
     outputResetRound,
-    outputUpdateMinRaise
+    outputUpdateMinRaise,
+    outputNextState
 )
 where
 
@@ -41,7 +42,8 @@ import Types
      DealtCardsMsg(..), NewChipsMsg(..), GameOverMsg(..),
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
      InitialGameMsg(..), GameStateT, Action, Player, ClientGame, InputMsg(..),
-     BadInputMsg(..), GatherChipsMsg(..), ResetRoundMsg(..), MinRaiseMsg(..))
+     BadInputMsg(..), GatherChipsMsg(..), ResetRoundMsg(..), MinRaiseMsg(..),
+     NextStateMsg(..))
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -180,3 +182,6 @@ outputResetRound = msgAll . MIsResetRound $ ResetRoundMsg
 
 outputUpdateMinRaise :: Int -> GameStateT ()
 outputUpdateMinRaise n = msgAll . MIsMinRaise $ MinRaiseMsg n
+
+outputNextState :: GameStateT ()
+outputNextState = msgAll . MIsNextState $ NextStateMsg
