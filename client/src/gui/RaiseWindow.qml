@@ -112,7 +112,8 @@ Rectangle
             Layout.fillHeight: true
             text: "OK"
             onClicked: raiseWindow.visible = false, 
-                       raiseN(slideValue.intSliderValue)
+                       raiseN(slideValue.intSliderValue),
+                       buttons.allEnabled = true
         }
     }
 }

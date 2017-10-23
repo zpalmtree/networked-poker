@@ -16,7 +16,8 @@ import Control.Monad (when)
 import Safe (headNote)
 import Data.UUID.Types (UUID)
 
-import Output (outputPlayerTurn, outputAction, outputGatherChips)
+import Output 
+    (outputPlayerTurn, outputAction, outputGatherChips, outputUpdateMinRaise)
 
 import Utilities.Player
     (getCurrentPlayer, getCurrentPlayerPure, getCurrentPlayer)
@@ -152,10 +153,11 @@ takeOutPlayersPot betSize = do
     where nonEligible = playerQueue.players.traversed.filtered 
                         (not . potEligible)
 
-updateMinimumRaise :: (Monad m) => Int -> GameState m ()
+updateMinimumRaise :: Int -> GameStateT ()
 updateMinimumRaise raise' = do
     bets.minimumRaise .= raise'
     playerQueue.players.traversed.canReRaise .= True
+    outputUpdateMinRaise raise'
 
 promptBet :: Bool -> GameStateT ()
 promptBet canCheck = do
@@ -210,7 +212,7 @@ convertMaxRaise a = do
                     else return a
         _ -> return a
 
-handleInput :: (Monad m) => Action Int -> GameState m ()
+handleInput :: Action Int -> GameStateT ()
 handleInput action = case action of
     Fold -> fold
     Check -> return ()
@@ -222,7 +224,7 @@ handleInput action = case action of
 fold :: (Monad m) => GameState m ()
 fold = playerQueue.players.ix 0.inPlay .= False
 
-raise :: (Monad m) => Int -> GameState m ()
+raise :: Int -> GameStateT ()
 raise amount = do
     s <- get
 
@@ -245,7 +247,7 @@ call = do
 
 -- if it's a raise and it's at least the minimum bet, then let any previous
 -- raisers re-raise, plus update minimum raise
-goAllIn :: (Monad m) => GameState m ()
+goAllIn :: GameStateT ()
 goAllIn = do
     s <- get
 
@@ -260,7 +262,7 @@ goAllIn = do
     when (bet' > s^.bets.currentBet && raise' >= s^.bets.minimumRaise) $
         updateMinimumRaise raise'
 
-giveWinnings :: (Monad m) => UUID -> GameState m ()
+giveWinnings :: UUID -> GameStateT ()
 giveWinnings winnerUUID = do
     winnings <- gatherChips
     playerQueue.players.traversed.filtered isWinner.chips += winnings
