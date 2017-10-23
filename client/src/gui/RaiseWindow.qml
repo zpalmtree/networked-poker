@@ -48,7 +48,7 @@ Rectangle
         snapMode: Slider.SnapAlways
         from: slideMin
         to: slideMax
-        value: from
+        value: slideMin
         stepSize: 1
         anchors.centerIn: parent
     }
@@ -112,7 +112,8 @@ Rectangle
             Layout.fillHeight: true
             text: "OK"
             onClicked: raiseWindow.visible = false, 
-                       raiseN(slideValue.intSliderValue)
+                       raiseN(slideValue.intSliderValue),
+                       buttons.allEnabled = true
         }
     }
 }

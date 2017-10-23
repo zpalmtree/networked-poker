@@ -27,7 +27,7 @@ import Types (Card)
 
 import Lenses 
     (cPlayers, cName, cChips, cCards, cBet, cInPlay, cCommunityCards,
-     cCurrentPlayer, cUUID, cBets, cPot, cMinimumRaise, cIsMe)
+     cCurrentPlayer, cUUID, cBets, cPot, cMinimumRaise, cIsMe, cCurrentBet)
 
 import CLenses 
     (game, qmlState, pVisibleS, pVisibleSig, ctx, pNamesS, pNamesSig,
@@ -147,8 +147,9 @@ updateRaiseWindow = do
     s <- get
 
     let me = head $ filter (^.cIsMe) (s^.game.cPlayers)
+        minBet = s^.game.cBets.cCurrentBet + s^.game.cBets.cMinimumRaise
 
-    lift $ writeIORef (s^.qmlState.slideMinS) (s^.game.cBets.cMinimumRaise)
+    lift $ writeIORef (s^.qmlState.slideMinS) minBet
     lift $ writeIORef (s^.qmlState.slideMaxS) (me^.cBet + me^.cChips)
 
     lift $ fireSignal (s^.qmlState.slideMinSig) (s^.ctx)

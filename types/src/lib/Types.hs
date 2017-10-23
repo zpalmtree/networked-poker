@@ -31,6 +31,7 @@ module Types
     GatherChipsMsg(..),
     ResetRoundMsg(..),
     MinRaiseMsg(..),
+    NextStateMsg(..),
     ClientGame(..),
     CPlayer(..),
     CBets(..),
@@ -211,15 +212,14 @@ data Message = MIsAction (ActionMsg Int)
              | MIsGatherChips GatherChipsMsg
              | MIsResetRound ResetRoundMsg
              | MIsMinRaise MinRaiseMsg
+             | MIsNextState NextStateMsg
              deriving (Generic, Show)
 
 data GameOverMsg = GameOverMsg deriving (Generic, Show)
-
 data BadInputMsg = BadInputMsg deriving (Generic, Show)
-
 data GatherChipsMsg = GatherChipsMsg deriving (Generic, Show)
-
 data ResetRoundMsg = ResetRoundMsg deriving (Generic, Show)
+data NextStateMsg = NextStateMsg deriving (Generic, Show)
 
 -- NEWTYPES
 
@@ -282,6 +282,7 @@ instance Binary BadInputMsg
 instance Binary GatherChipsMsg
 instance Binary ResetRoundMsg
 instance Binary MinRaiseMsg
+instance Binary NextStateMsg
 instance Binary Pot
 instance Binary Card
 instance Binary Value

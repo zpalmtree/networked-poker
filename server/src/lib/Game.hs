@@ -6,6 +6,7 @@ where
 
 import Control.Lens ((^.), (.=), (+=), traversed, zoom)
 import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad (unless)
 
 import Types (Game, Pot, Stage(..), Cards(..), GameStateT)
@@ -26,7 +27,7 @@ import Lenses
 
 import Output
     (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved,
-     outputResetRound)
+     outputResetRound, outputUpdateMinRaise, outputNextState)
 
 gameLoop :: GameStateT ()
 gameLoop = do
@@ -146,12 +147,12 @@ nextState = do
 
     zoom bets $ do
         currentBet .= 0
-        minimumRaise .= (s^.bets.bigBlindSize)
+        minimumRaise .= s^.bets.bigBlindSize
 
     resetDealer
 
     updatePot
-        
+
     case s^.stage of
         PreFlop -> do
             revealFlop
@@ -168,6 +169,8 @@ nextState = do
         River -> stage .= Showdown
 
         Showdown -> error "Can't advance stage at showdown!"
+
+    outputNextState
 
 nextRound :: GameStateT ()
 nextRound = do
