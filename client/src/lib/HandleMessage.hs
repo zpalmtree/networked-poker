@@ -35,7 +35,7 @@ import Lenses
      cChips, cBet, cInPlay, cSmallBlindSize, cBigBlindSize, playerTurn,
      allCards, playerCards, mapping, removed, infos, imsg, cCommunityCards,
      cCards, cIsMe, hand, person, cCurrentPlayer, cPot, minRaise, 
-     cMinimumRaise, cBigBlindSize)
+     cMinimumRaise, cBigBlindSize, cUUID)
 
 import Types 
     (Message(..), Action(..), ActionMsg, CPlayer, Card, PlayerHandInfo, CBets)
@@ -174,8 +174,11 @@ handleMyCards cs = do
 
 handleNewChips :: [(UUID, Int)] -> CGameStateT ()
 handleNewChips [] = do
+    game.cBets.cPot .= 0
+
     updateNames
     updateBets
+    updatePot
 
 handleNewChips ((u,n):xs) = do
     zoom (game.cPlayers.traversed.filtered isP) $ do
@@ -196,18 +199,16 @@ handlePlayersRemoved :: [UUID] -> CGameStateT ()
 handlePlayersRemoved ids = do
     s <- get
 
-    game.cPlayers .= filter isIn (s^.game.cPlayers)
+    let me = filter (^.cIsMe) (s^.game.cPlayers)
 
-    s' <- get
-
-    -- are we still in the game
-    if any (^.cIsMe) (s'^.game.cPlayers)
+    if head me^.cUUID `elem` ids
         then do
-            updateNames
-            updateBets
-            updateCards
+            game.cPlayers .= me
             updateVisible
-        else handleOutOfChips
+            handleOutOfChips
+        else do
+            game.cPlayers .= filter isIn (s^.game.cPlayers)
+            updateVisible
 
     where isIn x = x^.cUUID `notElem` ids
 

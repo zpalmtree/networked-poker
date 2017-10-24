@@ -161,4 +161,6 @@ setup = do
     dealCards
 
 cleanup :: GameStateT ()
-cleanup = outputGameOver
+cleanup = do
+    outputGameOver
+    lift $ infoM "Prog.cleanup" "Game finished"
