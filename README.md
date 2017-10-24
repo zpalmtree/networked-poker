@@ -16,6 +16,14 @@ You need stack and QtQuick installed.
 ##### Arch based:
 `sudo pacman -S stack qt5-quickcontrols qt5-quickcontrols`
 
+If you're using arch you might need to add 
+
+`ghc-build: nopie`
+
+To the `stack.yaml` or `~/.stack/config.yaml` due to issues with ncurses.
+
+You may also need to install `ncurses5-compat-libs` from the AUR
+
 #### Clone the repository
 
 `git clone https://github.com/ZedPea/networked-poker.git`

@@ -281,6 +281,7 @@ handleResetRound = do
     s <- get
 
     game.cPlayers.traversed.cCards .= []
+    game.cPlayers.traversed.cInPlay .= True
     game.cCommunityCards .= []
     game.cBets.cPot .= 0
     game.cBets.cMinimumRaise .= (s^.game.cBets.cBigBlindSize)
@@ -289,6 +290,7 @@ handleResetRound = do
     updateCards
     updateBets
     updatePot
+    updateInPlay
 
 handleMinRaise :: Int -> CGameStateT ()
 handleMinRaise newRaise = game.cBets.cMinimumRaise .= newRaise

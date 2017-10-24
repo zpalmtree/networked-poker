@@ -8,6 +8,7 @@ import Control.Lens ((^.), (.=), (+=), traversed, zoom)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (unless)
+import System.Log.Logger (debugM)
 
 import Types (Game, Pot, Stage(..), Cards(..), GameStateT)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
@@ -27,7 +28,7 @@ import Lenses
 
 import Output
     (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved,
-     outputResetRound, outputUpdateMinRaise, outputNextState)
+     outputResetRound, outputNextState)
 
 gameLoop :: GameStateT ()
 gameLoop = do
@@ -89,11 +90,15 @@ notAllInAndUnmatched s = not (p^.allIn) && p^.bet < s^.bets.currentBet
 makeChoice :: Game -> GameStateT ()
 makeChoice s
     | inShowdown s = do
+        lift $ debugM "Prog.makeChoice" "inShowdown"
+
         showdown
         outputHandValues
         outputNewChips
 
     | onlyOnePlayerLeft s = do
+        lift $ debugM "Prog.makeChoice" "onlyOnePlayerLeft"
+
         winnerID <- victorID
 
         updatePot
@@ -103,25 +108,35 @@ makeChoice s
         outputNewChips
 
     | maxOneNotAllIn s = do
+        lift $ debugM "Prog.makeChoice" "maxOneNotAllIn"
+
         nextState
         playRound
 
     | notInPlay s = do
+        lift $ debugM "Prog.makeChoice" "notInPlay"
+
         nextPlayer
         playRound 
 
     | inPlayCanCheck s = do
+        lift $ debugM "Prog.makeChoice" "inPlayCanCheck"
+
         promptBet True
         nextPlayer
         playRound
 
     | notAllInAndUnmatched s = do
+        lift $ debugM "Prog.makeChoice" "notAllInAndUnmatched"
+
         promptBet False
         nextPlayer
         playRound
 
     --already bet or all in
     | otherwise = do
+        lift $ debugM "Prog.makeChoice" "default"
+
         nextState
         playRound
 
