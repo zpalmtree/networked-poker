@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+
 module GUIUpdate
 (
     updateNames,
@@ -8,21 +10,22 @@ module GUIUpdate
     updateButtons,
     updateCurrentPlayer,
     updatePot,
-    updateRaiseWindow
+    updateRaiseWindow,
+    showGameOverWindow
 )
 where
 
 import Data.Text (Text, pack)
-import Control.Lens ((^.), (^..), traversed)
-import Graphics.QML (fireSignal)
-import Data.IORef (writeIORef)
+import Control.Lens (Lens', (^.), (^..), traversed)
+import Graphics.QML (SignalKey, fireSignal)
+import Data.IORef (IORef, writeIORef)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Data.List (elemIndex)
 import Data.Maybe (fromJust)
 
 import Constants (maxPlayers, cardBack, numTCards)
-import ClientTypes (CGameStateT)
+import ClientTypes (CGameStateT, StatesNSignals)
 import Types (Card)
 
 import Lenses 
@@ -154,3 +157,12 @@ updateRaiseWindow = do
 
     lift $ fireSignal (s^.qmlState.slideMinSig) (s^.ctx)
     lift $ fireSignal (s^.qmlState.slideMaxSig) (s^.ctx)
+
+showGameOverWindow :: Lens' StatesNSignals (SignalKey (IO ())) ->
+                      Lens' StatesNSignals (IORef Bool) ->
+                      CGameStateT ()
+showGameOverWindow windowSig windowState = do
+    s <- get
+
+    lift $ writeIORef (s^.qmlState.windowState) True
+    lift $ fireSignal (s^.qmlState.windowSig) (s^.ctx)

@@ -75,6 +75,7 @@ data-files:
     src/gui/Card.qml
     src/gui/CardsChipsPlayer.qml
     src/gui/Chip.qml
+    src/gui/GameOverWindow.qml
     src/gui/Main.qml
     src/gui/Player.qml
     src/gui/Pot.qml

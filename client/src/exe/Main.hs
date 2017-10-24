@@ -70,10 +70,12 @@ main = withSocketsDo $ do
 
     infoM "Prog.main" "Running GUI"
 
-    runEngineLoop defaultEngineConfig {
+    let config = defaultEngineConfig {
         initialDocument = fileDocument gui,
         contextObject = Just $ anyObjRef ctx
     }
+
+    runEngineLoop config
 
 ioLoop :: Socket -> CGameStateT ()
 ioLoop sock = do

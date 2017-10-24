@@ -11,9 +11,7 @@ import Data.List (sortBy)
 import Safe (headNote)
 import Data.UUID.Types (UUID)
 import Control.Monad.Trans.State (get)
-import Control.Monad.Trans.Class (lift)
 import Control.Monad (when)
-import System.Log.Logger (warningM)
 
 import Types (GameState, Card, HandInfo, Player, Pot, GameStateT)
 import Showdown.Ord (ordHand)
@@ -65,28 +63,24 @@ sortHandValue p1 p2 = ordHand hand1 hand2
           hand2 = fromJust $ p2^.handInfo
 
 distributePot :: Pot -> GameStateT [UUID]
-distributePot sidePot
-    | length (sidePot^.playerUUIDs) == 0 = do
-        lift $ warningM "Prog.distributePot" "empty side pot"
-        return []
-    | otherwise = do
-        s <- get
+distributePot sidePot = do
+    s <- get
 
-        let inPot = filter (\p -> p^.uuid `elem` sidePot^.playerUUIDs) 
+    let inPot = filter (\p -> p^.uuid `elem` sidePot^.playerUUIDs) 
                         (s^.playerQueue.players)
-            winners = getWinners inPot
-            chipsPerPerson = sidePot^.pot `div` length winners
-            spareChips = sidePot^.pot `rem` length winners
-            allPlayers = playerQueue.players.traversed
-            isWinner p = p^.uuid `elem` winners^..traversed.uuid
+        winners = getWinners inPot
+        chipsPerPerson = sidePot^.pot `div` length winners
+        spareChips = sidePot^.pot `rem` length winners
+        allPlayers = playerQueue.players.traversed
+        isWinner p = p^.uuid `elem` winners^..traversed.uuid
 
-        spareID <- leftOfDealer winners
+    spareID <- leftOfDealer winners
 
-        zoom (allPlayers.filtered isWinner) $ do
-            p <- get
+    zoom (allPlayers.filtered isWinner) $ do
+        p <- get
 
-            chips += chipsPerPerson
+        chips += chipsPerPerson
 
-            when (p^.uuid == spareID) $ chips += spareChips
+        when (p^.uuid == spareID) $ chips += spareChips
 
-        return $ winners^..traversed.uuid
+    return $ winners^..traversed.uuid

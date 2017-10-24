@@ -74,25 +74,33 @@ makeClass = do
     pCurrentPlayerSig <- newSignalKey
     pCurrentPlayerS <- newIORef $ replicate maxPlayers False
 
-    --SLIDE VALUES
+    --SLIDER VALUES
     slideMinSig <- newSignalKey
     slideMaxSig <- newSignalKey
     slideMinS <- newIORef 0
     slideMaxS <- newIORef 0
 
+    --GAME OVER WINDOWS
+    lossWindowVisibleSig <- newSignalKey
+    winWindowVisibleSig <- newSignalKey
+    lossWindowVisibleS <- newIORef False
+    winWindowVisibleS <- newIORef False
+
     m <- newEmptyMVar
 
-    let sNs = StatesNSignals pCardsSig          pCardsS
-                             pChipsSig          pChipsS
-                             pNamesSig          pNamesS
-                             tCardsSig          tCardsS
-                             bEnabledSig        bEnabledS
-                             potChipsSig        potChipsS
-                             pVisibleSig        pVisibleS
-                             pInPlaySig         pInPlayS
-                             pCurrentPlayerSig  pCurrentPlayerS
-                             slideMinSig        slideMinS
-                             slideMaxSig        slideMaxS
+    let sNs = StatesNSignals pCardsSig              pCardsS
+                             pChipsSig              pChipsS
+                             pNamesSig              pNamesS
+                             tCardsSig              tCardsS
+                             bEnabledSig            bEnabledS
+                             potChipsSig            potChipsS
+                             pVisibleSig            pVisibleS
+                             pInPlaySig             pInPlayS
+                             pCurrentPlayerSig      pCurrentPlayerS
+                             slideMinSig            slideMinS
+                             slideMaxSig            slideMaxS
+                             lossWindowVisibleSig   lossWindowVisibleS
+                             winWindowVisibleSig    winWindowVisibleS
                              m
 
     rootClass <- newClass [
@@ -108,6 +116,10 @@ makeClass = do
         defPropertySigRO' "pBets" pChipsSig $ defRead pChipsS,
         defPropertySigRO' "slideMin" slideMinSig $ defRead slideMinS,
         defPropertySigRO' "slideMax" slideMaxSig $ defRead slideMaxS,
+        defPropertySigRO' "lossWindowVisible" lossWindowVisibleSig 
+                        $ defRead lossWindowVisibleS,
+        defPropertySigRO' "winWindowVisible" winWindowVisibleSig
+                        $ defRead winWindowVisibleS,
 
         defMethod' "fold" (handleFold sNs),
         defMethod' "check" (handleCheck sNs),

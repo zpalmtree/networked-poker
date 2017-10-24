@@ -44,6 +44,10 @@ data StatesNSignals = StatesNSignals {
     _slideMinS :: IORef Int,
     _slideMaxSig :: SignalKey (IO ()),
     _slideMaxS :: IORef Int,
+    _lossWindowVisibleSig :: SignalKey (IO ()),
+    _lossWindowVisibleS :: IORef Bool,
+    _winWindowVisibleSig :: SignalKey (IO ()),
+    _winWindowVisibleS :: IORef Bool,
     _actionMade :: MVar (Action Int)
 }
 

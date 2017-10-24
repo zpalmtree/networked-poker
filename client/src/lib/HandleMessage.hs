@@ -20,11 +20,15 @@ import Control.Lens
      filtered)
 
 import ClientTypes (CGameStateT, CGame)
-import CLenses (game, qmlState, actionMade)
+
+import CLenses 
+    (game, qmlState, actionMade, winWindowVisibleSig, winWindowVisibleS,
+     lossWindowVisibleSig, lossWindowVisibleS)
 
 import GUIUpdate 
     (updateBets, updateNames, updateInPlay, updateCards, updateButtons,
-     updateVisible, updateCurrentPlayer, updatePot, updateRaiseWindow)
+     updateVisible, updateCurrentPlayer, updatePot, updateRaiseWindow,
+     showGameOverWindow)
 
 import Lenses 
     (player, action, cCurrentBet, cPlayers, cUUID, cBets,
@@ -182,10 +186,11 @@ handleNewChips ((u,n):xs) = do
 
     where isP p = p^.cUUID == u
 
---need to show message box, then kill game once confirmed
---return to caller? in a different thread...
 handleGameOver :: CGameStateT ()
-handleGameOver = undefined
+handleGameOver = showGameOverWindow winWindowVisibleSig winWindowVisibleS
+
+handleOutOfChips :: CGameStateT ()
+handleOutOfChips = showGameOverWindow lossWindowVisibleSig lossWindowVisibleS
 
 handlePlayersRemoved :: [UUID] -> CGameStateT ()
 handlePlayersRemoved ids = do
@@ -193,10 +198,16 @@ handlePlayersRemoved ids = do
 
     game.cPlayers .= filter isIn (s^.game.cPlayers)
 
-    updateNames
-    updateBets
-    updateCards
-    updateVisible
+    s' <- get
+
+    -- are we still in the game
+    if any (^.cIsMe) (s'^.game.cPlayers)
+        then do
+            updateNames
+            updateBets
+            updateCards
+            updateVisible
+        else handleOutOfChips
 
     where isIn x = x^.cUUID `notElem` ids
 
