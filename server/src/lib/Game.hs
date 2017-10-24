@@ -189,30 +189,30 @@ nextState = do
 
 nextRound :: GameStateT ()
 nextRound = do
+    removeOutPlayers outputPlayersRemoved
+
     s <- get
 
-    removed <- removeOutPlayers 
+    unless (s^.gameFinished) $ do
+        zoom (playerQueue.players.traversed) $ do
+            inPlay .= True
+            bet .= 0
+            madeInitialBet .= False
+            handInfo .= Nothing
+            canReRaise .= True
+            allIn .= False
 
-    zoom (playerQueue.players.traversed) $ do
-        inPlay .= True
-        bet .= 0
-        madeInitialBet .= False
-        handInfo .= Nothing
-        canReRaise .= True
-        allIn .= False
+        zoom bets $ do
+            pots .= []
+            currentBet .= 0
+            minimumRaise .= s^.bets.bigBlindSize
 
-    zoom bets $ do
-        pots .= []
-        currentBet .= 0
-        minimumRaise .= s^.bets.bigBlindSize
+        stage .= PreFlop
+        cardInfo .= Cards [] fullDeck
+        roundDone .= False
+        roundNumber += 1
 
-    stage .= PreFlop
-    cardInfo .= Cards [] fullDeck
-    roundDone .= False
-    roundNumber += 1
+        nextDealer
+        resetDealer
 
-    nextDealer
-    resetDealer
-
-    outputPlayersRemoved removed
-    outputResetRound
+        outputResetRound

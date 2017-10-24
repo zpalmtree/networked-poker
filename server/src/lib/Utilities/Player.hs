@@ -29,7 +29,7 @@ import Data.UUID.Types (UUID)
 import Network.Socket (Socket)
 import System.Random (getStdRandom, random)
 
-import Types (Player(..), GameState, Game)
+import Types (Player(..), GameState, GameStateT, Game)
 
 import Lenses (inPlay, allIn, gameFinished, dealer, uuid, chips, players,
                playerQueue)
@@ -110,24 +110,31 @@ nextPlayer :: (Monad m) => GameState m ()
 nextPlayer = playerQueue.players %= shift
     where shift x = tailNote "in nextPlayer!" x ++ [headNote "in nextPlayer!" x]
 
-removeOutPlayers :: (Monad m) => GameState m (Maybe [UUID])
-removeOutPlayers = do
+-- don't want to import Output.hs because then we have an import loop, 
+-- as output imports a few convenience funcs from here
+removeOutPlayers :: (Maybe [UUID] -> GameStateT ()) -> GameStateT ()
+removeOutPlayers outputFunc = do
     s <- get
 
-    let removed = filter (\x -> x^.chips <= 0) (s^.playerQueue.players)
+    -- find out who needs removing
+    let toRemove = filter (\x -> x^.chips <= 0) (s^.playerQueue.players)
+        removed
+            | null toRemove = Nothing
+            | otherwise = Just $ toRemove^..traversed.uuid
 
-    if null removed
-        then return Nothing
-        else do
-            playerQueue.players %= remove
-            oldPlayers <- flatten (s^.playerQueue.players)
-            updateDealer oldPlayers
+    -- let them know they're being removed
+    outputFunc removed
 
-            numPlayers' <- numPlayers
+    -- then actually removed them, if we remove them before telling them
+    -- they are being removed, we don't have their socket to message them
+    unless (null toRemove) $ do
+        playerQueue.players %= remove
+        oldPlayers <- flatten (s^.playerQueue.players)
+        updateDealer oldPlayers
 
-            when (numPlayers' <= 1) $ gameFinished .= True
+        numPlayers' <- numPlayers
 
-            return . Just $ removed^..traversed.uuid
+        when (numPlayers' <= 1) $ gameFinished .= True
 
     where remove = filter (\x -> x^.chips > 0)
 
