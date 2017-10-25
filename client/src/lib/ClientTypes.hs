@@ -48,6 +48,8 @@ data StatesNSignals = StatesNSignals {
     _lossWindowVisibleS :: IORef Bool,
     _winWindowVisibleSig :: SignalKey (IO ()),
     _winWindowVisibleS :: IORef Bool,
+    _logMsgSig :: SignalKey (IO ()),
+    _logMsgS :: IORef [Text],
     _actionMade :: MVar (Action Int)
 }
 

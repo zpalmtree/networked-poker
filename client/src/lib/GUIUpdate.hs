@@ -37,7 +37,8 @@ import CLenses
     (game, qmlState, pVisibleS, pVisibleSig, ctx, pNamesS, pNamesSig,
      pBetsS, pBetsSig, pCardsS, pCardsSig, pInPlayS, pInPlaySig, tCardsSig,
      tCardsS, bEnabledSig, bEnabledS, pCurrentPlayerSig, pCurrentPlayerS,
-     potChipsS, potChipsSig, slideMinS, slideMaxS, slideMinSig, slideMaxSig)
+     potChipsS, potChipsSig, slideMinS, slideMaxS, slideMinSig, slideMaxSig,
+     logMsgSig, logMsgS)
 
 updateInPlay :: CGameStateT ()
 updateInPlay = do
@@ -168,5 +169,9 @@ showGameOverWindow windowSig windowState = do
     lift $ writeIORef (s^.qmlState.windowState) True
     lift $ fireSignal (s^.qmlState.windowSig) (s^.ctx)
 
-updateTextBox :: Text -> CGameStateT ()
-updateTextBox msg = undefined
+updateTextBox :: [Text] -> CGameStateT ()
+updateTextBox msg = do
+    s <- get
+
+    lift $ writeIORef (s^.qmlState.logMsgS) msg
+    lift $ fireSignal (s^.qmlState.logMsgSig) (s^.ctx)

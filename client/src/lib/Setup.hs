@@ -86,6 +86,10 @@ makeClass = do
     lossWindowVisibleS <- newIORef False
     winWindowVisibleS <- newIORef False
 
+    --LOG MESSAGES
+    logMsgSig <- newSignalKey
+    logMsgS <- newIORef []
+
     m <- newEmptyMVar
 
     let sNs = StatesNSignals pCardsSig              pCardsS
@@ -101,6 +105,7 @@ makeClass = do
                              slideMaxSig            slideMaxS
                              lossWindowVisibleSig   lossWindowVisibleS
                              winWindowVisibleSig    winWindowVisibleS
+                             logMsgSig              logMsgS
                              m
 
     rootClass <- newClass [
@@ -120,6 +125,7 @@ makeClass = do
                         $ defRead lossWindowVisibleS,
         defPropertySigRO' "winWindowVisible" winWindowVisibleSig
                         $ defRead winWindowVisibleS,
+        defPropertySigRO' "logMsg" logMsgSig $ defRead logMsgS,
 
         defMethod' "fold" (handleFold sNs),
         defMethod' "check" (handleCheck sNs),

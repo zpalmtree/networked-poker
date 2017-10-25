@@ -30,12 +30,13 @@ import Control.Monad (void, forM_)
 import Data.Maybe (fromJust)
 import System.Log.Logger (infoM)
 import Text.Printf (printf)
+import Data.Text (pack)
 
 import Utilities.Player (getCurrentPlayer, getCurrentPlayerUUID)
 
 import Lenses
     (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
-     handInfo, handValue, cUUID, cPlayers, cCards, cIsMe, chips)
+     handInfo, handValue, cUUID, cPlayers, cCards, cIsMe, chips, name)
 
 import Types 
     (Message(..), PlayerTurnMsg(..), ActionMsg(..), CardMsg(..),
@@ -43,7 +44,7 @@ import Types
      PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
      InitialGameMsg(..), GameStateT, Action, Player, ClientGame, InputMsg(..),
      BadInputMsg(..), GatherChipsMsg(..), ResetRoundMsg(..), MinRaiseMsg(..),
-     NextStateMsg(..))
+     NextStateMsg(..), TextMsg(..))
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -162,8 +163,12 @@ outputHandValues = do
 
     let inPlayers = filter (^.inPlay) (s^.playerQueue.players)
         details = map mkHandInfo inPlayers
+        humanReadable = flip map inPlayers $ \p ->
+            pack $ printf "%s has a %s" (p^.name) 
+                          (show $ fromJust (p^.handInfo)^.handValue)
 
     msgAll . MIsCardReveal $ CardRevealMsg details
+    msgAll . MIsTextMsg $ TextMsg humanReadable
 
     --need to let players digest the other players cards
     lift $ threadDelay (oneSecond * 5)

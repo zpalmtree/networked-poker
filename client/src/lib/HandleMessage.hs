@@ -316,5 +316,5 @@ handleNextState = do
     game.cBets.cMinimumRaise .= s^.game.cBets.cBigBlindSize
     game.cBets.cCurrentBet .= 0
 
-handleTextMsg :: Text -> CGameStateT ()
-handleTextMsg msg = updateTextBox msg
+handleTextMsg :: [Text] -> CGameStateT ()
+handleTextMsg = updateTextBox

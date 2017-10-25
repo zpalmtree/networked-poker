@@ -11,7 +11,10 @@ RowLayout
     anchors.bottom: parent.bottom
     anchors.right: parent.right
     anchors.left: parent.left
+
     anchors.bottomMargin: Constants.bottomOffset
+    anchors.rightMargin: Constants.rightOffset
+    anchors.leftMargin: Constants.leftOffset
 
     property var allEnabled: true
 

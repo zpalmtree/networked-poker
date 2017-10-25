@@ -21,6 +21,7 @@ library:
     - bytestring
     - binary
     - types
+    - text
 executables:
     server:
         main: Main.hs

@@ -9,6 +9,9 @@ Row
     anchors.verticalCenter: parent.verticalCenter
 
     bottomPadding: 120 + Constants.bottomOffset
+    topPadding: Constants.topOffset
+    leftPadding: Constants.leftOffset
+    rightPadding: Constants.rightOffset
 
     spacing: 10
 

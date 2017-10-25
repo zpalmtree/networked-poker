@@ -5,9 +5,11 @@ Item
 {
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
-    anchors.verticalCenterOffset: -0.5 * Constants.bottomOffset
+    anchors.verticalCenterOffset: (-0.5 * Constants.bottomOffset) +
+                                  (0.5 * Constants.topOffset)
 
-    anchors.horizontalCenterOffset: -20
+    anchors.horizontalCenterOffset: -20 + Constants.leftOffset 
+                                    - Constants.rightOffset
 
     Chip
     {

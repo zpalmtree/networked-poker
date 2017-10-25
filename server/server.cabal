@@ -29,6 +29,7 @@ library
     , bytestring
     , binary
     , types
+    , text
   exposed-modules:
       Betting
       Game

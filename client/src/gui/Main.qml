@@ -42,5 +42,5 @@ Window
         text: "Congratulations, you won!\n\nThanks for playing!"
     }
 
-    //Console {}
+    Console {}
 }    

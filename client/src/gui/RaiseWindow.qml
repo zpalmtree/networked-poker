@@ -22,9 +22,9 @@ Rectangle
 
     anchors.fill: parent
 
-    anchors.leftMargin: 350 + getWindowXOffset()
-    anchors.rightMargin: 350 + getWindowXOffset()
-    anchors.topMargin: 200 + getWindowYOffset()
+    anchors.leftMargin: 350 + getWindowXOffset() + Constants.leftOffset
+    anchors.rightMargin: 350 + getWindowXOffset() + Constants.rightOffset
+    anchors.topMargin: 200 + getWindowYOffset() + Constants.topOffset
     anchors.bottomMargin: 300 + Constants.bottomOffset + getWindowYOffset()
 
     radius: 10

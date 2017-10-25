@@ -264,7 +264,7 @@ newtype MinRaiseMsg = MinRaiseMsg {
 } deriving (Generic, Show)
 
 newtype TextMsg = TextMsg {
-    _textMsg :: Text
+    _textMsg :: [Text]
 } deriving (Generic, Show)
 
 -- TYPES

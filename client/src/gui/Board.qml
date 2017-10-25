@@ -8,8 +8,8 @@ Rectangle
 
     anchors.fill: parent
 
-    anchors.leftMargin: 105
-    anchors.rightMargin: 105
-    anchors.topMargin: 105
+    anchors.leftMargin: 105 + Constants.leftOffset
+    anchors.rightMargin: 105 + Constants.rightOffset
+    anchors.topMargin: 105 + Constants.topOffset
     anchors.bottomMargin: 205 + Constants.bottomOffset
 }
