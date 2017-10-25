@@ -20,6 +20,7 @@ library
     , transformers
     , uuid-types
     , lens
+    , text
   exposed-modules:
       Lenses
       Types

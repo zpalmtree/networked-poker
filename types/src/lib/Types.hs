@@ -32,6 +32,7 @@ module Types
     ResetRoundMsg(..),
     MinRaiseMsg(..),
     NextStateMsg(..),
+    TextMsg(..),
     ClientGame(..),
     CPlayer(..),
     CBets(..),
@@ -47,6 +48,7 @@ import Network.Socket (Socket)
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
 import Text.Printf (printf)
+import Data.Text (Text)
 
 -- DATA TYPES
 
@@ -213,6 +215,7 @@ data Message = MIsAction (ActionMsg Int)
              | MIsResetRound ResetRoundMsg
              | MIsMinRaise MinRaiseMsg
              | MIsNextState NextStateMsg
+             | MIsTextMsg TextMsg
              deriving (Generic, Show)
 
 data GameOverMsg = GameOverMsg deriving (Generic, Show)
@@ -260,6 +263,10 @@ newtype MinRaiseMsg = MinRaiseMsg {
     _minRaise :: Int
 } deriving (Generic, Show)
 
+newtype TextMsg = TextMsg {
+    _textMsg :: Text
+} deriving (Generic, Show)
+
 -- TYPES
 
 type GameStateT a = StateT Game IO a
@@ -283,6 +290,7 @@ instance Binary GatherChipsMsg
 instance Binary ResetRoundMsg
 instance Binary MinRaiseMsg
 instance Binary NextStateMsg
+instance Binary TextMsg
 instance Binary Pot
 instance Binary Card
 instance Binary Value

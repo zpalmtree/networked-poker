@@ -11,7 +11,8 @@ module GUIUpdate
     updateCurrentPlayer,
     updatePot,
     updateRaiseWindow,
-    showGameOverWindow
+    showGameOverWindow,
+    updateTextBox
 )
 where
 
@@ -166,3 +167,6 @@ showGameOverWindow windowSig windowState = do
 
     lift $ writeIORef (s^.qmlState.windowState) True
     lift $ fireSignal (s^.qmlState.windowSig) (s^.ctx)
+
+updateTextBox :: Text -> CGameStateT ()
+updateTextBox msg = undefined

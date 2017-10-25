@@ -14,6 +14,7 @@ import Data.List (sort)
 import Control.Concurrent.MVar (takeMVar)
 import System.Log.Logger (infoM)
 import Control.Monad (when)
+import Data.Text (Text)
 
 import Control.Lens 
     (Zoom, Zoomed, Lens', (^.), (^..), (.=), (-=), (+=), zoom, traversed, 
@@ -28,14 +29,14 @@ import CLenses
 import GUIUpdate 
     (updateBets, updateNames, updateInPlay, updateCards, updateButtons,
      updateVisible, updateCurrentPlayer, updatePot, updateRaiseWindow,
-     showGameOverWindow)
+     showGameOverWindow, updateTextBox)
 
 import Lenses 
     (player, action, cCurrentBet, cPlayers, cUUID, cBets,
      cChips, cBet, cInPlay, cSmallBlindSize, cBigBlindSize, playerTurn,
      allCards, playerCards, mapping, removed, infos, imsg, cCommunityCards,
      cCards, cIsMe, hand, person, cCurrentPlayer, cPot, minRaise, 
-     cMinimumRaise, cBigBlindSize, cUUID)
+     cMinimumRaise, cBigBlindSize, cUUID, textMsg)
 
 import Types 
     (Message(..), Action(..), ActionMsg, CPlayer, Card, PlayerHandInfo, CBets)
@@ -60,6 +61,7 @@ handleMsg msg = do
         MIsResetRound _ -> def handleResetRound
         MIsNextState _ -> def handleNextState
         MIsMinRaise m -> def $ handleMinRaise (m^.minRaise)
+        MIsTextMsg m -> def $ handleTextMsg (m^.textMsg)
     where def f = f >> return Nothing
 
 handleAction :: ActionMsg a -> CGameStateT ()
@@ -313,3 +315,6 @@ handleNextState = do
 
     game.cBets.cMinimumRaise .= s^.game.cBets.cBigBlindSize
     game.cBets.cCurrentBet .= 0
+
+handleTextMsg :: Text -> CGameStateT ()
+handleTextMsg msg = updateTextBox msg

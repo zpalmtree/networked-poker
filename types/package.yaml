@@ -13,3 +13,4 @@ library:
     - transformers
     - uuid-types
     - lens
+    - text
