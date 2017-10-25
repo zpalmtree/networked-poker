@@ -1,4 +1,5 @@
 import QtQuick 2.7
+import "Constants.js" as Constants
 
 Row
 {
@@ -7,7 +8,7 @@ Row
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
 
-    bottomPadding: 120
+    bottomPadding: 120 + Constants.bottomOffset
 
     spacing: 10
 

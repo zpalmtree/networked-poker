@@ -1,4 +1,5 @@
 import QtQuick 2.7
+import "Constants.js" as Constants
 
 Rectangle
 {
@@ -10,5 +11,5 @@ Rectangle
     anchors.leftMargin: 105
     anchors.rightMargin: 105
     anchors.topMargin: 105
-    anchors.bottomMargin: 205
+    anchors.bottomMargin: 205 + Constants.bottomOffset
 }

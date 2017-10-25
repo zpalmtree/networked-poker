@@ -1,4 +1,5 @@
 import QtQuick.Window 2.2
+import "Constants.js" as Constants
 
 Window
 {
@@ -7,8 +8,8 @@ Window
     title: "Poker Client"
     visible: true
 
-    minimumHeight: 700
-    minimumWidth: 1000
+    minimumHeight: Constants.initialHeight
+    minimumWidth: Constants.initialWidth
 
     color: "black"
 
@@ -24,7 +25,8 @@ Window
 
     RaiseWindow {id: raiseWindow}
 
-    GameOverWindow {
+    GameOverWindow
+    {
         id: lossWindow
         visible: lossWindowVisible
 
@@ -32,10 +34,13 @@ Window
               "Thanks for playing!"
     }
 
-    GameOverWindow {
+    GameOverWindow
+    {
         id: winnerWindow
         visible: winWindowVisible
 
         text: "Congratulations, you won!\n\nThanks for playing!"
     }
+
+    //Console {}
 }    

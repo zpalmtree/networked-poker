@@ -1,5 +1,6 @@
 import QtQuick 2.7
 import QtQuick.Layouts 1.3
+import "Constants.js" as Constants
 
 RowLayout
 {
@@ -10,6 +11,7 @@ RowLayout
     anchors.bottom: parent.bottom
     anchors.right: parent.right
     anchors.left: parent.left
+    anchors.bottomMargin: Constants.bottomOffset
 
     property var allEnabled: true
 

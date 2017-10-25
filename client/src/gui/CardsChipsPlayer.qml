@@ -1,5 +1,6 @@
 import QtQuick 2.7
 import QtQuick.Window 2.2
+import "Constants.js" as Constants
 
 Item
 {
@@ -103,7 +104,7 @@ Item
 
     function getWindowXOffset()
     {
-        var diff = (Window.width - 1000) / 2
+        var diff = (Window.width - Constants.initialWidth) / 2
 
         if (indexNum == 1 || indexNum == 2 || indexNum == 3)
         {
@@ -114,7 +115,7 @@ Item
 
     function getWindowYOffset()
     {
-        var diff = (Window.height - 700) / 2
+        var diff = (Window.height - Constants.initialHeight) / 2
 
         if (indexNum == 0 || indexNum == 1)
         {

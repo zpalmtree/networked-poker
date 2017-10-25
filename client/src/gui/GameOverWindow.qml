@@ -2,6 +2,7 @@ import QtQuick 2.7
 import QtQuick.Controls 2.2
 import QtQuick.Window 2.2
 import QtQuick.Layouts 1.3
+import "Constants.js" as Constants
 
 Rectangle
 {
@@ -9,12 +10,12 @@ Rectangle
 
     function getWindowXOffset()
     {
-        return (Window.width - 1000) / 2
+        return (Window.width - Constants.initialWidth) / 2
     }
 
     function getWindowYOffset()
     {
-        return (Window.height - 700) / 2
+        return (Window.height - Constants.initialHeight) / 2
     }
 
     anchors.fill: parent
@@ -22,7 +23,8 @@ Rectangle
     anchors.leftMargin: 350 + getWindowXOffset()
     anchors.rightMargin: 350 + getWindowXOffset()
     anchors.topMargin: 260 + getWindowYOffset() - (msg.contentHeight / 2)
-    anchors.bottomMargin: 360 + getWindowYOffset() - (msg.contentHeight / 2)
+    anchors.bottomMargin: 360 + Constants.bottomOffset + getWindowYOffset() 
+                              - (msg.contentHeight / 2)
 
     radius: 10
     border.width: 3
