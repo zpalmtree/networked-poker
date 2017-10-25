@@ -12,11 +12,12 @@ module GUIUpdate
     updatePot,
     updateRaiseWindow,
     showGameOverWindow,
-    updateTextBox
+    updateTextBox,
+    createConsoleNewLine
 )
 where
 
-import Data.Text (Text, pack)
+import Data.Text (Text, pack, empty)
 import Control.Lens (Lens', (^.), (^..), traversed)
 import Graphics.QML (SignalKey, fireSignal)
 import Data.IORef (IORef, writeIORef)
@@ -25,6 +26,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.List (elemIndex)
 import Data.Maybe (fromJust)
 
+import Utilities (cardToFileNameText)
 import Constants (maxPlayers, cardBack, numTCards)
 import ClientTypes (CGameStateT, StatesNSignals)
 import Types (Card)
@@ -86,8 +88,8 @@ updateCards = do
     s <- get
 
     let cards = s^..game.cPlayers.traversed.cCards
-        paddedPCards = map convertCards $ padMaxP cards []
-        tableCards = map convertCard $ s^.game.cCommunityCards
+        paddedPCards = map cardToFileNameTexts $ padMaxP cards []
+        tableCards = map cardToFileNameText $ s^.game.cCommunityCards
         paddedTCards = padTCards tableCards cardBack
 
     lift $ writeIORef (s^.qmlState.pCardsS) paddedPCards
@@ -138,14 +140,11 @@ pad maxLen xs def
     | otherwise = xs ++ replicate (maxLen - len) def
     where len = length xs
 
-convertCard :: Card -> Text
-convertCard c = pack $ show c
-
-convertCards :: [Card] -> [Text]
-convertCards cs = case cs of
+cardToFileNameTexts :: [Card] -> [Text]
+cardToFileNameTexts cs = case cs of
     [] -> [cardBack, cardBack]
-    [a, b] -> [convertCard a, convertCard b]
-    _ -> error "Invalid cards passed to convertCards!"
+    [a, b] -> [cardToFileNameText a, cardToFileNameText b]
+    _ -> error "Invalid cards passed to cardToFileNameTexts!"
 
 updateRaiseWindow :: CGameStateT ()
 updateRaiseWindow = do
@@ -174,4 +173,11 @@ updateTextBox msg = do
     s <- get
 
     lift $ writeIORef (s^.qmlState.logMsgS) msg
+    lift $ fireSignal (s^.qmlState.logMsgSig) (s^.ctx)
+
+createConsoleNewLine :: CGameStateT ()
+createConsoleNewLine = do
+    s <- get
+
+    lift $ writeIORef (s^.qmlState.logMsgS) [empty]
     lift $ fireSignal (s^.qmlState.logMsgSig) (s^.ctx)

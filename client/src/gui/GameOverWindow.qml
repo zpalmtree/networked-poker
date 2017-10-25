@@ -20,9 +20,9 @@ Rectangle
 
     anchors.fill: parent
 
-    anchors.leftMargin: 350 + getWindowXOffset() + Constants.rightOffset
+    anchors.leftMargin: 350 + getWindowXOffset() + Constants.leftOffset
 
-    anchors.rightMargin: 350 + getWindowXOffset() + Constants.leftOffset
+    anchors.rightMargin: 350 + getWindowXOffset() + Constants.rightOffset
 
     anchors.topMargin: 260 + getWindowYOffset() - (msg.contentHeight / 2) 
                            + Constants.topOffset

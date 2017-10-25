@@ -33,6 +33,7 @@ library
   exposed-modules:
       Betting
       Game
+      HumanMessage
       Input
       Output
       Showdown

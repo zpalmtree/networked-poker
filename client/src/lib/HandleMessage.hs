@@ -29,7 +29,7 @@ import CLenses
 import GUIUpdate 
     (updateBets, updateNames, updateInPlay, updateCards, updateButtons,
      updateVisible, updateCurrentPlayer, updatePot, updateRaiseWindow,
-     showGameOverWindow, updateTextBox)
+     showGameOverWindow, updateTextBox, createConsoleNewLine)
 
 import Lenses 
     (player, action, cCurrentBet, cPlayers, cUUID, cBets,
@@ -305,6 +305,7 @@ handleResetRound = do
     updateBets
     updatePot
     updateInPlay
+    createConsoleNewLine
 
 handleMinRaise :: Int -> CGameStateT ()
 handleMinRaise newRaise = game.cBets.cMinimumRaise .= newRaise

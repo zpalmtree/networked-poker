@@ -47,8 +47,12 @@ import Control.Concurrent.MVar (MVar)
 import Network.Socket (Socket)
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
-import Text.Printf (printf)
 import Data.Text (Text)
+import Data.Char (toLower)
+
+import Text.Printf 
+    (PrintfArg(..), printf, fmtChar, fmtPrecision, vFmt, formatString,
+     errorBadFormat)
 
 -- DATA TYPES
 
@@ -163,7 +167,7 @@ data Suit = Heart
           | Spade 
           | Club 
           | Diamond 
-          deriving (Bounded, Enum, Eq, Generic)
+          deriving (Bounded, Enum, Eq, Generic, Show)
 
 data Value = Two 
            | Three 
@@ -178,7 +182,7 @@ data Value = Two
            | Queen 
            | King 
            | Ace 
-           deriving (Bounded, Enum, Eq, Ord, Generic)
+           deriving (Bounded, Enum, Eq, Ord, Generic, Show)
 
 data Action a = Fold 
               | Check 
@@ -198,7 +202,7 @@ data Hand a b = HighCard a
               | FullHouse a b 
               | FourOfAKind a
               | StraightFlush a b
-              deriving (Eq, Ord, Generic, Show)
+              deriving (Eq, Ord, Generic)
 
 data Message = MIsAction (ActionMsg Int)
              | MIsPlayerTurn PlayerTurnMsg
@@ -314,26 +318,47 @@ instance Eq (Action a) where
     (==) BigBlind BigBlind = True
     (==) _ _ = False
 
+instance (PrintfArg a, PrintfArg b) => Show (Hand a b) where
+    show (HighCard a)
+        = printf "high card %V" a
+
+    show (Pair a)
+        = printf "pair of %Us" a
+
+    show (TwoPair a b)
+        = printf "two pair, %Us and %Us" a b
+
+    show (ThreeOfAKind a)
+        = printf "three of a kind, %Us" a
+
+    show (Straight a b)
+        = printf "straight, %V to %V" a b
+
+    show (Flush a)
+        = printf "flush, %V high" a
+
+    show (FullHouse a b)
+        = printf "full house, %Us over %Us" a b
+
+    show (FourOfAKind a)
+        = printf "four of a kind, %Us" a
+
+    show (StraightFlush a b)
+        = printf "straight flush, %V to %V" a b
+
+instance PrintfArg Value where
+    formatArg x fmt
+        | fmtChar (vFmt 'V' fmt) == 'V' 
+            = formatString (map toLower $ show x) 
+              (fmt { fmtChar = 's', fmtPrecision = Nothing })
+
+        | fmtChar (vFmt 'U' fmt) == 'U'
+            = formatString (plural . map toLower $ show x)
+              (fmt { fmtChar = 's', fmtPrecision = Nothing})
+
+        | otherwise = errorBadFormat $ fmtChar fmt
+        where plural "six" = "sixe"
+              plural s = s
+
 instance Show Card where
-    show (Card v s) = printf "assets/card-%s-%ss.png" (show v) (show s)
-
-instance Show Value where
-    show Two = "2"
-    show Three = "3"
-    show Four = "4"
-    show Five = "5"
-    show Six = "6"
-    show Seven = "7"
-    show Eight = "8"
-    show Nine = "9"
-    show Ten = "10"
-    show Jack = "jack"
-    show Queen = "queen"
-    show King = "king"
-    show Ace = "ace"
-
-instance Show Suit where
-    show Club = "club"
-    show Diamond = "diamond"
-    show Heart = "heart"
-    show Spade = "spade"
+    show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"

@@ -30,13 +30,13 @@ import Control.Monad (void, forM_)
 import Data.Maybe (fromJust)
 import System.Log.Logger (infoM)
 import Text.Printf (printf)
-import Data.Text (pack)
 
 import Utilities.Player (getCurrentPlayer, getCurrentPlayerUUID)
+import HumanMessage (humanHandValues, humanAction)
 
 import Lenses
     (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
-     handInfo, handValue, cUUID, cPlayers, cCards, cIsMe, chips, name)
+     handInfo, handValue, cUUID, cPlayers, cCards, cIsMe, chips)
 
 import Types 
     (Message(..), PlayerTurnMsg(..), ActionMsg(..), CardMsg(..),
@@ -112,9 +112,13 @@ outputAction :: Action Int -> GameStateT ()
 outputAction a = do
     p <- getCurrentPlayer
 
+    humanMsg' <- humanAction a
+
     let msg = MIsAction $ ActionMsg a (p^.uuid)
+        humanMsg = MIsTextMsg $ TextMsg humanMsg'
 
     msgAll msg
+    msgAll humanMsg
 
 outputPlayerTurn :: GameStateT ()
 outputPlayerTurn = do
@@ -163,12 +167,10 @@ outputHandValues = do
 
     let inPlayers = filter (^.inPlay) (s^.playerQueue.players)
         details = map mkHandInfo inPlayers
-        humanReadable = flip map inPlayers $ \p ->
-            pack $ printf "%s has a %s" (p^.name) 
-                          (show $ fromJust (p^.handInfo)^.handValue)
+        humanMsg = humanHandValues inPlayers
 
     msgAll . MIsCardReveal $ CardRevealMsg details
-    msgAll . MIsTextMsg $ TextMsg humanReadable
+    msgAll . MIsTextMsg $ TextMsg humanMsg
 
     --need to let players digest the other players cards
     lift $ threadDelay (oneSecond * 5)
