@@ -79,7 +79,6 @@ data-files:
     src/gui/Constants.js
     src/gui/GameOverWindow.qml
     src/gui/Main.qml
-    src/gui/MessageModel.qml
     src/gui/Player.qml
     src/gui/Pot.qml
     src/gui/RaiseWindow.qml

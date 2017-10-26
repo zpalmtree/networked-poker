@@ -68,6 +68,8 @@ Item
 
             delegate: Text
             {
+                width: parent.width
+                wrapMode: Text.Wrap
                 color: "#00FF00"
                 text: modelData
             }
