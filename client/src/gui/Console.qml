@@ -57,16 +57,19 @@ Item
             anchors.fill: parent
             anchors.margins: 5
 
-            model: MessageModel {}
+            model: messages
+
+            onCountChanged:
+            {
+                var newIndex = count - 1
+                positionViewAtEnd()
+                currentIndex = newIndex
+            }
+
             delegate: Text
             {
                 color: "#00FF00"
-                text: msg
-
-                Component.onCompleted:
-                {
-                    consoleLog.positionViewAtEnd()
-                }
+                text: modelData
             }
         }
     }

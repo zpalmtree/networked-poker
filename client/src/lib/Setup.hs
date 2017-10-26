@@ -125,7 +125,7 @@ makeClass = do
                         $ defRead lossWindowVisibleS,
         defPropertySigRO' "winWindowVisible" winWindowVisibleSig
                         $ defRead winWindowVisibleS,
-        defPropertySigRO' "logMsg" logMsgSig $ defRead logMsgS,
+        defPropertySigRO' "messages" logMsgSig $ defRead logMsgS,
 
         defMethod' "fold" (handleFold sNs),
         defMethod' "check" (handleCheck sNs),

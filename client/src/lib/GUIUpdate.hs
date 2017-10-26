@@ -20,7 +20,7 @@ where
 import Data.Text (Text, pack, empty)
 import Control.Lens (Lens', (^.), (^..), traversed)
 import Graphics.QML (SignalKey, fireSignal)
-import Data.IORef (IORef, writeIORef)
+import Data.IORef (IORef, writeIORef, atomicModifyIORef)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Data.List (elemIndex)
@@ -168,16 +168,16 @@ showGameOverWindow windowSig windowState = do
     lift $ writeIORef (s^.qmlState.windowState) True
     lift $ fireSignal (s^.qmlState.windowSig) (s^.ctx)
 
-updateTextBox :: [Text] -> CGameStateT ()
-updateTextBox msg = do
-    s <- get
-
-    lift $ writeIORef (s^.qmlState.logMsgS) msg
-    lift $ fireSignal (s^.qmlState.logMsgSig) (s^.ctx)
-
 createConsoleNewLine :: CGameStateT ()
-createConsoleNewLine = do
+createConsoleNewLine = appendTextBox [empty]
+
+updateTextBox :: [Text] -> CGameStateT ()
+updateTextBox = appendTextBox
+
+appendTextBox :: [Text] -> CGameStateT ()
+appendTextBox msg = do
     s <- get
 
-    lift $ writeIORef (s^.qmlState.logMsgS) [empty]
+    lift $ atomicModifyIORef (s^.qmlState.logMsgS) (\x -> (x ++ msg, ()))
+
     lift $ fireSignal (s^.qmlState.logMsgSig) (s^.ctx)

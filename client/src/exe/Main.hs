@@ -56,7 +56,7 @@ main = withSocketsDo $ do
 
         case trySetup of
             (Left err) -> error $ 
-                "Couldn't connect to server. Did you start it?" ++ show err
+                "Couldn't connect to server. Did you start it?\n" ++ show err
 
             (Right (initialState, sock)) -> do
 
