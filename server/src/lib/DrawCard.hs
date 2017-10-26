@@ -1,8 +1,10 @@
+{-# LANGUAGE RankNTypes #-}
+
 module DrawCard
 (
-    Deck(),
+    StandardDraw(),
     initDeck,
-    drawCard
+    draw
 )
 where
 
@@ -11,33 +13,41 @@ import System.Random (getStdRandom, randomR)
 import Types (Card)
 import Utilities.Card (fullDeck)
 
-newtype Deck = Deck { getDeck :: [Card] }
+newtype Deck = Deck { getCard :: [Card] }
 
-initDeck :: Deck
-initDeck = initDeckDefault
+class Drawable a where
+    initDeck :: a
+    draw :: a -> IO (a, Card)
+    unwrap :: a -> [Card]
+    wrap :: [Card] -> a
 
-drawCard :: Deck -> IO (Deck, Card)
-drawCard deck = do
-    (newDeck, card) <- drawFunction $ getDeck deck
-    return (Deck newDeck, card)
+newtype StandardDraw = StandardDraw { getStandardDraw :: Deck }
 
--- reimplement this
-drawFunction :: [Card] -> IO ([Card], Card)
-drawFunction = drawCard1
---drawFunction = drawCard2
+instance Drawable StandardDraw where
+    initDeck = wrap fullDeck
 
-initDeckDefault :: Deck
-initDeckDefault = Deck generateDeckFunction
+    draw x = do
+        let cards = unwrap x
 
--- reimplement this
-generateDeckFunction :: [Card]
-generateDeckFunction = fullDeck
---generateDeckFunction = undefined
+        randomNum <- getStdRandom $ randomR (0, length cards- 1)
 
--- creates random number in deck range and takes that card
--- returns new deck
-drawCard1 :: [Card] -> IO ([Card], Card)
-drawCard1 deck = do
-    randomNum <- getStdRandom $ randomR (0, length deck - 1) 
-    let (beginning, card:end) = splitAt randomNum deck
-    return (beginning ++ end, card)
+        let (beginning, card:end) = splitAt randomNum cards
+
+        return (wrap $ beginning ++ end, card)
+
+    unwrap = getCard . getStandardDraw
+
+    wrap = StandardDraw . Deck
+
+newtype ShuffleDraw = ShuffleDraw { getShuffleDraw :: Deck }
+
+instance Drawable ShuffleDraw where
+    initDeck = wrap $ shuffle fullDeck
+        where shuffle = undefined
+
+    draw x = return (wrap deck, card)
+        where (card:deck) = unwrap x
+
+    unwrap = getCard . getShuffleDraw
+
+    wrap = ShuffleDraw . Deck
