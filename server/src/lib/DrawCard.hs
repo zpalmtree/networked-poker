@@ -1,8 +1,7 @@
-{-# LANGUAGE RankNTypes #-}
-
 module DrawCard
 (
     StandardDraw(),
+    ShuffleDraw(),
     initDeck,
     draw
 )
