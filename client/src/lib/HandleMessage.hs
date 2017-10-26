@@ -11,6 +11,7 @@ import Data.UUID.Types (UUID)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Data.List (sort)
+import Control.Concurrent (threadDelay)
 import Control.Concurrent.MVar (takeMVar)
 import System.Log.Logger (infoM)
 import Control.Monad (when)
@@ -215,7 +216,12 @@ handlePlayersRemoved ids = do
     where isIn x = x^.cUUID `notElem` ids
 
 handleCardsRevealed :: [PlayerHandInfo] -> CGameStateT ()
-handleCardsRevealed [] = updateCards
+handleCardsRevealed [] = do
+    updateCards
+    lift $ threadDelay (5 * oneSecond)
+
+    where oneSecond = 10^6
+
 handleCardsRevealed (p:ps) = do
     zoom (game.cPlayers.traversed.filtered isP) $
         cCards .= p^.hand

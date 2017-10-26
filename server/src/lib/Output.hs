@@ -20,7 +20,6 @@ where
 
 import Data.UUID.Types (UUID)
 import Network.Socket.ByteString (send)
-import Control.Concurrent (threadDelay)
 import Control.Lens ((^.), (^..), (.=), (%=), zoom, filtered, traversed)
 import Data.Binary (encode)
 import Data.ByteString.Lazy (toStrict)
@@ -172,14 +171,9 @@ outputHandValues = do
     msgAll . MIsCardReveal $ CardRevealMsg details
     msgAll . MIsTextMsg $ TextMsg humanMsg
 
-    --need to let players digest the other players cards
-    lift $ threadDelay (oneSecond * 5)
-
     where mkHandInfo p = PlayerHandInfo (p^.uuid) 
                                         (fromJust (p^.handInfo)^.handValue)
                                         (p^.cards)
-
-          oneSecond = 1000000
 
 outputGatherChips :: GameStateT ()
 outputGatherChips = msgAll . MIsGatherChips $ GatherChipsMsg
