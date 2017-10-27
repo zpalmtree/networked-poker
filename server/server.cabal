@@ -41,6 +41,7 @@ library
       Showdown.Best
       Showdown.Ord
       Showdown.Value
+      TestDrawCard
       Utilities.Card
       Utilities.Player
       Utilities.Showdown
