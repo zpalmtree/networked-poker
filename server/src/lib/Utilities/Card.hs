@@ -19,7 +19,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad (when, replicateM_, replicateM)
 import Safe (at)
 
-import Types (Card(..), Value, Suit(..), Stage(..), GameStateT)
+import Types (Card(..), Value(..), Suit(..), Stage(..), GameStateT)
 import Utilities.Player (numPlayers)
 import Output (outputPlayerCards)
 
@@ -80,8 +80,8 @@ deleteNth n = do
     cardInfo.deck %= (\xs -> take n xs ++ drop (n+1) xs)
 
 fullDeck :: [Card]
-fullDeck = [Card value suit | value <- [minBound :: Value .. maxBound],
-                              suit <- [minBound :: Suit .. maxBound]]
+fullDeck = [Card value suit | value <- [Two .. Ace],
+                              suit  <- [Heart .. Diamond]]
 
 hearts :: [Card]
 hearts = [Card value Heart | value <- [minBound :: Value .. maxBound]]

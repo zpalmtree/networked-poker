@@ -25,9 +25,8 @@ import Graphics.QML
      defMethod')
 
 import ClientTypes (StatesNSignals(..), CGame(..), CGameStateT)
-import Types (Message(..))
+import Types (Message(..), InitialGameMsg(..))
 import Utilities (getName, decode)
-import Lenses (clientGame)
 import Constants (maxPlayers, numTCards, numButtons, cardBack)
 import HandleClick (handleFold, handleCheck, handleCall, handleRaise, handleAllIn)
 
@@ -159,10 +158,10 @@ initialSetup sigs this = do
             case decode msg of
                 Left (_, _, err) -> error err
                 Right (_, _, msg') -> case msg' of
-                    MIsInitialGame m -> do
+                    MIsInitialGame (InitialGameMsg m) -> do
                         infoM "Prog.initialSetup" "Recieved initial game"
 
-                        return $ Right (CGame (m^.clientGame) sigs this, sock)
+                        return $ Right (CGame m sigs this, sock)
 
                     _ -> error "Invalid message recieved!"
 

@@ -33,14 +33,15 @@ import GUIUpdate
      showGameOverWindow, updateTextBox, createConsoleNewLine)
 
 import Lenses 
-    (player, action, cCurrentBet, cPlayers, cUUID, cBets,
-     cChips, cBet, cInPlay, cSmallBlindSize, cBigBlindSize, playerTurn,
-     allCards, playerCards, mapping, removed, infos, imsg, cCommunityCards,
-     cCards, cIsMe, hand, person, cCurrentPlayer, cPot, minRaise, 
-     cMinimumRaise, cBigBlindSize, cUUID, textMsg)
+    (player, action, cCurrentBet, cPlayers, cUUID, cBets, cChips, cBet, 
+     cInPlay, cSmallBlindSize, cBigBlindSize, cCommunityCards, cCards, cIsMe, 
+     hand, person, cCurrentPlayer, cPot, cMinimumRaise, cBigBlindSize, cUUID)
 
 import Types 
-    (Message(..), Action(..), ActionMsg, CPlayer, Card, PlayerHandInfo, CBets)
+    (Message(..), Action(..), ActionMsg, CPlayer, Card, PlayerHandInfo, CBets,
+     PlayerTurnMsg(..), CardMsg(..), DealtCardsMsg(..), NewChipsMsg(..),
+     PlayersRemovedMsg(..), CardRevealMsg(..), InputMsg(..), MinRaiseMsg(..),
+     TextMsg(..))
 
 handleMsg :: Message -> CGameStateT (Maybe (Action Int))
 handleMsg msg = do
@@ -48,21 +49,21 @@ handleMsg msg = do
 
     case msg of
         MIsAction m -> def $ handleAction m
-        MIsPlayerTurn m -> def $ handlePlayerTurn (m^.playerTurn)
-        MIsCard m -> def $ handleNewCards (m^.allCards)
-        MIsDealt m -> def $ handleMyCards (m^.playerCards)
-        MIsNewChips m -> def $ handleNewChips (m^.mapping)
-        MIsGameOver _ -> def handleGameOver
-        MIsPlayersRemoved m -> def $ handlePlayersRemoved (m^.removed)
-        MIsCardReveal m -> def $ handleCardsRevealed (m^.infos)
-        MIsInput m -> handleInputRequest (m^.imsg)
-        MIsBadInput _ -> def handleBadInput
+        MIsPlayerTurn (PlayerTurnMsg m) -> def $ handlePlayerTurn m
+        MIsCard (CardMsg m) -> def $ handleNewCards m
+        MIsDealt (DealtCardsMsg m) -> def $ handleMyCards m
+        MIsNewChips (NewChipsMsg m) -> def $ handleNewChips m
+        MIsGameOver -> def handleGameOver
+        MIsPlayersRemoved (PlayersRemovedMsg m) -> def $ handlePlayersRemoved m
+        MIsCardReveal (CardRevealMsg m) -> def $ handleCardsRevealed m
+        MIsInput (InputMsg m) -> handleInputRequest m
+        MIsBadInput -> def handleBadInput
         MIsInitialGame _ -> error "Unexpected initialGame in handleMsg!"
-        MIsGatherChips _ -> def handleGatherChips
-        MIsResetRound _ -> def handleResetRound
-        MIsNextState _ -> def handleNextState
-        MIsMinRaise m -> def $ handleMinRaise (m^.minRaise)
-        MIsTextMsg m -> def $ handleTextMsg (m^.textMsg)
+        MIsGatherChips -> def handleGatherChips
+        MIsResetRound -> def handleResetRound
+        MIsNextState -> def handleNextState
+        MIsMinRaise (MinRaiseMsg m) -> def $ handleMinRaise m
+        MIsTextMsg (TextMsg m) -> def $ handleTextMsg m
     where def f = f >> return Nothing
 
 handleAction :: ActionMsg a -> CGameStateT ()

@@ -39,11 +39,9 @@ import Lenses
 
 import Types 
     (Message(..), PlayerTurnMsg(..), ActionMsg(..), CardMsg(..),
-     DealtCardsMsg(..), NewChipsMsg(..), GameOverMsg(..),
-     PlayersRemovedMsg(..), CardRevealMsg(..), PlayerHandInfo(..),
-     InitialGameMsg(..), GameStateT, Action, Player, ClientGame, InputMsg(..),
-     BadInputMsg(..), GatherChipsMsg(..), ResetRoundMsg(..), MinRaiseMsg(..),
-     NextStateMsg(..), TextMsg(..))
+     DealtCardsMsg(..), NewChipsMsg(..), PlayersRemovedMsg(..), 
+     CardRevealMsg(..), PlayerHandInfo(..), InitialGameMsg(..), GameStateT, 
+     Action, Player, ClientGame, InputMsg(..), MinRaiseMsg(..), TextMsg(..))
 
 msgAll :: Message -> GameStateT ()
 msgAll msg = do
@@ -64,9 +62,7 @@ outputBadInput :: GameStateT ()
 outputBadInput = do
     p <- getCurrentPlayer
 
-    let msg = MIsBadInput BadInputMsg
-
-    msgP msg p
+    msgP MIsBadInput p
 
 outputInputRequest :: [Action Int] -> GameStateT ()
 outputInputRequest actions = do
@@ -156,7 +152,7 @@ outputNewChips pot2player = do
     msgAll . MIsTextMsg $ TextMsg humanMsg
 
 outputGameOver :: GameStateT ()
-outputGameOver = msgAll . MIsGameOver $ GameOverMsg
+outputGameOver = msgAll MIsGameOver
 
 outputPlayersRemoved :: Maybe [UUID] -> GameStateT ()
 outputPlayersRemoved maybeP = case maybeP of
@@ -179,13 +175,13 @@ outputHandValues = do
                                         (p^.cards)
 
 outputGatherChips :: GameStateT ()
-outputGatherChips = msgAll . MIsGatherChips $ GatherChipsMsg
+outputGatherChips = msgAll MIsGatherChips
 
 outputResetRound :: GameStateT ()
-outputResetRound = msgAll . MIsResetRound $ ResetRoundMsg
+outputResetRound = msgAll MIsResetRound
 
 outputUpdateMinRaise :: Int -> GameStateT ()
 outputUpdateMinRaise n = msgAll . MIsMinRaise $ MinRaiseMsg n
 
 outputNextState :: GameStateT ()
-outputNextState = msgAll . MIsNextState $ NextStateMsg
+outputNextState = msgAll MIsNextState
