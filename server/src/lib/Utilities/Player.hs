@@ -8,7 +8,7 @@ module Utilities.Player
     getCurrentPlayerPure,
     getCurrentPlayer,
     getPlayerByUUID,
-    victorID,
+    victor,
     nextPlayer,
     nextDealer,
     resetDealer,
@@ -70,12 +70,12 @@ getCurrentPlayer = do
 
     return $ s^.playerQueue.players ^?! _head
 
-victorID :: (Monad m) => GameState m UUID
-victorID = do
+victor :: (Monad m) => GameState m Player
+victor = do
     s <- get
 
     return $ headNote "in victorID!" 
-                      (filter (^.inPlay) (s^.playerQueue.players))^.uuid
+                      (filter (^.inPlay) (s^.playerQueue.players))
 
 -- this function resets the current player to the one left of the dealer
 -- imagine there are 6 players. the dealer is pointing at player 4, so left

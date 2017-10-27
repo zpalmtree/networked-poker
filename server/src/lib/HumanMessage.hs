@@ -1,7 +1,8 @@
 module HumanMessage
 (
     humanHandValues,
-    humanAction
+    humanAction,
+    humanNewChips
 )
 where
 
@@ -11,6 +12,7 @@ import Text.Printf (printf)
 import Data.Text (Text, pack)
 import Control.Lens ((^.))
 import Control.Monad.Trans.State (get)
+import Safe (headNote)
 
 import Utilities.Player (getCurrentPlayer)
 import Types (Player, GameStateT, Action(..))
@@ -52,3 +54,20 @@ humanAction a = do
 upperFirstLetter :: String -> String
 upperFirstLetter [] = []
 upperFirstLetter (x:xs) = toUpper x : xs
+
+humanNewChips :: [(Int, [Player])] -> [Text]
+humanNewChips = concatMap (map pack . potWinners)
+
+potWinners :: (Int, [Player]) -> [String]
+potWinners (pot', players')
+    | length players' == 1 = [singleWinner pot' 
+                             (headNote "in potWinners!" players')
+                             "won"]
+    | otherwise = multiWinners pot' players'
+
+singleWinner :: Int -> Player -> String -> String
+singleWinner n p verb = printf msg (upperFirstLetter $ p^.name) verb n 
+    where msg = "%s %s the pot of %d chips"
+
+multiWinners :: Int -> [Player] -> [String]
+multiWinners n = map (\x -> singleWinner n x "shared")

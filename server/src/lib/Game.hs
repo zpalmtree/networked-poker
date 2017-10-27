@@ -10,7 +10,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad (unless)
 import System.Log.Logger (debugM)
 
-import Types (Game, Pot, Stage(..), Cards(..), GameStateT)
+import Types (Game, Pot, Stage(..), Cards(..), GameStateT, Player)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
 import Showdown (distributePot, calculateHandValues)
 
@@ -19,12 +19,12 @@ import Utilities.Card
 
 import Utilities.Player 
     (nextPlayer, getCurrentPlayerPure, removeOutPlayers, numInPlayPure, 
-     victorID, numAllInPure, nextDealer, resetDealer)
+     victor, numAllInPure, nextDealer, resetDealer)
 
 import Lenses 
     (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet, allIn, pots, 
      stage, canReRaise, minimumRaise, bigBlindSize, handInfo, cardInfo, 
-     roundDone, roundNumber, playerQueue, players)
+     roundDone, roundNumber, playerQueue, players, pot)
 
 import Output
     (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved,
@@ -92,20 +92,20 @@ makeChoice s
     | inShowdown s = do
         lift $ debugM "Prog.makeChoice" "inShowdown"
 
-        showdown
+        winners <- showdown
         outputHandValues
-        outputNewChips
+        outputNewChips winners
 
     | onlyOnePlayerLeft s = do
         lift $ debugM "Prog.makeChoice" "onlyOnePlayerLeft"
 
-        winnerID <- victorID
+        winner <- victor
 
         updatePot
 
-        giveWinnings winnerID
+        pot' <- giveWinnings winner
 
-        outputNewChips
+        outputNewChips [(pot', [winner])]
 
     | maxOneNotAllIn s = do
         lift $ debugM "Prog.makeChoice" "maxOneNotAllIn"
@@ -140,17 +140,18 @@ makeChoice s
         nextState
         playRound
 
-showdown :: GameStateT ()
+showdown :: GameStateT [(Int, [Player])]
 showdown = do
     calculateHandValues
     s <- get
     getWinnersAndDistribute (s^.bets.pots)
 
-getWinnersAndDistribute :: [Pot] -> GameStateT ()
-getWinnersAndDistribute [] = return ()
+getWinnersAndDistribute :: [Pot] -> GameStateT [(Int, [Player])]
+getWinnersAndDistribute [] = return []
 getWinnersAndDistribute (p:ps) = do
-    distributePot p
-    getWinnersAndDistribute ps
+    winners <- distributePot p
+    moreWinners <- getWinnersAndDistribute ps
+    return $ (p^.pot, winners) : moreWinners
 
 nextState :: GameStateT ()
 nextState = do

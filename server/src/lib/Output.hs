@@ -31,7 +31,7 @@ import System.Log.Logger (infoM)
 import Text.Printf (printf)
 
 import Utilities.Player (getCurrentPlayer, getCurrentPlayerUUID)
-import HumanMessage (humanHandValues, humanAction)
+import HumanMessage (humanHandValues, humanAction, humanNewChips)
 
 import Lenses
     (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
@@ -143,14 +143,17 @@ outputPlayerCards = do
 
     where msg p = MIsDealt $ DealtCardsMsg (p^.cards)
 
-outputNewChips :: GameStateT ()
-outputNewChips = do
+outputNewChips :: [(Int, [Player])] -> GameStateT ()
+outputNewChips pot2player = do
     s <- get
 
     let mapping = zip (s^..playerQueue.players.traversed.uuid)
                       (s^..playerQueue.players.traversed.chips)
 
+        humanMsg = humanNewChips pot2player
+
     msgAll . MIsNewChips $ NewChipsMsg mapping
+    msgAll . MIsTextMsg $ TextMsg humanMsg
 
 outputGameOver :: GameStateT ()
 outputGameOver = msgAll . MIsGameOver $ GameOverMsg

@@ -274,8 +274,9 @@ goAllIn = do
     when (bet' > s^.bets.currentBet && raise' >= s^.bets.minimumRaise) $
         updateMinimumRaise raise'
 
-giveWinnings :: UUID -> GameStateT ()
-giveWinnings winnerUUID = do
+giveWinnings :: Player -> GameStateT Int
+giveWinnings winner = do
     winnings <- gatherChips
     playerQueue.players.traversed.filtered isWinner.chips += winnings
-    where isWinner p = p^.uuid == winnerUUID
+    return winnings
+    where isWinner p = p^.uuid == winner^.uuid
