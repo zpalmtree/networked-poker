@@ -9,7 +9,6 @@ import Control.Lens
 import Data.Maybe (fromJust)
 import Data.List (sortBy)
 import Safe (headNote)
-import Data.UUID.Types (UUID)
 import Control.Monad.Trans.State (get)
 import Control.Monad (when)
 
@@ -62,7 +61,7 @@ sortHandValue p1 p2 = ordHand hand1 hand2
     where hand1 = fromJust $ p1^.handInfo
           hand2 = fromJust $ p2^.handInfo
 
-distributePot :: Pot -> GameStateT [UUID]
+distributePot :: Pot -> GameStateT [Player]
 distributePot sidePot = do
     s <- get
 
@@ -83,4 +82,4 @@ distributePot sidePot = do
 
         when (p^.uuid == spareID) $ chips += spareChips
 
-    return $ winners^..traversed.uuid
+    return winners
