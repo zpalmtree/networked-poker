@@ -40,13 +40,14 @@ humanAction a = do
 
             Fold -> printf "%s folded" $ upperFirstLetter (p^.name)
             Check -> printf "%s checked" $ upperFirstLetter (p^.name)
-            Call -> printf "%s called a bet of %d" (upperFirstLetter (p^.name))
-                                                   (s^.bets.currentBet)
+            Call -> printf "%s called a bet of %d chips" 
+                           (upperFirstLetter (p^.name))
+                           (s^.bets.currentBet)
 
-            Raise n -> printf "%s raised the bet from %d to %d"
+            Raise n -> printf "%s raised the bet from %d chips to %d chips"
                             (upperFirstLetter (p^.name)) (s^.bets.currentBet) n
 
-            AllIn -> printf "%s went all in for a total bet of %d"
+            AllIn -> printf "%s went all in for a total bet of %d chips"
                             (upperFirstLetter (p^.name)) (p^.bet + p^.chips)
                                                         
     return [pack msg]

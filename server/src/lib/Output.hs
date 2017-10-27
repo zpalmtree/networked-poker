@@ -148,8 +148,8 @@ outputNewChips pot2player = do
 
         humanMsg = humanNewChips pot2player
 
-    msgAll . MIsNewChips $ NewChipsMsg mapping
     msgAll . MIsTextMsg $ TextMsg humanMsg
+    msgAll . MIsNewChips $ NewChipsMsg mapping
 
 outputGameOver :: GameStateT ()
 outputGameOver = msgAll MIsGameOver
@@ -167,8 +167,8 @@ outputHandValues = do
         details = map mkHandInfo inPlayers
         humanMsg = humanHandValues inPlayers
 
-    msgAll . MIsCardReveal $ CardRevealMsg details
     msgAll . MIsTextMsg $ TextMsg humanMsg
+    msgAll . MIsCardReveal $ CardRevealMsg details
 
     where mkHandInfo p = PlayerHandInfo (p^.uuid) 
                                         (fromJust (p^.handInfo)^.handValue)
