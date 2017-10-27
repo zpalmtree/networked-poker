@@ -21,17 +21,12 @@ module Types
     CardMsg(..),
     DealtCardsMsg(..),
     NewChipsMsg(..),
-    GameOverMsg(..),
     PlayersRemovedMsg(..),
     CardRevealMsg(..),
     PlayerHandInfo(..),
     InitialGameMsg(..),
     InputMsg(..),
-    BadInputMsg(..),
-    GatherChipsMsg(..),
-    ResetRoundMsg(..),
     MinRaiseMsg(..),
-    NextStateMsg(..),
     TextMsg(..),
     ClientGame(..),
     CPlayer(..),
@@ -209,72 +204,35 @@ data Message = MIsAction (ActionMsg Int)
              | MIsCard CardMsg
              | MIsDealt DealtCardsMsg
              | MIsNewChips NewChipsMsg
-             | MIsGameOver GameOverMsg
+             | MIsGameOver
              | MIsPlayersRemoved PlayersRemovedMsg
              | MIsCardReveal CardRevealMsg
              | MIsInitialGame InitialGameMsg
              | MIsInput InputMsg
-             | MIsBadInput BadInputMsg
-             | MIsGatherChips GatherChipsMsg
-             | MIsResetRound ResetRoundMsg
+             | MIsBadInput
+             | MIsGatherChips
+             | MIsResetRound
              | MIsMinRaise MinRaiseMsg
-             | MIsNextState NextStateMsg
+             | MIsNextState
              | MIsTextMsg TextMsg
              deriving (Generic, Show)
 
-data GameOverMsg = GameOverMsg deriving (Generic, Show)
-data BadInputMsg = BadInputMsg deriving (Generic, Show)
-data GatherChipsMsg = GatherChipsMsg deriving (Generic, Show)
-data ResetRoundMsg = ResetRoundMsg deriving (Generic, Show)
-data NextStateMsg = NextStateMsg deriving (Generic, Show)
-
 -- NEWTYPES
 
-newtype CardMsg = CardMsg {
-    _allCards :: [Card]
-} deriving (Generic, Show)
-
-newtype PlayerTurnMsg = PlayerTurnMsg {
-    _playerTurn :: UUID
-} deriving (Generic, Show)
-
-newtype DealtCardsMsg = DealtCardsMsg {
-    _playerCards :: [Card]
-} deriving (Generic, Show)
-
-newtype NewChipsMsg = NewChipsMsg {
-    _mapping :: [(UUID, Int)]
-} deriving (Generic, Show)
-
-newtype PlayersRemovedMsg = PlayersRemovedMsg {
-    _removed :: [UUID]
-} deriving (Generic, Show)
-
-newtype CardRevealMsg = CardRevealMsg {
-    _infos :: [PlayerHandInfo]
-} deriving (Generic, Show)
-
-newtype InitialGameMsg = InitialGameMsg {
-    _clientGame :: ClientGame
-} deriving (Generic, Show)
-
--- a list of valid actions client can perform
-newtype InputMsg = InputMsg {
-    _imsg :: [Action Int]
-} deriving (Generic, Show)
-
-newtype MinRaiseMsg = MinRaiseMsg {
-    _minRaise :: Int
-} deriving (Generic, Show)
-
-newtype TextMsg = TextMsg {
-    _textMsg :: [Text]
-} deriving (Generic, Show)
+newtype CardMsg = CardMsg [Card] deriving (Generic, Show)
+newtype PlayerTurnMsg = PlayerTurnMsg UUID deriving (Generic, Show)
+newtype DealtCardsMsg = DealtCardsMsg [Card] deriving (Generic, Show)
+newtype NewChipsMsg = NewChipsMsg [(UUID, Int)] deriving (Generic, Show)
+newtype PlayersRemovedMsg = PlayersRemovedMsg [UUID] deriving (Generic, Show)
+newtype CardRevealMsg = CardRevealMsg [PlayerHandInfo] deriving (Generic, Show)
+newtype InitialGameMsg = InitialGameMsg ClientGame deriving (Generic, Show)
+newtype InputMsg = InputMsg [Action Int] deriving (Generic, Show)
+newtype MinRaiseMsg = MinRaiseMsg Int deriving (Generic, Show)
+newtype TextMsg = TextMsg [Text] deriving (Generic, Show)
 
 -- TYPES
 
 type GameStateT a = StateT Game IO a
-
 type GameState m a = StateT Game m a
 
 -- INSTANCES
@@ -283,17 +241,12 @@ instance Binary PlayerTurnMsg
 instance Binary CardMsg
 instance Binary DealtCardsMsg
 instance Binary NewChipsMsg
-instance Binary GameOverMsg
 instance Binary PlayersRemovedMsg
 instance Binary CardRevealMsg
 instance Binary PlayerHandInfo
 instance Binary InitialGameMsg
 instance Binary InputMsg
-instance Binary BadInputMsg
-instance Binary GatherChipsMsg
-instance Binary ResetRoundMsg
 instance Binary MinRaiseMsg
-instance Binary NextStateMsg
 instance Binary TextMsg
 instance Binary Pot
 instance Binary Card

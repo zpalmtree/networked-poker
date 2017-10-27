@@ -11,8 +11,7 @@ where
 import System.Random (getStdRandom, randomR)
 import Data.Coerce (coerce)
 
-import Types (Card)
-import Utilities.Card (fullDeck)
+import Types (Card(..), Value(..), Suit(..))
 
 -- These functions don't check that they aren't passed empty lists for
 -- demonstration simplicity
@@ -22,6 +21,10 @@ newtype Deck = Deck [Card]
 class Drawable a where
     initDeck :: IO a
     draw :: a -> IO (a, Card)
+
+fullDeck :: [Card]
+fullDeck = [Card value suit | value <- [Two .. Ace],
+                              suit  <- [Heart .. Diamond]]
 
 newtype RandomIndex = RandomIndex Deck
 
