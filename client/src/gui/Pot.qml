@@ -8,8 +8,8 @@ Item
     anchors.verticalCenterOffset: (-0.5 * Constants.bottomOffset) +
                                   (0.5 * Constants.topOffset)
 
-    anchors.horizontalCenterOffset: -20 + Constants.leftOffset 
-                                    - Constants.rightOffset
+    anchors.horizontalCenterOffset: -20 + (0.5 * Constants.leftOffset)
+                                        - (0.5 * Constants.rightOffset)
 
     Chip
     {
