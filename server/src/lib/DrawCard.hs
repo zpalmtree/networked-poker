@@ -8,45 +8,37 @@ module DrawCard
 where
 
 import System.Random (getStdRandom, randomR)
+import Data.Coerce (coerce)
 
 import Types (Card)
 import Utilities.Card (fullDeck)
 
-newtype Deck = Deck { getCard :: [Card] }
+newtype Deck = Deck [Card]
 
 class Drawable a where
     initDeck :: a
     draw :: a -> IO (a, Card)
-    unwrap :: a -> [Card]
-    wrap :: [Card] -> a
 
-newtype StandardDraw = StandardDraw { getStandardDraw :: Deck }
+newtype StandardDraw = StandardDraw Deck
 
 instance Drawable StandardDraw where
-    initDeck = wrap fullDeck
+    initDeck = coerce fullDeck
 
     draw x = do
-        let cards = unwrap x
+        let cards = coerce x
 
         randomNum <- getStdRandom $ randomR (0, length cards- 1)
 
         let (beginning, card:end) = splitAt randomNum cards
 
-        return (wrap $ beginning ++ end, card)
+        return (coerce $ beginning ++ end, card)
 
-    unwrap = getCard . getStandardDraw
-
-    wrap = StandardDraw . Deck
-
-newtype ShuffleDraw = ShuffleDraw { getShuffleDraw :: Deck }
+newtype ShuffleDraw = ShuffleDraw Deck
 
 instance Drawable ShuffleDraw where
-    initDeck = wrap $ shuffle fullDeck
-        where shuffle = undefined
+    initDeck = coerce $ shuffle fullDeck
+        where shuffle :: a -> a
+              shuffle = undefined
 
-    draw x = return (wrap deck, card)
-        where (card:deck) = unwrap x
-
-    unwrap = getCard . getShuffleDraw
-
-    wrap = ShuffleDraw . Deck
+    draw x = return (coerce deck, card)
+        where (card:deck) = coerce x
