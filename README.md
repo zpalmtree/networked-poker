@@ -3,7 +3,9 @@
 
 A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against.
 
-Working on the client GUI, then the networking.
+GUI is pretty much finished, next I'll be working on the AI. I might look into animations first, and customisable colours.
+
+![poker-client](https://zacharypalmer.co.uk/images/poker-client.png)
 
 ## Installation
 
