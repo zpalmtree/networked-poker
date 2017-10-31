@@ -58,6 +58,10 @@ Or, run
 
 `--fullgame` On the server launches the game with 6 players instead of 2.
 
+`--chooseshuffle` On the server launches a GUI to allow you to choose which shuffle to use, at any point.
+
+However, the new shuffle only takes effect at the end of the round.
+
 ## Thanks
 
 #### Cards
