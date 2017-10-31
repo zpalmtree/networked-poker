@@ -12,11 +12,14 @@ import Control.Monad (void, forever, when)
 import Text.Printf (printf)
 import Data.Binary (decodeOrFail)
 import Data.Binary.Get (ByteOffset)
-import Control.Monad.Trans.State (evalStateT)
+import Control.Monad.Trans.State (evalStateT, get)
 import Control.Monad.Trans.Class (lift)
 import System.IO.Error (tryIOError)
 import System.Environment (getArgs)
 import Data.Either (isLeft)
+import Data.IORef (IORef, writeIORef)
+import Control.Lens ((^.))
+import Data.Text (Text, unpack)
 
 import System.Log.Logger 
     (Priority(..), updateGlobalLogger, rootLoggerName, setLevel, infoM,
@@ -27,12 +30,19 @@ import Network.Socket
      addrSocketType, bind, addrAddress, listen, accept, isReadable,
      addrProtocol, isSupportedSocketOption, setSocketOption)
 
+import Graphics.QML 
+    (ObjRef, initialDocument, contextObject, newClass, defMethod', newObject,
+     defaultEngineConfig, fileDocument, anyObjRef, runEngineLoop)
+
 import Utilities.Player (mkNewPlayer)
 import Utilities.Card (dealCards)
 import Utilities.Types (mkCGame, mkGame)
 import Game (gameLoop)
 import Output (outputGameOver, outputInitialGame)
-import Types (GameStateT, Player(..))
+import Types (GameStateT, Player(..), ShuffleType(..))
+import Lenses (nextRoundShuffleType)
+
+import Paths_server (getDataFileName)
 
 main :: IO ()
 main = do
@@ -141,7 +151,7 @@ launchNewGame :: [Player] -> MVar [Player] -> IO ()
 launchNewGame players' playerChan = do
     infoM "Prog.launchNewGame" "Making new game"
 
-    let game' = mkGame players' playerChan
+    game' <- mkGame players' playerChan
 
     void . forkIO $ evalStateT play game'
 
@@ -155,6 +165,27 @@ setup :: GameStateT ()
 setup = do
     cgame <- mkCGame
 
+    args <- lift getArgs
+
+    s <- get
+
+    lift . when ("--chooseshuffle" `elem` args) $ do
+
+        rootClass <- newClass [
+            defMethod' "changeShuffle" $ 
+                changeShuffle (s^.nextRoundShuffleType)]
+
+        ctx <- newObject rootClass ()
+
+        gui <- getDataFileName "src/gui/Main.qml"
+
+        let config = defaultEngineConfig {
+            initialDocument = fileDocument gui,
+            contextObject = Just $ anyObjRef ctx
+        }
+
+        void . forkIO $ runEngineLoop config
+
     lift $ infoM "Prog.setup" "Sending initial game to clients..."
 
     outputInitialGame cgame
@@ -164,3 +195,10 @@ cleanup :: GameStateT ()
 cleanup = do
     outputGameOver
     lift $ infoM "Prog.cleanup" "Game finished"
+
+changeShuffle :: IORef ShuffleType -> ObjRef () -> Text -> IO ()
+changeShuffle shuffleTypeIORef _ selectedItem = case unpack selectedItem of
+    "RandomIndex" -> set RandomIndex
+    "KnuthShuffle" -> set Knuth
+    _ -> error "Unexpected shuffle type in combobox!"
+    where set = writeIORef shuffleTypeIORef

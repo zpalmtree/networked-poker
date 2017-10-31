@@ -6,6 +6,8 @@ category: Network
 author: ZedPea
 maintainer: zp+github@zacharypalmer.co.uk
 license: BSD3
+data-files:
+- src/gui/*.qml
 dependencies:
 - base >=4.9 && <=4.11
 - lens
@@ -14,21 +16,17 @@ dependencies:
 - safe
 - uuid-types
 - hslogger
+- network
+- types
+- text
+- bytestring
+- binary
 library:
     source-dirs: src/lib
-    dependencies:
-    - network
-    - bytestring
-    - binary
-    - types
-    - text
 executables:
     server:
         main: Main.hs
         source-dirs: src/exe
         dependencies:
         - server
-        - types
-        - network
-        - bytestring
-        - binary
+        - hsqml

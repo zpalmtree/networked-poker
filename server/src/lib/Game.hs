@@ -9,13 +9,15 @@ import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (unless)
 import System.Log.Logger (debugM)
+import Data.IORef (readIORef)
 
-import Types (Game, Pot, Stage(..), Cards(..), GameStateT, Player)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
 import Showdown (distributePot, calculateHandValues)
+import Utilities.Card (dealCards, revealFlop, revealTurn, revealRiver)
+import DrawCard (initDeckKnuth, initDeckRandomIndex)
 
-import Utilities.Card 
-    (dealCards, revealFlop, revealTurn, revealRiver, fullDeck)
+import Types 
+    (Game, Pot, Stage(..), GameStateT, Player, ShuffleType(..))
 
 import Utilities.Player 
     (nextPlayer, getCurrentPlayerPure, removeOutPlayers, numInPlayPure, 
@@ -23,8 +25,9 @@ import Utilities.Player
 
 import Lenses 
     (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet, allIn, pots, 
-     stage, canReRaise, minimumRaise, bigBlindSize, handInfo, cardInfo, 
-     roundDone, roundNumber, playerQueue, players, pot)
+     stage, canReRaise, minimumRaise, bigBlindSize, handInfo, shuffleType,
+     roundDone, roundNumber, playerQueue, players, pot, nextRoundShuffleType,
+     cardInfo, tableCards)
 
 import Output
     (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved,
@@ -209,7 +212,19 @@ nextRound = do
             minimumRaise .= s^.bets.bigBlindSize
 
         stage .= PreFlop
-        cardInfo .= Cards [] fullDeck
+
+        newShuffle <- lift $ readIORef (s^.nextRoundShuffleType)
+
+        shuffleType .= newShuffle
+
+        cardInfo.tableCards .= []
+
+        s' <- get
+
+        case s'^.shuffleType of
+            Knuth -> initDeckKnuth
+            RandomIndex -> initDeckRandomIndex
+
         roundDone .= False
         roundNumber += 1
 

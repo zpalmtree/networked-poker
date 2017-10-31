@@ -8,11 +8,13 @@ where
 import Control.Monad.Trans.State (get)
 import Control.Concurrent.MVar (MVar)
 import Control.Lens ((^.))
+import Data.IORef (newIORef)
+import Utilities.Card (fullDeck)
 
 import Types 
-    (GameStateT, ClientGame(..), Game(..), PlayerQueue(..),
-     Cards(..), CBets(..), Stage(..), Player, Card(..), Value(..), Suit(..),
-     CPlayer(..), Bets(..))
+    (GameStateT, ClientGame(..), Game(..), PlayerQueue(..), Cards(..), 
+     CBets(..), Stage(..), Player, CPlayer(..), Bets(..), ShuffleType(..),
+     Deck(..), RandomIndexDeck(..))
 
 import Lenses 
     (stage, tableCards, bets, playerQueue, players, dealer, name, uuid, chips,
@@ -43,14 +45,16 @@ mkCGame = do
 
     return cgame
 
-mkGame :: [Player] -> MVar [Player] -> Game
-mkGame players' playerChan = game'
+mkGame :: [Player] -> MVar [Player] -> IO Game
+mkGame players' playerChan = do
+    shuffleType' <- newIORef RandomIndex
+
+    let cards' = Cards [] (IsRandomIndex $ RandomIndexDeck fullDeck)
+
+    return $ Game playerChan pq PreFlop cards' False bets' False 1 
+             RandomIndex shuffleType'
+
     where pq = PlayerQueue players' (length players' - 1)
-          cards' = Cards [] fullDeck
           bets' = Bets [] 0 smallBlind bigBlind bigBlind
           smallBlind = 10
           bigBlind = smallBlind * 2
-          game' = Game playerChan pq PreFlop cards' False bets' False 1
-          -- redefine to prevent import loop
-          fullDeck = [Card value suit | value <- [Two .. Ace],
-                                        suit  <- [Heart .. Diamond]]

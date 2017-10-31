@@ -12,19 +12,19 @@ module Utilities.Card
 )
 where
 
-import System.Random (getStdRandom, randomR)
 import Control.Lens ((^.), (.=), (%=), (<~), ix)
 import Control.Monad.Trans.State (get)
-import Control.Monad.Trans.Class (lift)
-import Control.Monad (when, replicateM_, replicateM)
-import Safe (at)
+import Control.Monad (replicateM_, replicateM)
 
-import Types (Card(..), Value(..), Suit(..), Stage(..), GameStateT)
 import Utilities.Player (numPlayers)
 import Output (outputPlayerCards)
+import DrawCard (drawKnuth, drawRandomIndex)
+
+import Types 
+    (Card(..), Value(..), Suit(..), Stage(..), GameStateT, ShuffleType(..))
 
 import Lenses 
-    (cards, cardInfo, deck, tableCards, stage, playerQueue, players)
+    (cards, cardInfo, tableCards, stage, playerQueue, players, shuffleType)
 
 dealCards :: GameStateT ()
 dealCards = do
@@ -44,19 +44,14 @@ getRandomCard :: GameStateT Card
 getRandomCard = do
     s <- get
 
-    let deck' = s^.cardInfo.deck
-
-    when (null deck') $ error "Can't take a card from an empty deck!"
-
-    cardNum <- lift . getStdRandom $ randomR (0, length deck' - 1)
-    deleteNth cardNum
-
-    return $ deck' `at` cardNum
+    case s^.shuffleType of
+        Knuth -> drawKnuth
+        RandomIndex -> drawRandomIndex
 
 drawCard :: GameStateT ()
 drawCard = do
     card <- getRandomCard
-    cardInfo.tableCards %= (\cards' -> cards' ++ [card])
+    cardInfo.tableCards %= (++ [card])
 
 revealFlop :: GameStateT ()
 revealFlop = do
@@ -72,12 +67,6 @@ revealRiver :: GameStateT ()
 revealRiver = do
     drawCard
     stage .= River
-
-deleteNth :: Int -> GameStateT ()
-deleteNth n = do
-    when (n < 0) $ error "Can't remove negative deck index!"
-
-    cardInfo.deck %= (\xs -> take n xs ++ drop (n+1) xs)
 
 fullDeck :: [Card]
 fullDeck = [Card value suit | value <- [Two .. Ace],

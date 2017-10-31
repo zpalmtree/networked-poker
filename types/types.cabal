@@ -21,6 +21,7 @@ library
     , uuid-types
     , lens
     , text
+    , random
   exposed-modules:
       Lenses
       Types

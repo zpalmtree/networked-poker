@@ -1,56 +1,42 @@
 module DrawCard
 (
-    Drawable,
-    RandomIndex(),
-    KnuthShuffle(),
-    initDeck,
-    draw
+    initDeckKnuth,
+    initDeckRandomIndex,
+    drawKnuth,
+    drawRandomIndex
 )
 where
 
 import System.Random (getStdRandom, randomR)
-import Data.Coerce (coerce)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.State (get)
+import Control.Lens ((^.), (.=))
 
-import Types (Card(..), Value(..), Suit(..))
+import Types (Card(..), Suit(..), Value(..), KnuthDeck(..), 
+              RandomIndexDeck(..), Deck(..), GameStateT)
 
--- These functions don't check that they aren't passed empty lists for
--- demonstration simplicity
+import Lenses (cardInfo, deck)
 
-newtype Deck = Deck [Card]
+initDeckKnuth :: GameStateT ()
+initDeckKnuth = do
+    deck' <- lift $ shuffle (length fullDeck -1) fullDeck
 
-class Drawable a where
-    initDeck :: IO a
-    draw :: a -> IO (a, Card)
+    cardInfo.deck .= (IsKnuth $ KnuthDeck deck')
 
-fullDeck :: [Card]
-fullDeck = [Card value suit | value <- [Two .. Ace],
-                              suit  <- [Heart .. Diamond]]
+    where shuffle 0 xs = return xs
+          shuffle i xs = do
+            j <- getStdRandom $ randomR (0, i)
+            shuffle (i-1) (swap i j xs)
 
-newtype RandomIndex = RandomIndex Deck
+drawKnuth :: GameStateT Card
+drawKnuth = do
+    s <- get
 
-instance Drawable RandomIndex where
-    initDeck = return $ coerce fullDeck
+    let (IsKnuth (KnuthDeck (card:deck'))) = s^.cardInfo.deck
 
-    draw x = do
-        let cards = coerce x
+    cardInfo.deck .= (IsKnuth $ KnuthDeck deck')
 
-        randomNum <- getStdRandom $ randomR (0, length cards- 1)
-
-        let (beginning, card:end) = splitAt randomNum cards
-
-        return (coerce $ beginning ++ end, card)
-
-newtype KnuthShuffle = KnuthShuffle Deck
-
-instance Drawable KnuthShuffle where
-    initDeck = coerce $ shuffle (length fullDeck - 1) fullDeck
-        where shuffle 0 xs = return xs
-              shuffle i xs = do
-                j <- getStdRandom $ randomR (0, i)
-                shuffle (i-1) (swap i j xs)
-
-    draw x = return (coerce deck, card)
-        where (card:deck) = coerce x
+    return card
 
 -- adapted from https://stackoverflow.com/a/30551130/8737306
 swap :: Int -> Int -> [a] -> [a]
@@ -62,3 +48,25 @@ swap i j xs
                       middle = take (i - j - 1) (drop (j + 1) xs)
                       right = drop (i + 1) xs
                   in  left ++ [elemI] ++ middle ++ [elemJ] ++ right
+
+initDeckRandomIndex :: GameStateT ()
+initDeckRandomIndex = cardInfo.deck .= 
+    (IsRandomIndex $ RandomIndexDeck fullDeck)
+
+drawRandomIndex :: GameStateT Card
+drawRandomIndex = do
+    s <- get
+
+    let (IsRandomIndex (RandomIndexDeck cards)) = s^.cardInfo.deck
+
+    randomNum <- lift . getStdRandom $ randomR (0, length cards- 1)
+
+    let (beginning, card:end) = splitAt randomNum cards
+
+    cardInfo.deck .= (IsRandomIndex . RandomIndexDeck $ beginning ++ end)
+
+    return card
+
+fullDeck :: [Card]
+fullDeck = [Card value suit | value <- [Two .. Ace],
+                              suit  <- [Heart .. Diamond]]

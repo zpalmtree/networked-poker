@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric, ExistentialQuantification #-}
 
 module Types
 (
@@ -31,6 +31,10 @@ module Types
     ClientGame(..),
     CPlayer(..),
     CBets(..),
+    ShuffleType(..),
+    Deck(..),
+    KnuthDeck(..),
+    RandomIndexDeck(..),
     GameStateT,
     GameState
 )
@@ -44,6 +48,7 @@ import Data.Binary (Binary)
 import GHC.Generics (Generic)
 import Data.Text (Text)
 import Data.Char (toLower)
+import Data.IORef (IORef)
 
 import Text.Printf 
     (PrintfArg(..), printf, fmtChar, fmtPrecision, vFmt, formatString,
@@ -59,7 +64,10 @@ data Game = Game {
     _roundDone :: Bool,
     _bets :: Bets,
     _gameFinished :: Bool,
-    _roundNumber :: Int
+    _roundNumber :: Int,
+    _shuffleType :: ShuffleType,
+    -- can't change shuffle type mid round
+    _nextRoundShuffleType :: IORef ShuffleType
 }
 
 data Player = Player {
@@ -92,8 +100,8 @@ data CPlayer = CPlayer {
 
 data Cards = Cards {
     _tableCards :: [Card],
-    _deck :: [Card]
-} deriving (Eq)
+    _deck :: Deck
+}
 
 data Bets = Bets {
     _pots :: [Pot],
@@ -216,6 +224,15 @@ data Message = MIsAction (ActionMsg Int)
              | MIsNextState
              | MIsTextMsg TextMsg
              deriving (Generic, Show)
+
+data ShuffleType = RandomIndex
+                 | Knuth
+
+data Deck = IsKnuth KnuthDeck
+          | IsRandomIndex RandomIndexDeck
+
+newtype KnuthDeck = KnuthDeck [Card]
+newtype RandomIndexDeck = RandomIndexDeck [Card]
 
 -- NEWTYPES
 
