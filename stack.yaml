@@ -11,6 +11,7 @@ resolver: lts-9.9
 install-ghc: true
 ghc-build: nopie
 ghc-options:
-    $locals: -O0
-    client: -threaded
-    server: -threaded
+    ai: -O0
+    types: -O0
+    client: "-O0 -threaded"
+    server: "-O0 -threaded"
