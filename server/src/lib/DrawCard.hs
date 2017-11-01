@@ -11,6 +11,7 @@ import System.Random (getStdRandom, randomR)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State (get)
 import Control.Lens ((^.), (.=))
+import System.Log.Logger (infoM)
 
 import Types (Card(..), Suit(..), Value(..), KnuthDeck(..), 
               RandomIndexDeck(..), Deck(..), GameStateT)
@@ -19,6 +20,8 @@ import Lenses (cardInfo, deck)
 
 initDeckKnuth :: GameStateT ()
 initDeckKnuth = do
+    lift $ infoM "Prog.initDeckKnuth" "Using knuth shuffle"
+
     deck' <- lift $ shuffle (length fullDeck -1) fullDeck
 
     cardInfo.deck .= (IsKnuth $ KnuthDeck deck')
@@ -50,8 +53,10 @@ swap i j xs
                   in  left ++ [elemI] ++ middle ++ [elemJ] ++ right
 
 initDeckRandomIndex :: GameStateT ()
-initDeckRandomIndex = cardInfo.deck .= 
-    (IsRandomIndex $ RandomIndexDeck fullDeck)
+initDeckRandomIndex = do
+    lift $ infoM "Prog.initDeckKnuth" "Using randomIndex shuffle"
+
+    cardInfo.deck .= (IsRandomIndex $ RandomIndexDeck fullDeck)
 
 drawRandomIndex :: GameStateT Card
 drawRandomIndex = do

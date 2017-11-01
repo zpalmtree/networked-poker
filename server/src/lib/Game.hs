@@ -138,7 +138,7 @@ makeChoice s
 
     --already bet or all in
     | otherwise = do
-        lift $ debugM "Prog.makeChoice" "default"
+        lift $ debugM "Prog.makeChoice" "defaultChoice"
 
         nextState
         playRound

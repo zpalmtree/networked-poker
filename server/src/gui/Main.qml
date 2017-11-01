@@ -41,7 +41,8 @@ Window
 
         onActivated:
         {
-            changeShuffle(currentText)
+            var item = textAt(index);
+            changeShuffle(item);
         }
     }
 }
