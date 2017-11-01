@@ -14,7 +14,8 @@ module Output
     outputGatherChips,
     outputResetRound,
     outputUpdateMinRaise,
-    outputNextState
+    outputNextState,
+    outputNewShuffle
 )
 where
 
@@ -31,7 +32,9 @@ import System.Log.Logger (infoM)
 import Text.Printf (printf)
 
 import Utilities.Player (getCurrentPlayer, getCurrentPlayerUUID)
-import HumanMessage (humanHandValues, humanAction, humanNewChips)
+
+import HumanMessage 
+    (humanHandValues, humanAction, humanNewChips, humanNewShuffle)
 
 import Lenses
     (socket, uuid, playerQueue, players, cardInfo, tableCards, cards, inPlay,
@@ -185,3 +188,8 @@ outputUpdateMinRaise n = msgAll . MIsMinRaise $ MinRaiseMsg n
 
 outputNextState :: GameStateT ()
 outputNextState = msgAll MIsNextState
+
+outputNewShuffle :: GameStateT ()
+outputNewShuffle = do
+    humanMsg <- humanNewShuffle
+    msgAll . MIsTextMsg $ TextMsg humanMsg

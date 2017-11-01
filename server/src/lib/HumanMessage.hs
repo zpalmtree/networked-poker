@@ -2,7 +2,8 @@ module HumanMessage
 (
     humanHandValues,
     humanAction,
-    humanNewChips
+    humanNewChips,
+    humanNewShuffle
 )
 where
 
@@ -16,7 +17,9 @@ import Safe (headNote)
 
 import Utilities.Player (getCurrentPlayer)
 import Types (Player, GameStateT, Action(..))
-import Lenses (handInfo, handValue, name, bets, currentBet, bet, chips)
+
+import Lenses 
+    (handInfo, handValue, name, bets, currentBet, bet, chips, shuffleType)
 
 humanHandValues :: [Player] -> [Text]
 humanHandValues = map humanHandValues'
@@ -72,3 +75,8 @@ singleWinner n p verb = printf msg (upperFirstLetter $ p^.name) verb n
 
 multiWinners :: Int -> [Player] -> [String]
 multiWinners n = map (\x -> singleWinner n x "shared")
+
+humanNewShuffle :: GameStateT [Text]
+humanNewShuffle = do
+    s <- get
+    return $ [pack $ "Switched to using " ++ show (s^.shuffleType) ++ " shuffle"]

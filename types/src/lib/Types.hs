@@ -226,7 +226,8 @@ data Message = MIsAction (ActionMsg Int)
              deriving (Generic, Show)
 
 data ShuffleType = RandomIndex
-                 | Knuth
+                 | Knuth 
+                 deriving (Show, Eq)
 
 data Deck = IsKnuth KnuthDeck
           | IsRandomIndex RandomIndexDeck

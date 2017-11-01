@@ -7,7 +7,7 @@ where
 import Control.Lens ((^.), (.=), (+=), traversed, zoom)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad (unless)
+import Control.Monad (unless, when)
 import System.Log.Logger (debugM)
 import Data.IORef (readIORef)
 
@@ -31,7 +31,7 @@ import Lenses
 
 import Output
     (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved,
-     outputResetRound, outputNextState)
+     outputResetRound, outputNextState, outputNewShuffle)
 
 gameLoop :: GameStateT ()
 gameLoop = do
@@ -215,15 +215,17 @@ nextRound = do
 
         newShuffle <- lift $ readIORef (s^.nextRoundShuffleType)
 
-        shuffleType .= newShuffle
-
-        cardInfo.tableCards .= []
+        when (newShuffle /= s^.shuffleType) $ do
+            shuffleType .= newShuffle
+            outputNewShuffle
 
         s' <- get
 
         case s'^.shuffleType of
             Knuth -> initDeckKnuth
             RandomIndex -> initDeckRandomIndex
+
+        cardInfo.tableCards .= []
 
         roundDone .= False
         roundNumber += 1
