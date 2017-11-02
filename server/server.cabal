@@ -55,7 +55,7 @@ library
 executable server
   main-is: Main.hs
   hs-source-dirs:
-      src/exe
+      src/exe/server
   build-depends:
       base >=4.9 && <=4.11
     , lens
@@ -71,4 +71,25 @@ executable server
     , binary
     , server
     , hsqml
+  default-language: Haskell2010
+
+executable shuffletest
+  main-is: Main.hs
+  hs-source-dirs:
+      src/exe/shuffletest
+  build-depends:
+      base >=4.9 && <=4.11
+    , lens
+    , random
+    , transformers
+    , safe
+    , uuid-types
+    , hslogger
+    , network
+    , types
+    , text
+    , bytestring
+    , binary
+    , server
+    , containers
   default-language: Haskell2010

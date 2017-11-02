@@ -26,7 +26,13 @@ library:
 executables:
     server:
         main: Main.hs
-        source-dirs: src/exe
+        source-dirs: src/exe/server
         dependencies:
         - server
         - hsqml
+    shuffletest:
+        main: Main.hs
+        source-dirs: src/exe/shuffletest
+        dependencies:
+        - server
+        - containers

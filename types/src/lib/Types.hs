@@ -122,7 +122,7 @@ data CBets = CBets {
 data Card = Card {
     _value :: Value,
     _suit :: Suit
-} deriving (Eq, Generic)
+} deriving (Eq, Generic, Ord)
 
 data HandInfo = HandInfo {
     _handValue :: Hand Value Value,
@@ -170,7 +170,7 @@ data Suit = Heart
           | Spade 
           | Club 
           | Diamond 
-          deriving (Bounded, Enum, Eq, Generic, Show)
+          deriving (Bounded, Enum, Eq, Generic, Show, Ord)
 
 data Value = Two 
            | Three 
