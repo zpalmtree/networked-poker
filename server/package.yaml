@@ -36,3 +36,6 @@ executables:
         dependencies:
         - server
         - containers
+        - hsqml
+        - Chart
+        - Chart-cairo

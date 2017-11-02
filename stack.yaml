@@ -7,7 +7,7 @@ packages:
 - client
 - server
 - types
-resolver: lts-9.9
+resolver: lts-9.11
 install-ghc: true
 ghc-build: nopie
 ghc-options:

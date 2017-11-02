@@ -177,7 +177,7 @@ setup = do
 
         ctx <- newObject rootClass ()
 
-        gui <- getDataFileName "src/gui/Main.qml"
+        gui <- getDataFileName "src/gui/ShufflePicker.qml"
 
         let config = defaultEngineConfig {
             initialDocument = fileDocument gui,
