@@ -1,5 +1,5 @@
 import QtQuick.Window 2.2
-import QtQuick.Controls 1.4
+import QtQuick.Controls 2.2
 import QtQuick 2.7
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Controls.Private 1.0
@@ -53,52 +53,28 @@ Window
             text: "Launch Test"
         }
 
-        ComboBox
+        CustomComboBox
         {
-            enabled: guiEnabled
+            id: shuffleType
 
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150
-
-            id: shuffleType
 
             property string value: shuffleType.currentText
 
             model: ["RandomIndex", "KnuthShuffle"]
 
-            style: ComboBoxStyle
-            {
-                label: Text
-                {
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    font.pointSize: 15
-                    text: control.currentText
-                }
-
-                property Component __dropDownStyle: MenuStyle
-                {
-                    itemDelegate.label: Text
-                    {
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignHCenter
-                        font.pointSize: 15
-                        text: styleData.text
-                    }
-                }
-            }
+            dropDownText: shuffleType.displayText
         }
 
-        ComboBox
+        CustomComboBox
         {
-            enabled: guiEnabled
+            id: iterations
 
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150
-
-            id: iterations
 
             property int value: Number(iterations.currentText)
 
@@ -106,31 +82,13 @@ Window
 
             model: [1, 10, 100, 1000, 10000, 100000]
 
-            style: ComboBoxStyle
-            {
-                label: Text
-                {
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    font.pointSize: 15
-                    text: control.currentText
-                }
-
-                property Component __dropDownStyle: MenuStyle
-                {
-                    itemDelegate.label: Text
-                    {
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignHCenter
-                        font.pointSize: 15
-                        text: styleData.text
-                    }
-                }
-            }
+            dropDownText: iterations.displayText
         }
-        
+
         Button
         {
+            id: goButton
+
             enabled: guiEnabled
 
             Layout.fillWidth: true
@@ -139,15 +97,18 @@ Window
 
             text: "Go"
 
-            style: ButtonStyle
+            contentItem: Text
             {
-                label: Text
-                {
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    font.pointSize: 15
-                    text: control.text
-                }
+                text: goButton.text
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+
+                font.pointSize: 15
+
+                opacity: enabled ? 1.0: 0.3
             }
 
             onClicked: 
@@ -155,7 +116,6 @@ Window
                 testShuffle(shuffleType.value, iterations.value)
             }
         }
-
     }
 
     Image
