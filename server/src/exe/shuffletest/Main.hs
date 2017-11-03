@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main
 (
     main
@@ -8,13 +10,15 @@ import Data.Map.Lazy (Map, insertWith, empty, toAscList)
 import Data.Text (Text, unpack, pack)
 import qualified Data.Text as T (empty)
 import Graphics.Rendering.Chart.Backend.Cairo (renderableToFile)
-import Control.Lens ((.~))
+import Control.Lens ((.~), (^.), makeLenses)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import System.IO (openTempFile, hClose)
+import Control.Concurrent (forkIO)
+import Control.Monad (void, when)
 
 import Graphics.Rendering.Chart.Easy 
-    (Renderable, layout_x_axis, laxis_generate, addIndexes, plotBars, def,
-     plot_bars_values, toRenderable, layout_plots, layout_title, autoIndexAxis)
+    (Renderable, layout_x_axis, laxis_generate, addIndexes, plot_bars_values, 
+     toRenderable, layout_plots, layout_title, autoIndexAxis, def, plotBars)
 
 import Graphics.QML 
     (ObjRef, SignalKey, initialDocument, contextObject, newClass, defMethod',
@@ -28,20 +32,30 @@ import Paths_server (getDataFileName)
 
 data StatesNSignals = StatesNSignals {
     _chartLocationSig :: SignalKey (IO ()),
-    _chartLocationS :: IORef Text
+    _chartLocationS :: IORef Text,
+    _guiEnabledSig :: SignalKey (IO ()),
+    _guiEnabledS :: IORef Bool
 }
+
+makeLenses ''StatesNSignals
 
 main :: IO ()
 main = do
-    chartLocationSig <- newSignalKey
-    chartLocationS <- newIORef T.empty
+    chartLocationSig' <- newSignalKey
+    chartLocationS' <- newIORef T.empty
 
-    let sNs = StatesNSignals chartLocationSig chartLocationS
+    guiEnabledSig' <- newSignalKey
+    guiEnabledS' <- newIORef True
+
+    let sNs = StatesNSignals chartLocationSig'  chartLocationS'
+                             guiEnabledSig'     guiEnabledS'
 
     rootClass <- newClass [
         defMethod' "testShuffle" (testShuffle sNs),
-        defPropertySigRO' "chartLocation" chartLocationSig 
-            $ defRead chartLocationS]
+        defPropertySigRO' "guiEnabled" guiEnabledSig'
+            $ defRead guiEnabledS',
+        defPropertySigRO' "chartLocation" chartLocationSig'
+            $ defRead chartLocationS']
     
     ctx <- newObject rootClass ()
 
@@ -69,23 +83,41 @@ updateAccumulator :: Map Card Int -> [Card] -> Map Card Int
 updateAccumulator = foldl (\acc x -> insertWith (+) x 1 acc)
 
 testShuffle :: StatesNSignals -> ObjRef () -> Text -> Int -> IO ()
-testShuffle sNs this shuffleType iterations = case unpack shuffleType of
-    "RandomIndex" -> do
-        mapping <- dealNHands iterations dealHandRandomIndex
-        outputMapping sNs this mapping
-    "KnuthShuffle" -> do
-        mapping <- dealNHands iterations dealHandKnuth
-        outputMapping sNs this mapping
-
-outputMapping :: StatesNSignals -> ObjRef () -> Map Card Int -> IO ()
-outputMapping sNs this mapping = do
+testShuffle sNs this shuffleType iterations = void . forkIO $ do
     (fileName, handle) <- openTempFile "/tmp" "cardspicked" 
     hClose handle
 
+    flipGUI sNs this
+
+    when (iterations >= 10000) $ do
+        pending <- getDataFileName "src/gui/assets/loading.png"
+
+        setImg sNs this pending
+
+    let handF = case unpack shuffleType of
+            "RandomIndex" -> dealHandRandomIndex
+            "KnuthShuffle" -> dealHandKnuth
+            _ -> error "Unexpected shuffle type!"
+
+    mapping <- dealNHands iterations handF
+
     renderableToFile def fileName (chart mapping)
 
-    writeIORef (_chartLocationS sNs) $ pack fileName
-    fireSignal (_chartLocationSig sNs) this
+    setImg sNs this fileName
+
+    flipGUI sNs this
+
+flipGUI :: StatesNSignals -> ObjRef () -> IO ()
+flipGUI sNs this = do
+    enabled <- readIORef (sNs^.guiEnabledS)
+
+    writeIORef (sNs^.guiEnabledS) (not enabled)
+    fireSignal (sNs^.guiEnabledSig) this
+
+setImg :: StatesNSignals -> ObjRef () -> String -> IO ()
+setImg sNs this loc = do
+    writeIORef (sNs^.chartLocationS) $ pack loc
+    fireSignal (sNs^.chartLocationSig) this
 
 {-# ANN chart "HLint: ignore Use ." #-}
 chart :: Map Card Int -> Renderable ()

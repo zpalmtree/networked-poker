@@ -10,8 +10,8 @@ Window
     title: "Shuffle Tester"
     visible: true
 
-    minimumHeight: 800
-    minimumWidth: 900
+    minimumHeight: 700
+    minimumWidth: 800
 
     GridLayout
     {
@@ -55,6 +55,8 @@ Window
 
         ComboBox
         {
+            enabled: guiEnabled
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150
@@ -90,6 +92,8 @@ Window
 
         ComboBox
         {
+            enabled: guiEnabled
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150
@@ -97,6 +101,8 @@ Window
             id: iterations
 
             property int value: Number(iterations.currentText)
+
+            currentIndex: 2
 
             model: [1, 10, 100, 1000, 10000, 100000]
 
@@ -125,6 +131,8 @@ Window
         
         Button
         {
+            enabled: guiEnabled
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150

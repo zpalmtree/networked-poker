@@ -45,6 +45,8 @@ drawKnuthPure :: Deck -> (Card, Deck)
 drawKnuthPure (IsKnuth (KnuthDeck (card:deck'))) = 
     (card, IsKnuth $ KnuthDeck deck')
 
+drawKnuthPure _ = error "Expected IsKnuth deck!"
+
 drawKnuth :: GameStateT Card
 drawKnuth = do
     s <- get
@@ -82,6 +84,8 @@ drawRandomIndexPure (IsRandomIndex (RandomIndexDeck cards)) = do
     let (beginning, card:end) = splitAt randomNum cards
 
     return (card, IsRandomIndex $ RandomIndexDeck $ beginning ++ end)
+
+drawRandomIndexPure _ = error "Expected IsRandomIndex deck!"
 
 drawRandomIndex :: GameStateT Card
 drawRandomIndex = do
