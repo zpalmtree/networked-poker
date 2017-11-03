@@ -5,28 +5,43 @@ module Main
 where
 
 import Data.Map.Lazy (Map, insertWith, empty, toAscList)
-import Data.Text (Text, unpack)
+import Data.Text (Text, unpack, pack)
+import qualified Data.Text as T (empty)
 import Graphics.Rendering.Chart.Backend.Cairo (renderableToFile)
-import Control.Monad (void)
 import Control.Lens ((.~))
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
+import System.IO (openTempFile, hClose)
 
 import Graphics.Rendering.Chart.Easy 
     (Renderable, layout_x_axis, laxis_generate, addIndexes, plotBars, def,
      plot_bars_values, toRenderable, layout_plots, layout_title, autoIndexAxis)
 
 import Graphics.QML 
-    (ObjRef, initialDocument, contextObject, newClass, defMethod', newObject,
-     defaultEngineConfig, fileDocument, anyObjRef, runEngineLoop)
+    (ObjRef, SignalKey, initialDocument, contextObject, newClass, defMethod',
+     defaultEngineConfig, fileDocument, anyObjRef, runEngineLoop, newSignalKey,
+     defPropertySigRO', newObject, fireSignal)
 
 import DrawCard (dealHandKnuth, dealHandRandomIndex)
 import Types (Card)
 
 import Paths_server (getDataFileName)
 
+data StatesNSignals = StatesNSignals {
+    _chartLocationSig :: SignalKey (IO ()),
+    _chartLocationS :: IORef Text
+}
 
 main :: IO ()
 main = do
-    rootClass <- newClass [defMethod' "testShuffle" testShuffle]
+    chartLocationSig <- newSignalKey
+    chartLocationS <- newIORef T.empty
+
+    let sNs = StatesNSignals chartLocationSig chartLocationS
+
+    rootClass <- newClass [
+        defMethod' "testShuffle" (testShuffle sNs),
+        defPropertySigRO' "chartLocation" chartLocationSig 
+            $ defRead chartLocationS]
     
     ctx <- newObject rootClass ()
 
@@ -38,6 +53,8 @@ main = do
     }
 
     runEngineLoop config
+
+    where defRead s _ = readIORef s
 
 dealNHands :: Int -> IO [Card] -> IO (Map Card Int)
 dealNHands n f = dealNHands' n f empty
@@ -51,22 +68,28 @@ dealNHands' n f acc = do
 updateAccumulator :: Map Card Int -> [Card] -> Map Card Int
 updateAccumulator = foldl (\acc x -> insertWith (+) x 1 acc)
 
-testShuffle :: ObjRef () -> Text -> Int -> IO ()
-testShuffle _ shuffleType iterations = case unpack shuffleType of
+testShuffle :: StatesNSignals -> ObjRef () -> Text -> Int -> IO ()
+testShuffle sNs this shuffleType iterations = case unpack shuffleType of
     "RandomIndex" -> do
         mapping <- dealNHands iterations dealHandRandomIndex
-        outputMapping mapping
+        outputMapping sNs this mapping
     "KnuthShuffle" -> do
         mapping <- dealNHands iterations dealHandKnuth
-        outputMapping mapping
+        outputMapping sNs this mapping
 
-outputMapping :: Map Card Int -> IO ()
-outputMapping mapping' = void $ 
-    renderableToFile def "example.png" (chart mapping')
+outputMapping :: StatesNSignals -> ObjRef () -> Map Card Int -> IO ()
+outputMapping sNs this mapping = do
+    (fileName, handle) <- openTempFile "/tmp" "cardspicked" 
+    hClose handle
+
+    renderableToFile def fileName (chart mapping)
+
+    writeIORef (_chartLocationS sNs) $ pack fileName
+    fireSignal (_chartLocationSig sNs) this
 
 {-# ANN chart "HLint: ignore Use ." #-}
 chart :: Map Card Int -> Renderable ()
-chart mapping' = toRenderable layout
+chart mapping = toRenderable layout
     where barChart = plot_bars_values .~ addIndexes y_axis_values
                    $ def
     
@@ -75,6 +98,6 @@ chart mapping' = toRenderable layout
                  $ layout_plots .~ [plotBars barChart]
                  $ def
         
-          list = toAscList mapping'
+          list = toAscList mapping
           x_axis_labels = map (show . fst) list
           y_axis_values = map (\x -> [snd x]) list

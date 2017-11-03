@@ -10,11 +10,13 @@ Window
     title: "Shuffle Tester"
     visible: true
 
-    minimumHeight: 500
-    minimumWidth: 500
+    minimumHeight: 800
+    minimumWidth: 900
 
     GridLayout
     {
+        id: grid
+
         columns: 3
 
         anchors.left: parent.left
@@ -145,5 +147,17 @@ Window
                 testShuffle(shuffleType.value, iterations.value)
             }
         }
+
+    }
+
+    Image
+    {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.top: grid.bottom
+
+        fillMode: Image.PreserveAspectFit
+        source: chartLocation
     }
 }
