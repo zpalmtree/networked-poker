@@ -25,7 +25,7 @@ initDeckKnuthPure :: IO Deck
 initDeckKnuthPure = do
     deck' <- shuffle (length fullDeck - 1) fullDeck
     
-    return $ IsKnuth $ KnuthDeck deck'
+    return . IsKnuth $ KnuthDeck deck'
 
 initDeckKnuth :: GameStateT ()
 initDeckKnuth = do
@@ -83,7 +83,7 @@ drawRandomIndexPure (IsRandomIndex (RandomIndexDeck cards)) = do
 
     let (beginning, card:end) = splitAt randomNum cards
 
-    return (card, IsRandomIndex $ RandomIndexDeck $ beginning ++ end)
+    return (card, IsRandomIndex . RandomIndexDeck $ beginning ++ end)
 
 drawRandomIndexPure _ = error "Expected IsRandomIndex deck!"
 

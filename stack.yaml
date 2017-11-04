@@ -2,6 +2,7 @@ flags: {}
 extra-package-dbs: []
 extra-deps: 
 - hsqml-0.3.5.0
+- hnn-0.3
 packages:
 - ai
 - client
