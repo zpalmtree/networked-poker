@@ -49,8 +49,8 @@ ComboBox
     {
         id: dropDown
 
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.fill: parent
+
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
 
