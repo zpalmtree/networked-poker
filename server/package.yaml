@@ -22,6 +22,7 @@ dependencies:
 - text
 - bytestring
 - binary
+- mersenne-random
 library:
     source-dirs: src/lib
 executables:

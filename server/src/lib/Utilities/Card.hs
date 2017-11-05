@@ -18,13 +18,12 @@ import Control.Monad (replicateM_, replicateM)
 
 import Utilities.Player (numPlayers)
 import Output (outputPlayerCards)
-import DrawCard (drawKnuth, drawRandomIndex)
-
-import Types 
-    (Card(..), Value(..), Suit(..), Stage(..), GameStateT, ShuffleType(..))
+import DrawCard (drawM, getRNGFunc, getDrawFunc)
+import Types  (Card(..), Value(..), Suit(..), Stage(..), GameStateT)
 
 import Lenses 
-    (cards, cardInfo, tableCards, stage, playerQueue, players, shuffleType)
+    (cards, cardInfo, tableCards, stage, playerQueue, players, shuffleType,
+     algorithm, randomSource)
 
 dealCards :: GameStateT ()
 dealCards = do
@@ -44,9 +43,10 @@ getRandomCard :: GameStateT Card
 getRandomCard = do
     s <- get
 
-    case s^.shuffleType of
-        Knuth -> drawKnuth
-        RandomIndex -> drawRandomIndex
+    let drawFunc = getDrawFunc $ s^.shuffleType.algorithm
+        rngFunc = getRNGFunc $ s^.shuffleType.randomSource
+
+    drawM drawFunc rngFunc
 
 drawCard :: GameStateT ()
 drawCard = do

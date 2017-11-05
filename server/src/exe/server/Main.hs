@@ -39,8 +39,11 @@ import Utilities.Card (dealCards)
 import Utilities.Types (mkCGame, mkGame)
 import Game (gameLoop)
 import Output (outputGameOver, outputInitialGame)
-import Types (GameStateT, Player(..), ShuffleType(..))
 import Lenses (nextRoundShuffleType)
+
+import Types 
+    (GameStateT, Player(..), ShuffleType(..), DrawAlgorithm(..), 
+     RandomSource(..))
 
 import Paths_server (getDataFileName)
 
@@ -196,9 +199,18 @@ cleanup = do
     outputGameOver
     lift $ infoM "Prog.cleanup" "Game finished"
 
-changeShuffle :: IORef ShuffleType -> ObjRef () -> Text -> IO ()
-changeShuffle shuffleTypeIORef _ selectedItem = case unpack selectedItem of
-    "RandomIndex" -> set RandomIndex
-    "KnuthShuffle" -> set Knuth
-    _ -> error "Unexpected shuffle type in combobox!"
-    where set = writeIORef shuffleTypeIORef
+changeShuffle :: IORef ShuffleType -> ObjRef () -> Text -> Text -> IO ()
+changeShuffle shuffleTypeIORef _ algorithm randomSource = do
+    let newAlgorithm = case unpack algorithm of
+            "RandomIndex" -> RandomIndex
+            "KnuthShuffle" -> Knuth
+            _ -> undefined
+
+    let newRandomSource = case unpack randomSource of
+            "LEucyer" -> LEucyer
+            "Mersenne" -> Mersenne
+            _ -> undefined
+
+    let newShuffleType = ShuffleType newAlgorithm newRandomSource
+
+    writeIORef shuffleTypeIORef newShuffleType

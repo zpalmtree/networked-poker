@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, ExistentialQuantification #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types
 (
@@ -31,10 +31,12 @@ module Types
     ClientGame(..),
     CPlayer(..),
     CBets(..),
-    ShuffleType(..),
     Deck(..),
     KnuthDeck(..),
     RandomIndexDeck(..),
+    ShuffleType(..),
+    DrawAlgorithm(..),
+    RandomSource(..),
     GameStateT,
     GameState
 )
@@ -159,6 +161,19 @@ data ClientGame = ClientGame {
     _cBets :: CBets
 } deriving (Generic, Show)
 
+data ShuffleType = ShuffleType {
+    _algorithm :: DrawAlgorithm,
+    _randomSource :: RandomSource
+} deriving (Eq)
+
+data DrawAlgorithm = RandomIndex
+                   | Knuth
+                   deriving (Show, Eq)
+
+data RandomSource = LEucyer
+                  | Mersenne
+                  deriving (Show, Eq)
+
 data Stage = PreFlop 
            | Flop 
            | Turn 
@@ -224,10 +239,6 @@ data Message = MIsAction (ActionMsg Int)
              | MIsNextState
              | MIsTextMsg TextMsg
              deriving (Generic, Show)
-
-data ShuffleType = RandomIndex
-                 | Knuth 
-                 deriving (Show, Eq)
 
 data Deck = IsKnuth KnuthDeck
           | IsRandomIndex RandomIndexDeck
@@ -333,3 +344,7 @@ instance PrintfArg Value where
 
 instance Show Card where
     show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"
+
+instance Show ShuffleType where
+    show (ShuffleType algo rng) = show algo ++ " using a " ++ show rng ++
+                                " algorithm to generate random numbers"

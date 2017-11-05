@@ -36,6 +36,7 @@ library
     , text
     , bytestring
     , binary
+    , mersenne-random
   exposed-modules:
       Betting
       DrawCard
@@ -72,6 +73,7 @@ executable server
     , text
     , bytestring
     , binary
+    , mersenne-random
     , server
     , hsqml
   default-language: Haskell2010
@@ -93,6 +95,7 @@ executable shuffletest
     , text
     , bytestring
     , binary
+    , mersenne-random
     , server
     , containers
     , hsqml

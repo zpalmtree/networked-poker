@@ -14,7 +14,7 @@ import Data.IORef (readIORef)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
 import Showdown (distributePot, calculateHandValues)
 import Utilities.Card (dealCards, revealFlop, revealTurn, revealRiver)
-import DrawCard (initDeckKnuth, initDeckRandomIndex)
+import DrawCard (getRNGFunc, getDrawFunc, getInitFunc, initM)
 
 import Types 
     (Game, Pot, Stage(..), GameStateT, Player, ShuffleType(..))
@@ -27,7 +27,7 @@ import Lenses
     (gameFinished, bet, bets, currentBet, inPlay, madeInitialBet, allIn, pots, 
      stage, canReRaise, minimumRaise, bigBlindSize, handInfo, shuffleType,
      roundDone, roundNumber, playerQueue, players, pot, nextRoundShuffleType,
-     cardInfo, tableCards)
+     cardInfo, tableCards, randomSource, algorithm)
 
 import Output
     (outputHandValues, outputNewChips, outputCards, outputPlayersRemoved,
@@ -221,9 +221,10 @@ nextRound = do
 
         s' <- get
 
-        case s'^.shuffleType of
-            Knuth -> initDeckKnuth
-            RandomIndex -> initDeckRandomIndex
+        let initFunc = getInitFunc (s'^.shuffleType.algorithm)
+            rngFunc = getRNGFunc (s'^.shuffleType.randomSource)
+
+        initM initFunc rngFunc
 
         cardInfo.tableCards .= []
 

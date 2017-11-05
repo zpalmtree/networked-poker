@@ -25,8 +25,8 @@ import Graphics.QML
      defaultEngineConfig, fileDocument, anyObjRef, runEngineLoop, newSignalKey,
      defPropertySigRO', newObject, fireSignal)
 
-import DrawCard (dealHandKnuth, dealHandRandomIndex)
-import Types (Card)
+import DrawCard (getInitFunc, getDrawFunc, getRNGFunc, dealHand)
+import Types (Card, RandomSource(..), DrawAlgorithm(..))
 
 import Paths_server (getDataFileName)
 
@@ -82,8 +82,8 @@ dealNHands' n f acc = do
 updateAccumulator :: Map Card Int -> [Card] -> Map Card Int
 updateAccumulator = foldl (\acc x -> insertWith (+) x 1 acc)
 
-testShuffle :: StatesNSignals -> ObjRef () -> Text -> Int -> IO ()
-testShuffle sNs this shuffleType iterations = void . forkIO $ do
+testShuffle :: StatesNSignals -> ObjRef () -> Text -> Text -> Int -> IO ()
+testShuffle sNs this algorithm randomSource iterations = void . forkIO $ do
     (fileName, handle) <- openTempFile "/tmp" "cardspicked" 
     hClose handle
 
@@ -94,12 +94,23 @@ testShuffle sNs this shuffleType iterations = void . forkIO $ do
 
         setImg sNs this pending
 
-    let handF = case unpack shuffleType of
-            "RandomIndex" -> dealHandRandomIndex
-            "KnuthShuffle" -> dealHandKnuth
-            _ -> error "Unexpected shuffle type!"
+    let algo = case unpack algorithm of
+            "RandomIndex" -> RandomIndex
+            "KnuthShuffle" -> Knuth
+            _ -> undefined
 
-    mapping <- dealNHands iterations handF
+    let rng = case unpack randomSource of
+            "LEucyer" -> LEucyer
+            "Mersenne" -> Mersenne
+            _ -> undefined
+
+    let initFunc = getInitFunc algo
+        drawFunc = getDrawFunc algo
+        rngFunc = getRNGFunc rng
+
+        dealFunc = dealHand initFunc drawFunc rngFunc
+
+    mapping <- dealNHands iterations dealFunc
 
     renderableToFile def fileName (chart mapping)
 

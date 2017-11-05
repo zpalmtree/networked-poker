@@ -14,7 +14,7 @@ import Utilities.Card (fullDeck)
 import Types 
     (GameStateT, ClientGame(..), Game(..), PlayerQueue(..), Cards(..), 
      CBets(..), Stage(..), Player, CPlayer(..), Bets(..), ShuffleType(..),
-     Deck(..), RandomIndexDeck(..))
+     Deck(..), RandomIndexDeck(..), DrawAlgorithm(..), RandomSource(..))
 
 import Lenses 
     (stage, tableCards, bets, playerQueue, players, dealer, name, uuid, chips,
@@ -47,12 +47,13 @@ mkCGame = do
 
 mkGame :: [Player] -> MVar [Player] -> IO Game
 mkGame players' playerChan = do
-    shuffleType' <- newIORef RandomIndex
+    let shuffleType' = ShuffleType RandomIndex LEucyer
+        cards' = Cards [] (IsRandomIndex $ RandomIndexDeck fullDeck)
 
-    let cards' = Cards [] (IsRandomIndex $ RandomIndexDeck fullDeck)
+    shuffleType'' <- newIORef shuffleType'
 
     return $ Game playerChan pq PreFlop cards' False bets' False 1 
-             RandomIndex shuffleType'
+             shuffleType' shuffleType''
 
     where pq = PlayerQueue players' (length players' - 1)
           bets' = Bets [] 0 smallBlind bigBlind bigBlind

@@ -1,61 +1,111 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module DrawCard
 (
+    getInitFunc,
+    getDrawFunc,
+    getRNGFunc,
+    dealHand,
+    initM,
+    drawM,
     initDeckKnuth,
-    initDeckRandomIndex,
-    drawKnuth,
-    drawRandomIndex,
-    dealHandKnuth,
-    dealHandRandomIndex
+    randomFrom0ToN_LEucyer
 )
 where
 
-import System.Random (getStdRandom, randomR)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State (get)
-import Control.Lens ((^.), (.=))
-import System.Log.Logger (infoM)
+import Control.Lens ((.=), (^.))
+import System.Random (getStdRandom, randomR)
+import qualified System.Random.Mersenne as M (getStdRandom, random)
 
 import Lenses (cardInfo, deck)
 
 import Types 
-    (Card(..), Suit(..), Value(..), KnuthDeck(..), GameStateT, 
-     RandomIndexDeck(..), Deck(..))
+    (KnuthDeck(..), Deck(..), Card(..), Value(..), RandomIndexDeck(..),
+     Suit(..), GameStateT, RandomSource(..), DrawAlgorithm(..))
 
-initDeckKnuthPure :: IO Deck
-initDeckKnuthPure = do
-    deck' <- shuffle (length fullDeck - 1) fullDeck
-    
-    return . IsKnuth $ KnuthDeck deck'
+-- DEAL WHOLE HAND
 
-initDeckKnuth :: GameStateT ()
-initDeckKnuth = do
-    lift $ infoM "Prog.initDeckKnuth" "Using knuth shuffle"
+dealHand :: (a -> IO b) -> (a -> b -> IO (c, b)) -> a -> IO [c]
+dealHand initFunc drawFunc randomSource = do
+    x <- initFunc randomSource
 
-    deck' <- lift $ shuffle (length fullDeck -1) fullDeck
+    draw handSize x
 
-    cardInfo.deck .= (IsKnuth $ KnuthDeck deck')
+    where draw 0 _ = return []
+          draw n xs = do
+            (card, newDeck) <- drawFunc randomSource xs
+            rest <- draw (n-1) newDeck
+            return $ card : rest
 
-shuffle :: Int -> [a] -> IO [a]
-shuffle 0 xs = return xs
-shuffle i xs = do
-    j <- getStdRandom $ randomR (0, i)
-    shuffle (i-1) (swap i j xs)
-    
-drawKnuthPure :: Deck -> (Card, Deck)
-drawKnuthPure (IsKnuth (KnuthDeck (card:deck'))) = 
+          handSize = (6 * 2) + 5
+
+-- MONADIC INIT AND DRAW
+
+initM :: (a -> IO Deck) -> a -> GameStateT ()
+initM initFunc randomSource = do
+    x <- lift $ initFunc randomSource
+    cardInfo.deck .= x
+
+drawM :: (a -> Deck -> IO (b, Deck)) -> a -> GameStateT b
+drawM drawFunc randomSource = do
+    s <- get
+    (card, x) <- lift $ drawFunc randomSource (s^.cardInfo.deck)
+    cardInfo.deck .= x
+    return card
+
+-- RANDOM NUMBER IMPLEMENTATIONS
+
+-- the default implementation from System.Random, with a cycle of 2.30584e18
+randomFrom0ToN_LEucyer :: Int -> IO Int
+randomFrom0ToN_LEucyer n = getStdRandom $ randomR (0, n)
+
+-- Uses a Fast Mersenne Twister, with a cycle of 2^19937-1
+randomFrom0ToN_Mersenne :: Int -> IO Int
+randomFrom0ToN_Mersenne n = do
+    result <- M.getStdRandom M.random
+    return $ result `mod` n
+
+-- INIT FUNCS
+
+initDeckKnuth :: (Int -> IO Int) -> IO Deck
+initDeckKnuth randomSource = do
+    x <- shuffle randomSource (length fullDeck - 1) fullDeck
+    return . IsKnuth $ KnuthDeck x
+
+initDeckRandomIndex :: (Int -> IO Int) -> IO Deck
+initDeckRandomIndex _ = return . IsRandomIndex $ RandomIndexDeck fullDeck
+
+-- DRAW FUNCS
+
+drawKnuth :: (Int -> IO Int) -> Deck -> IO (Card, Deck)
+drawKnuth _ (IsKnuth (KnuthDeck (card:deck'))) = return
     (card, IsKnuth $ KnuthDeck deck')
 
-drawKnuthPure _ = error "Expected IsKnuth deck!"
+drawKnuth _ _ = error "Expected IsKnuth deck!"
 
-drawKnuth :: GameStateT Card
-drawKnuth = do
-    s <- get
+drawRandomIndex :: (Int -> IO Int) -> Deck -> IO (Card, Deck)
+drawRandomIndex randomSource (IsRandomIndex (RandomIndexDeck cards)) = do
+    randomNum <- randomSource $ length cards - 1
 
-    let (IsKnuth (KnuthDeck (card:deck'))) = s^.cardInfo.deck
+    let (beginning, card:end) = splitAt randomNum cards
 
-    cardInfo.deck .= (IsKnuth $ KnuthDeck deck')
+    return (card, IsRandomIndex . RandomIndexDeck $ beginning ++ end)
 
-    return card
+drawRandomIndex _ _ = error "Expected IsRandomIndex deck!"
+
+-- UTILITIES
+
+fullDeck :: [Card]
+fullDeck = [Card value suit | value <- [Two .. Ace],
+                              suit  <- [Heart .. Diamond]]
+
+shuffle :: (Int -> IO Int) -> Int -> [a] -> IO [a]
+shuffle _ 0 xs = return xs
+shuffle randomSource i xs = do
+    j <- randomSource i
+    shuffle randomSource (i-1) (swap i j xs)
 
 -- adapted from https://stackoverflow.com/a/30551130/8737306
 swap :: Int -> Int -> [a] -> [a]
@@ -68,65 +118,14 @@ swap i j xs
                       right = drop (i + 1) xs
                   in  left ++ [elemI] ++ middle ++ [elemJ] ++ right
 
-initDeckRandomIndexPure :: Deck
-initDeckRandomIndexPure = IsRandomIndex $ RandomIndexDeck fullDeck
+getRNGFunc :: RandomSource -> (Int -> IO Int)
+getRNGFunc LEucyer = randomFrom0ToN_LEucyer
+getRNGFunc Mersenne = randomFrom0ToN_Mersenne
 
-initDeckRandomIndex :: GameStateT ()
-initDeckRandomIndex = do
-    lift $ infoM "Prog.initDeckKnuth" "Using randomIndex shuffle"
+getDrawFunc :: DrawAlgorithm -> ((Int -> IO Int) -> Deck -> IO (Card, Deck))
+getDrawFunc Knuth = drawKnuth
+getDrawFunc RandomIndex = drawRandomIndex
 
-    cardInfo.deck .= (IsRandomIndex $ RandomIndexDeck fullDeck)
-
-drawRandomIndexPure :: Deck -> IO (Card, Deck)
-drawRandomIndexPure (IsRandomIndex (RandomIndexDeck cards)) = do
-    randomNum <- getStdRandom $ randomR (0, length cards - 1) 
-
-    let (beginning, card:end) = splitAt randomNum cards
-
-    return (card, IsRandomIndex . RandomIndexDeck $ beginning ++ end)
-
-drawRandomIndexPure _ = error "Expected IsRandomIndex deck!"
-
-drawRandomIndex :: GameStateT Card
-drawRandomIndex = do
-    s <- get
-
-    let (IsRandomIndex (RandomIndexDeck cards)) = s^.cardInfo.deck
-
-    randomNum <- lift . getStdRandom $ randomR (0, length cards - 1)
-
-    let (beginning, card:end) = splitAt randomNum cards
-
-    cardInfo.deck .= (IsRandomIndex . RandomIndexDeck $ beginning ++ end)
-
-    return card
-
-fullDeck :: [Card]
-fullDeck = [Card value suit | value <- [Two .. Ace],
-                              suit  <- [Heart .. Diamond]]
-
-dealHandKnuth :: IO [Card]
-dealHandKnuth = do
-    deck' <- initDeckKnuthPure
-
-    return $ draw handSize deck'
-
-    where draw 0 _ = []
-          draw n deck' = let (card, newDeck) = drawKnuthPure deck'
-                         in  card : draw (n-1) newDeck
-
-dealHandRandomIndex :: IO [Card]
-dealHandRandomIndex = do
-    let deck' = initDeckRandomIndexPure
-
-    draw handSize deck'
-
-    where draw 0 _ = return []
-          draw n deck' = do
-            (card, newDeck) <- drawRandomIndexPure deck'
-            rest <- draw (n-1) newDeck
-            return $ card : rest
-
--- 6 players with 2 cards each, 5 table cards
-handSize :: (Num a) => a
-handSize = (6 * 2) + 5
+getInitFunc :: DrawAlgorithm -> (Int -> IO Int) -> IO Deck
+getInitFunc Knuth = initDeckKnuth
+getInitFunc RandomIndex = initDeckRandomIndex
