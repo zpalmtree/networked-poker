@@ -17,6 +17,7 @@ cabal-version:  >= 1.10
 data-files:
     src/gui/assets/loading.png
     src/gui/CustomComboBox.qml
+    src/gui/CustomLabel.qml
     src/gui/ShufflePicker.qml
     src/gui/ShuffleTester.qml
 

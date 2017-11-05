@@ -17,7 +17,7 @@ Window
     {
         id: grid
 
-        columns: 3
+        columns: 4
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -26,46 +26,54 @@ Window
 
         height: 80
 
-        Label
+        CustomLabel
         {
-            font.pointSize: 12
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-            Layout.fillWidth: true
             text: "Shuffle Type"
+            Layout.fillWidth: true
         }
 
-        Label
+        CustomLabel
         {
-            font.pointSize: 12
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
+            text: "Source of Randomness"
             Layout.fillWidth: true
+        }
+
+        CustomLabel
+        {
             text: "Iterations"
+            Layout.fillWidth: true
         }
 
-        Label
+        CustomLabel
         {
-            font.pointSize: 12
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-            Layout.fillWidth: true
             text: "Launch Test"
+            Layout.fillWidth: true
         }
 
         CustomComboBox
         {
-            id: shuffleType
+            id: drawAlgorithm
 
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150
 
-            property string value: shuffleType.currentText
-
             model: ["RandomIndex", "KnuthShuffle"]
 
-            dropDownText: shuffleType.displayText
+            dropDownText: drawAlgorithm.displayText
+        }
+
+        CustomComboBox
+        {
+            id: rngSource
+
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 150
+
+            model: ["LEucyer", "Mersenne"]
+
+            dropDownText: rngSource.displayText
         }
 
         CustomComboBox
@@ -75,8 +83,6 @@ Window
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150
-
-            property int value: Number(iterations.currentText)
 
             currentIndex: 2
 
@@ -111,7 +117,8 @@ Window
 
             onClicked: 
             {
-                testShuffle(shuffleType.value, iterations.value)
+                testShuffle(drawAlgorithm.currentText, rngSource.currentText, 
+                            Number(iterations.currentText))
             }
         }
     }
