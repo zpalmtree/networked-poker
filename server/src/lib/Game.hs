@@ -14,10 +14,8 @@ import Data.IORef (readIORef)
 import Betting (smallBlind, bigBlind, giveWinnings, promptBet, updatePot)
 import Showdown (distributePot, calculateHandValues)
 import Utilities.Card (dealCards, revealFlop, revealTurn, revealRiver)
-import DrawCard (getRNGFunc, getDrawFunc, getInitFunc, initM)
-
-import Types 
-    (Game, Pot, Stage(..), GameStateT, Player, ShuffleType(..))
+import DrawCard (getRNGFunc, getInitFunc, initM)
+import Types (Game, Pot, Stage(..), GameStateT, Player)
 
 import Utilities.Player 
     (nextPlayer, getCurrentPlayerPure, removeOutPlayers, numInPlayPure, 

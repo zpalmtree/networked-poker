@@ -5,13 +5,11 @@ ComboBox
 {
     property alias dropDownText: dropDown.text
 
-    enabled: guiEnabled
-
     delegate: ItemDelegate
     {
         id: item
 
-        width: iterations.width
+        width: parent.width
 
         contentItem: Text
         {

@@ -344,7 +344,3 @@ instance PrintfArg Value where
 
 instance Show Card where
     show (Card value' suit') = show value' ++ " of " ++ show suit' ++ "s"
-
-instance Show ShuffleType where
-    show (ShuffleType algo rng) = show algo ++ " using a " ++ show rng ++
-                                " algorithm to generate random numbers"

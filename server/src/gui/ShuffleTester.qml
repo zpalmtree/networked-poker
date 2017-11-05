@@ -1,8 +1,6 @@
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick 2.7
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Controls.Private 1.0
 import QtQuick.Layouts 1.3
 
 Window
@@ -54,6 +52,8 @@ Window
         {
             id: drawAlgorithm
 
+            enabled: guiEnabled
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150
@@ -67,6 +67,8 @@ Window
         {
             id: rngSource
 
+            enabled: guiEnabled
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 150
@@ -79,6 +81,8 @@ Window
         CustomComboBox
         {
             id: iterations
+
+            enabled: guiEnabled
 
             Layout.fillWidth: true
             Layout.fillHeight: true

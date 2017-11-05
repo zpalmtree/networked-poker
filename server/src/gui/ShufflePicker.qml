@@ -1,48 +1,97 @@
 import QtQuick.Window 2.2
-import QtQuick.Controls 1.4
+import QtQuick.Controls 2.2
 import QtQuick 2.7
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Controls.Private 1.0
+import QtQuick.Layouts 1.3
 
 Window
 {
     title: "Shuffle Picker"
     visible: true
 
-    minimumHeight: 50
-    minimumWidth: 300
+    minimumHeight: 100
+    minimumWidth: 600
 
-    ComboBox
+    GridLayout
     {
-        model: ["RandomIndex", "KnuthShuffle"]
-        anchors.fill: parent
+        id: grid
 
-        style: ComboBoxStyle
+        columns: 3
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 10
+
+        height: 80
+
+        CustomLabel
         {
-            label: Text
-            {
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                font.pointSize: 15
-                text: control.currentText
-            }
-
-            property Component __dropDownStyle: MenuStyle
-            {
-                itemDelegate.label: Text
-                {
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    font.pointSize: 15
-                    text: styleData.text
-                }
-            }
+            text: "Shuffle Type"
+            Layout.fillWidth: true
         }
 
-        onActivated:
+        CustomLabel
         {
-            var item = textAt(index);
-            changeShuffle(item);
+            text: "Source of Randomness"
+            Layout.fillWidth: true
+        }
+
+        CustomLabel
+        {
+            text: "Update Shuffle Type"
+            Layout.fillWidth: true
+        }
+
+        CustomComboBox
+        {
+            id: drawAlgorithm
+
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 150
+
+            model: ["RandomIndex", "KnuthShuffle"]
+
+            dropDownText: drawAlgorithm.displayText
+        }
+
+        CustomComboBox
+        {
+            id: rngSource
+
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 150
+
+            model: ["LEucyer", "Mersenne"]
+
+            dropDownText: rngSource.displayText
+        }
+
+        Button
+        {
+            id: goButton
+
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 150
+
+            text: "Go"
+
+            contentItem: Text
+            {
+                text: goButton.text
+
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+
+                font.pointSize: 15
+            }
+
+            onClicked: 
+            {
+                changeShuffle(drawAlgorithm.currentText, rngSource.currentText)
+            }
         }
     }
 }

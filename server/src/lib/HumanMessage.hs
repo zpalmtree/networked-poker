@@ -19,7 +19,8 @@ import Utilities.Player (getCurrentPlayer)
 import Types (Player, GameStateT, Action(..))
 
 import Lenses 
-    (handInfo, handValue, name, bets, currentBet, bet, chips, shuffleType)
+    (handInfo, handValue, name, bets, currentBet, bet, chips, shuffleType,
+     algorithm, randomSource)
 
 humanHandValues :: [Player] -> [Text]
 humanHandValues = map humanHandValues'
@@ -79,4 +80,10 @@ multiWinners n = map (\x -> singleWinner n x "shared")
 humanNewShuffle :: GameStateT [Text]
 humanNewShuffle = do
     s <- get
-    return $ [pack $ "Switched to using " ++ show (s^.shuffleType) ++ " shuffle"]
+
+    let msg = "Switched to using a " ++ show (s^.shuffleType.algorithm) ++
+              " card picker algorithm and a " ++ 
+              show (s^.shuffleType.randomSource) ++ 
+              " random number generation algorithm"
+
+    return [pack msg]
