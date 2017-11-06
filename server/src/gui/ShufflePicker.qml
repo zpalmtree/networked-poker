@@ -8,7 +8,7 @@ Window
     title: "Shuffle Picker"
     visible: true
 
-    minimumHeight: 100
+    minimumHeight: 250
     minimumWidth: 600
 
     GridLayout
@@ -50,7 +50,7 @@ Window
             Layout.fillHeight: true
             Layout.minimumWidth: 150
 
-            model: ["RandomIndex", "KnuthShuffle"]
+            model: ["RandomIndex", "Knuth"]
 
             dropDownText: drawAlgorithm.displayText
         }
@@ -63,7 +63,7 @@ Window
             Layout.fillHeight: true
             Layout.minimumWidth: 150
 
-            model: ["LEucyer", "Mersenne"]
+            model: ["LEucyer", "Mersenne", "MWC256"]
 
             dropDownText: rngSource.displayText
         }

@@ -23,6 +23,7 @@ dependencies:
 - bytestring
 - binary
 - mersenne-random
+- mwc-random
 library:
     source-dirs: src/lib
 executables:

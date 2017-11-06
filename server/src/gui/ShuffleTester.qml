@@ -58,7 +58,7 @@ Window
             Layout.fillHeight: true
             Layout.minimumWidth: 150
 
-            model: ["RandomIndex", "KnuthShuffle"]
+            model: ["RandomIndex", "Knuth"]
 
             dropDownText: drawAlgorithm.displayText
         }
@@ -73,7 +73,7 @@ Window
             Layout.fillHeight: true
             Layout.minimumWidth: 150
 
-            model: ["LEucyer", "Mersenne"]
+            model: ["LEucyer", "Mersenne", "MWC256"]
 
             dropDownText: rngSource.displayText
         }
@@ -122,7 +122,7 @@ Window
             onClicked: 
             {
                 testShuffle(drawAlgorithm.currentText, rngSource.currentText, 
-                            Number(iterations.currentText))
+                            iterations.currentText)
             }
         }
     }
