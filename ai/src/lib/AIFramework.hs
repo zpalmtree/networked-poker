@@ -5,7 +5,6 @@ module AIFramework
 where
 
 import Control.Monad.Trans.State (evalStateT)
-import Data.Binary (Binary)
 
 import ClientFramework (establishConnection, ioLoop)
 import AITypes (AIGameStateT)
@@ -19,8 +18,7 @@ import Types
     (Message(..), Action(..), CardMsg(..), DealtCardsMsg(..), NewChipsMsg(..),
      PlayersRemovedMsg(..), InputMsg(..), MinRaiseMsg(..))
 
-runAI :: (Show b, Binary b) => 
-          String -> ([Action Int] -> AIGameStateT (Maybe b)) -> IO ()
+runAI :: String -> ([Action Int] -> AIGameStateT (Maybe (Action Int))) -> IO ()
 runAI name handleFunc = do
     maybeGame <- establishConnection name
     case maybeGame of
@@ -30,8 +28,8 @@ runAI name handleFunc = do
         Right (game, socket) -> 
             evalStateT (ioLoop socket (filterUnneeded handleFunc)) game
 
-filterUnneeded :: ([Action Int] -> AIGameStateT (Maybe a)) -> Message -> 
-                    AIGameStateT (Maybe a)
+filterUnneeded :: ([Action Int] -> AIGameStateT (Maybe (Action Int))) 
+                 -> Message -> AIGameStateT (Maybe (Action Int))
 filterUnneeded aiFunction msg = case msg of
     MIsInput (InputMsg m) -> aiFunction m
 
