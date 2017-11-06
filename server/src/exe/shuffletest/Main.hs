@@ -26,7 +26,7 @@ import Graphics.QML
      defPropertySigRO', newObject, fireSignal)
 
 import DrawCard (getInitFunc, getDrawFunc, getRNGFunc, dealHand)
-import Types (Card, RandomSource(..), DrawAlgorithm(..))
+import Types (Card)
 
 import Paths_server (getDataFileName)
 
@@ -94,17 +94,9 @@ testShuffle sNs this algorithm randomSource iterations = void . forkIO $ do
 
         setImg sNs this pending
 
-    let algo = case unpack algorithm of
-            "RandomIndex" -> RandomIndex
-            "KnuthShuffle" -> Knuth
-            _ -> undefined
-
-    let rng = case unpack randomSource of
-            "LEucyer" -> LEucyer
-            "Mersenne" -> Mersenne
-            _ -> undefined
-
-    let initFunc = getInitFunc algo
+    let algo = read $ unpack algorithm
+        rng = read $ unpack randomSource
+        initFunc = getInitFunc algo
         drawFunc = getDrawFunc algo
         rngFunc = getRNGFunc rng
 

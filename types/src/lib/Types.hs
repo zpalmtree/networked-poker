@@ -168,11 +168,12 @@ data ShuffleType = ShuffleType {
 
 data DrawAlgorithm = RandomIndex
                    | Knuth
-                   deriving (Show, Eq)
+                   deriving (Show, Eq, Read)
 
 data RandomSource = LEucyer
                   | Mersenne
-                  deriving (Show, Eq)
+                  | MWC256
+                  deriving (Show, Eq, Read)
 
 data Stage = PreFlop 
            | Flop 

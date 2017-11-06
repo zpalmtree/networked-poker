@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module DrawCard
 (
     getInitFunc,
@@ -8,18 +6,18 @@ module DrawCard
     dealHand,
     initM,
     drawM,
-    initDeckKnuth,
-    randomFrom0ToN_LEucyer
+    initDeckKnuth
 )
 where
 
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State (get)
 import Control.Lens ((.=), (^.))
-import System.Random (getStdRandom, randomR)
-import qualified System.Random.Mersenne as M (getStdRandom, random)
 
 import Lenses (cardInfo, deck)
+
+import RandomSource 
+    (randomFrom0ToN_LEucyer, randomFrom0ToN_Mersenne, randomFrom0ToN_MWC256)
 
 import Types 
     (KnuthDeck(..), Deck(..), Card(..), Value(..), RandomIndexDeck(..),
@@ -54,18 +52,6 @@ drawM drawFunc randomSource = do
     (card, x) <- lift $ drawFunc randomSource (s^.cardInfo.deck)
     cardInfo.deck .= x
     return card
-
--- RANDOM NUMBER IMPLEMENTATIONS
-
--- the default implementation from System.Random, with a cycle of 2.30584e18
-randomFrom0ToN_LEucyer :: Int -> IO Int
-randomFrom0ToN_LEucyer n = getStdRandom $ randomR (0, n)
-
--- Uses a Fast Mersenne Twister, with a cycle of 2^19937-1
-randomFrom0ToN_Mersenne :: Int -> IO Int
-randomFrom0ToN_Mersenne n = do
-    result <- M.getStdRandom M.random
-    return $ result `mod` n
 
 -- INIT FUNCS
 
@@ -121,6 +107,7 @@ swap i j xs
 getRNGFunc :: RandomSource -> (Int -> IO Int)
 getRNGFunc LEucyer = randomFrom0ToN_LEucyer
 getRNGFunc Mersenne = randomFrom0ToN_Mersenne
+getRNGFunc MWC256 = randomFrom0ToN_MWC256
 
 getDrawFunc :: DrawAlgorithm -> ((Int -> IO Int) -> Deck -> IO (Card, Deck))
 getDrawFunc Knuth = drawKnuth

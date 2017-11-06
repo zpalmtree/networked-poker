@@ -41,9 +41,7 @@ import Game (gameLoop)
 import Output (outputGameOver, outputInitialGame)
 import Lenses (nextRoundShuffleType)
 
-import Types 
-    (GameStateT, Player(..), ShuffleType(..), DrawAlgorithm(..), 
-     RandomSource(..))
+import Types (GameStateT, Player(..), ShuffleType(..))
 
 import Paths_server (getDataFileName)
 
@@ -201,16 +199,8 @@ cleanup = do
 
 changeShuffle :: IORef ShuffleType -> ObjRef () -> Text -> Text -> IO ()
 changeShuffle shuffleTypeIORef _ algorithm randomSource = do
-    let newAlgorithm = case unpack algorithm of
-            "RandomIndex" -> RandomIndex
-            "KnuthShuffle" -> Knuth
-            _ -> undefined
-
-    let newRandomSource = case unpack randomSource of
-            "LEucyer" -> LEucyer
-            "Mersenne" -> Mersenne
-            _ -> undefined
-
-    let newShuffleType = ShuffleType newAlgorithm newRandomSource
+    let newAlgorithm = read $ unpack algorithm
+        newRandomSource = read $ unpack randomSource
+        newShuffleType = ShuffleType newAlgorithm newRandomSource
 
     writeIORef shuffleTypeIORef newShuffleType
