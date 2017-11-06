@@ -24,8 +24,16 @@ library
     , hnn
     , hmatrix
     , random
+    , transformers
+    , types
+    , lens
+    , client-framework
+    , binary
+    , uuid-types
   exposed-modules:
       AIFramework
+      AITypes
+      HandleMessage
       NeuralNetwork
   other-modules:
       Paths_ai
@@ -40,5 +48,8 @@ executable ai-random
     , hnn
     , hmatrix
     , random
+    , transformers
+    , types
+    , lens
     , ai
   default-language: Haskell2010

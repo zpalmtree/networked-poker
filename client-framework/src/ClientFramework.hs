@@ -37,7 +37,7 @@ establishConnection name = withSocketsDo $ do
             msg <- recv sock 4096
 
             case decodeOrFail $ fromStrict msg of
-                Left (_, _, err) -> return $ Left err
+                Left (_, _, err) -> error err
                 Right (_, _, msg') -> case msg' of
                     MIsInitialGame (InitialGameMsg m) -> do
                         infoM "Prog.establishConnection" "Recieved initial game"

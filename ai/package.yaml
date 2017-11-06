@@ -10,9 +10,16 @@ dependencies:
 - hnn
 - hmatrix
 - random
+- transformers
+- types
+- lens
 data-files: src/lib/EVs.txt
 library:
     source-dirs: src/lib
+    dependencies:
+    - client-framework
+    - binary
+    - uuid-types
 executables:
   ai-random:
     main: Main.hs
