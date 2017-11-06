@@ -1,6 +1,6 @@
-module Main
+module NeuralNetwork
 (
-    main
+    run
 )
 where
 
@@ -15,8 +15,8 @@ import AI.HNN.FF.Network
 
 import Paths_ai (getDataFileName)
 
-main :: IO ()
-main = do
+run :: IO ()
+run = do
     net <- createNetwork 2 [2] 1
 
     evS <- readEV

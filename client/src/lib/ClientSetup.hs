@@ -1,4 +1,4 @@
-module Setup
+module ClientSetup
 (
     initialSetup,
     initialGUISetup,
@@ -7,31 +7,29 @@ module Setup
 where
 
 import Control.Concurrent.MVar (newEmptyMVar)
-import Data.IORef (IORef, newIORef, readIORef)
-import Control.Exception (IOException, try)
-import Network.Socket.ByteString (send, recv)
-import Data.ByteString.Lazy (toStrict)
-import Data.Binary (encode)
-import Control.Lens ((^.))
+import Data.IORef (newIORef, readIORef)
 import Data.Text (pack)
-import System.Log.Logger (infoM)
-
-import Network.Socket 
-    (Socket, getAddrInfo, socket, addrFamily, addrSocketType, addrProtocol,
-     connect, addrAddress)
+import Network.Socket (Socket(..))
 
 import Graphics.QML 
     (Class, ObjRef, defPropertySigRO', newClass, newSignalKey, 
      defMethod')
 
-import ClientTypes (StatesNSignals(..), CGame(..), CGameStateT)
-import Types (Message(..), InitialGameMsg(..))
-import Utilities (getName, decode)
+import ClientFramework (establishConnection)
+import ClientTypes (StatesNSignals(..), CGameStateT, CGame(..))
 import Constants (maxPlayers, numTCards, numButtons, cardBack)
 import HandleClick (handleFold, handleCheck, handleCall, handleRaise, handleAllIn)
 
 import GUIUpdate 
     (updateNames, updateBets, updateCards, updateVisible, updateCurrentPlayer)
+
+initialSetup :: StatesNSignals -> ObjRef () -> String -> 
+                IO (Either String (CGame, Socket))
+initialSetup sigs this name = do
+    maybeGame <- establishConnection name
+    case maybeGame of
+        Right (game, sock) -> return $ Right (CGame game sigs this, sock)
+        Left err -> return $ Left err
 
 makeClass :: IO (Class (), StatesNSignals)
 makeClass = do
@@ -51,11 +49,11 @@ makeClass = do
 
     -- PLAYER CHIPS
     pChipsSig <- newSignalKey
-    pChipsS <- newIORef $ replicate maxPlayers 0 :: IO (IORef [Int])
+    pChipsS <- newIORef $ replicate maxPlayers 0
 
     -- POT CHIPS
     potChipsSig <- newSignalKey
-    potChipsS <- newIORef (0 :: Int)
+    potChipsS <- newIORef 0
 
     -- PLAYER NAMES
     pNamesSig <- newSignalKey
@@ -136,34 +134,6 @@ makeClass = do
 
     where defRead s _ = readIORef s
           names = replicate maxPlayers (pack "")
-
-initialSetup :: StatesNSignals -> ObjRef () 
-             -> IO (Either IOException (CGame, Socket))
-initialSetup sigs this = do
-    addr:_ <- getAddrInfo Nothing (Just "127.0.0.1") (Just "2112")
-    sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
-
-    connectSuccess <- try (connect sock (addrAddress addr))
-
-    case connectSuccess of
-        Left err -> return $ Left err
-        Right _ -> do
-
-            name <- getName
-            
-            send sock (toStrict . encode $ name)
-
-            msg <- recv sock 4096
-
-            case decode msg of
-                Left (_, _, err) -> error err
-                Right (_, _, msg') -> case msg' of
-                    MIsInitialGame (InitialGameMsg m) -> do
-                        infoM "Prog.initialSetup" "Recieved initial game"
-
-                        return $ Right (CGame m sigs this, sock)
-
-                    _ -> error "Invalid message recieved!"
 
 initialGUISetup :: CGameStateT ()
 initialGUISetup = do

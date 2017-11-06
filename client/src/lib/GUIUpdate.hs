@@ -26,7 +26,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.List (elemIndex)
 import Data.Maybe (fromJust)
 
-import Utilities (cardToFileNameText)
+import ClientUtilities (cardToFileNameText)
 import Constants (maxPlayers, cardBack, numTCards)
 import ClientTypes (CGameStateT, StatesNSignals)
 import Types (Card)

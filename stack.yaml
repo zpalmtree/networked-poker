@@ -9,6 +9,7 @@ packages:
 - client
 - server
 - types
+- client-framework
 resolver: lts-9.11
 install-ghc: true
 ghc-build: nopie
@@ -17,3 +18,4 @@ ghc-options:
     types: -O0
     client: "-O0 -threaded"
     server: "-O0 -threaded"
+    client-framework: -O0

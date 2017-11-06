@@ -3,7 +3,7 @@ version: '0.1.0.0'
 synopsis: A GUI to connect to a server and play poker
 category: Network
 author: ZedPea
-maintainer: z.palmer@openmailbox.org
+maintainer: zp+github@zacharypalmer.co.uk
 license: BSD3
 data-files:
 - src/gui/*.qml
@@ -20,6 +20,7 @@ dependencies:
 - binary
 - bytestring
 - hslogger
+- client-framework
 library:
     source-dirs: src/lib
     dependencies:

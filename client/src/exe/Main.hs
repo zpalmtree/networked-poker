@@ -4,16 +4,10 @@ module Main
 )
 where
 
-import Network.Socket.ByteString (recv, send)
 import Control.Monad.Trans.State (evalStateT)
-import Control.Monad.Trans.Class (lift)
 import Control.Concurrent (forkIO)
-import Network.Socket (Socket, withSocketsDo)
 import System.Environment (getArgs)
-import Data.Binary (encode, decodeOrFail)
 import Control.Monad (void, when)
-import qualified Data.ByteString as BS (ByteString)
-import qualified Data.ByteString.Lazy as BL (toStrict, null, fromStrict)
 
 import System.Log.Logger
     (Priority(..), updateGlobalLogger, rootLoggerName, setLevel, infoM)
@@ -22,14 +16,15 @@ import Graphics.QML
     (initialDocument, contextObject, newObject, defaultEngineConfig, 
      fileDocument, anyObjRef, runEngineLoop)
 
-import ClientTypes (CGameStateT)
 import HandleMessage (handleMsg)
-import Setup (initialSetup, initialGUISetup, makeClass)
+import ClientSetup (initialSetup, initialGUISetup, makeClass)
+import ClientFramework (ioLoop)
+import Utilities (getName)
 
 import Paths_client (getDataFileName)
 
 main :: IO ()
-main = withSocketsDo $ do 
+main = do 
 
     args <- getArgs
 
@@ -52,7 +47,9 @@ main = withSocketsDo $ do
 
         infoM "Prog.main" "Getting initial state"
 
-        trySetup <- initialSetup sigs ctx
+        name <- getName
+
+        trySetup <- initialSetup sigs ctx name
 
         case trySetup of
             (Left err) -> error $ 
@@ -66,7 +63,7 @@ main = withSocketsDo $ do
 
                 infoM "Prog.main" "Entering network loop"
 
-                void . forkIO $ evalStateT (ioLoop sock) initialState
+                void . forkIO $ evalStateT (ioLoop sock handleMsg) initialState
 
     infoM "Prog.main" "Running GUI"
 
@@ -76,27 +73,3 @@ main = withSocketsDo $ do
     }
 
     runEngineLoop config
-
-ioLoop :: Socket -> CGameStateT ()
-ioLoop sock = do
-    msg <- lift $ recv sock 4096
-    decode msg sock
-
-decode :: BS.ByteString -> Socket -> CGameStateT ()
-decode input sock = case decodeOrFail $ BL.fromStrict input of
-    Left (_, _, err) -> error err
-    Right (unconsumed, _, msg) -> do
-        maybeAction <- handleMsg msg
-        case maybeAction of
-            Nothing -> return ()
-            Just action -> do
-                lift . infoM "Prog.decode" $
-                    "Sending message to server: " ++ show action
-
-                let actionMsg = BL.toStrict $ encode action
-                
-                void . lift $ send sock actionMsg
-
-        if BL.null unconsumed
-            then ioLoop sock
-            else decode (BL.toStrict unconsumed) sock

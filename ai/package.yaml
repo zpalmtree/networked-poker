@@ -3,16 +3,19 @@ version: '0.1.0.0'
 synopsis: An ai to play poker
 category: Game
 author: ZedPea
-maintainer: z.palmer@openmailbox.org
+maintainer: zp+github@zacharypalmer.co.uk
 license: BSD3
 dependencies:
 - base >=4.9 && <=4.11
-data-files: src/EVs.txt
+- hnn
+- hmatrix
+- random
+data-files: src/lib/EVs.txt
+library:
+    source-dirs: src/lib
 executables:
-  ai:
+  ai-random:
     main: Main.hs
-    source-dirs: src
+    source-dirs: src/exe/ai-random/
     dependencies:
-    - hnn
-    - hmatrix
-    - random
+    - ai
