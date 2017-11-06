@@ -28,7 +28,6 @@ library
     , uuid-types
   exposed-modules:
       ClientFramework
-      Utilities
   other-modules:
       Paths_client_framework
   default-language: Haskell2010

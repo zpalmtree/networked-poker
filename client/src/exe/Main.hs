@@ -19,7 +19,7 @@ import Graphics.QML
 import HandleMessage (handleMsg)
 import ClientSetup (initialSetup, initialGUISetup, makeClass)
 import ClientFramework (ioLoop)
-import Utilities (getName)
+import ClientUtilities (getName)
 
 import Paths_client (getDataFileName)
 
