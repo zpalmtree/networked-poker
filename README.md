@@ -1,9 +1,9 @@
 # networked-poker
 [![Build Status](https://travis-ci.org/ZedPea/networked-poker.svg)](https://travis-ci.org/ZedPea/networked-poker)
 
-A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against.
+A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against. Multiple AI's will be implemented, currently the only one implemented picks an action at random.
 
-GUI is pretty much finished, next I'll be working on the AI. I might look into animations first, and customisable colours.
+There is also a utility program to test different card picking algorithms and randomness sources, along with a tiny GUI to hot swap card picking algorithms and random sources mid game.
 
 ![poker-client](https://zacharypalmer.co.uk/images/poker-client.png)
 
@@ -38,15 +38,17 @@ You may also need to install `ncurses5-compat-libs` from the AUR
 
 Then either add ~/.local/bin to your path and run the executable of your choice:
 
-`ai`
+`ai-random`
 `client`
 `server`
+`shuffletest`
 
 Or, run
 
-`stack exec ai`
+`stack exec ai-random`
 `stack exec client`
 `stack exec server`
+`stack exec shuffletest`
 
 #### Flags
 
