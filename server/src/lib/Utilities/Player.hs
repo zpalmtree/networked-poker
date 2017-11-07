@@ -104,11 +104,15 @@ nextDealer = do
     numPlayers' <- numPlayers
 
     playerQueue.dealer %= advance numPlayers'
-    where advance n numPlayers' = n + 1 `rem` numPlayers'
+
+    where advance numPlayers' n
+            | numPlayers' == 0 = error "Divide by zero in nextDealer"
+            | otherwise = n + 1 `rem` numPlayers'
 
 nextPlayer :: (Monad m) => GameState m ()
 nextPlayer = playerQueue.players %= shift
-    where shift x = tailNote "in nextPlayer!" x ++ [headNote "in nextPlayer!" x]
+    where shift x = tailNote "in nextPlayer!" x ++ 
+                   [headNote "in nextPlayer!" x]
 
 -- don't want to import Output.hs because then we have an import loop, 
 -- as output imports a few convenience funcs from here
@@ -129,7 +133,11 @@ removeOutPlayers outputFunc = do
     -- they are being removed, we don't have their socket to message them
     unless (null toRemove) $ do
         playerQueue.players %= remove
-        oldPlayers <- flatten (s^.playerQueue.players)
+
+        -- stick dealer at head of list
+        oldPlayers <- flatten (s^.playerQueue.dealer) (s^.playerQueue.players)
+        -- search through list starting with guy at head to find new person
+        -- nearest left to old dealer
         updateDealer oldPlayers
 
         numPlayers' <- numPlayers
@@ -148,12 +156,9 @@ find :: Eq a => [a] -> [a] -> Int
 find [] _ = 0
 find (x:xs) new = fromMaybe (find xs new) (elemIndex x new)
 
-flatten :: (Monad m) => [a] -> GameState m [a]
-flatten = flatten' 0
-
-flatten' :: Monad m => Int -> [a] -> m [a]
-flatten' offset p = let (end, beginning) = splitAt offset p
-                    in  return $ beginning ++ end
+flatten :: Monad m => Int -> [a] -> m [a]
+flatten offset p = let (end, beginning) = splitAt offset p
+                   in  return $ beginning ++ end
 
 leftOfDealer :: (Monad m) => [Player] -> GameState m UUID
 leftOfDealer subset = do

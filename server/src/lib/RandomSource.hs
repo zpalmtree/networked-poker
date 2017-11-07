@@ -21,7 +21,9 @@ randomFrom0ToN_LEucyer n = getStdRandom $ randomR (0, n)
 
 -- Uses a Fast Mersenne Twister, with a cycle of 2^19937-1
 randomFrom0ToN_Mersenne :: Int -> IO Int
-randomFrom0ToN_Mersenne n = (`mod` n) <$> M.getStdRandom M.random
+randomFrom0ToN_Mersenne n 
+    | n == 0 = error "Divide by zero in randomFrom0ToN_Mersenne"
+    | otherwise = (`mod` n) <$> M.getStdRandom M.random
 
 -- Uses Marsaglia's MWC256, with a cycle of 2^8222
 randomFrom0ToN_MWC256 :: Int -> IO Int

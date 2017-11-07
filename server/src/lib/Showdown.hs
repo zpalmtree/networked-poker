@@ -73,6 +73,9 @@ distributePot sidePot = do
         allPlayers = playerQueue.players.traversed
         isWinner p = p^.uuid `elem` winners^..traversed.uuid
 
+    when (null winners) $
+        error "Divide by zero in distributePot"
+
     spareID <- leftOfDealer winners
 
     zoom (allPlayers.filtered isWinner) $ do

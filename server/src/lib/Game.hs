@@ -34,6 +34,7 @@ import Output
 gameLoop :: GameStateT ()
 gameLoop = do
     postBlindsAndPlayRound
+
     nextRound
 
     s <- get
