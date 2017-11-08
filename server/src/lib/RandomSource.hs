@@ -10,6 +10,7 @@ import Control.Monad (when)
 import System.IO.Unsafe (unsafePerformIO)
 import System.Random (getStdRandom, randomR)
 import System.Random.MWC (Seed, createSystemRandom, uniformR, save, restore)
+import Data.Word (Word32)
 import qualified System.Random.Mersenne as M (getStdRandom, random)
 
 import Control.Concurrent.MVar 
@@ -21,9 +22,21 @@ randomFrom0ToN_LEucyer n = getStdRandom $ randomR (0, n)
 
 -- Uses a Fast Mersenne Twister, with a cycle of 2^19937-1
 randomFrom0ToN_Mersenne :: Int -> IO Int
-randomFrom0ToN_Mersenne n 
-    | n == 0 = error "Divide by zero in randomFrom0ToN_Mersenne"
-    | otherwise = (`mod` n) <$> M.getStdRandom M.random
+randomFrom0ToN_Mersenne n = do
+    let range = 1 + fromIntegral n
+        buckets = maxBound `div` range
+        limit = buckets * range
+
+    r <- getValidValue limit
+
+    return . fromIntegral $ r `div` buckets
+
+getValidValue :: Word32 -> IO Word32
+getValidValue limit = do
+    r <- M.getStdRandom M.random
+    if r >= limit
+        then getValidValue limit
+        else return r
 
 -- Uses Marsaglia's MWC256, with a cycle of 2^8222
 randomFrom0ToN_MWC256 :: Int -> IO Int
