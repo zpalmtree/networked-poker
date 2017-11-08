@@ -16,11 +16,10 @@ import qualified System.Random.Mersenne as M (getStdRandom, random)
 import Control.Concurrent.MVar 
     (MVar, newEmptyMVar, putMVar, modifyMVar, isEmptyMVar)
 
--- the default implementation from System.Random, with a cycle of 2.30584e18
 randomFrom0ToN_LEucyer :: Int -> IO Int
 randomFrom0ToN_LEucyer n = getStdRandom $ randomR (0, n)
 
--- Uses a Fast Mersenne Twister, with a cycle of 2^19937-1
+-- modified from https://stackoverflow.com/a/17554531/8737306
 randomFrom0ToN_Mersenne :: Int -> IO Int
 randomFrom0ToN_Mersenne n = do
     let range = 1 + fromIntegral n
@@ -38,7 +37,6 @@ getValidValue limit = do
         then getValidValue limit
         else return r
 
--- Uses Marsaglia's MWC256, with a cycle of 2^8222
 randomFrom0ToN_MWC256 :: Int -> IO Int
 randomFrom0ToN_MWC256 n = do
     empty <- isEmptyMVar genSeed
