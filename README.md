@@ -93,3 +93,7 @@ Icons made by Kenney.nl - https://opengameart.org/content/boardgame-pack
 They fall under the CC0 1.0 license - https://creativecommons.org/licenses/by/1.0/
 
 Icons were resized.
+
+#### Deuces
+
+I'm using deuces from https://github.com/worldveil/deuces with a python3 port from https://github.com/msaindon/deuces
