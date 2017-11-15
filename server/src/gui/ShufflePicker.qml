@@ -50,7 +50,7 @@ Window
             Layout.fillHeight: true
             Layout.minimumWidth: 150
 
-            model: ["RandomIndex", "Knuth"]
+            model: ["RandomIndex", "Knuth", "RandomSort"]
 
             dropDownText: drawAlgorithm.displayText
         }

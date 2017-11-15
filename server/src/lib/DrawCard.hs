@@ -12,6 +12,9 @@ where
 
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State (get)
+import Control.Monad (replicateM)
+import Data.List (sortBy)
+import Data.Function (on)
 import Control.Lens ((.=), (^.))
 
 import Lenses (cardInfo, deck)
@@ -21,7 +24,8 @@ import RandomSource
 
 import Types 
     (KnuthDeck(..), Deck(..), Card(..), Value(..), RandomIndexDeck(..),
-     Suit(..), GameStateT, RandomSource(..), DrawAlgorithm(..))
+     Suit(..), GameStateT, RandomSource(..), DrawAlgorithm(..),
+     RandomSortDeck(..))
 
 -- DEAL WHOLE HAND
 
@@ -63,6 +67,12 @@ initDeckKnuth randomSource = do
 initDeckRandomIndex :: (Int -> IO Int) -> IO Deck
 initDeckRandomIndex _ = return . IsRandomIndex $ RandomIndexDeck fullDeck
 
+initDeckRandomSort :: (Int -> IO Int) -> IO Deck
+initDeckRandomSort randomSource = do
+    randoms <- replicateM (length fullDeck) (randomSource $ maxBound - 1)
+    let sorted = map fst . sortBy (compare `on` snd) $ zip fullDeck randoms
+    return . IsRandomSort $ RandomSortDeck sorted
+
 -- DRAW FUNCS
 
 drawKnuth :: (Int -> IO Int) -> Deck -> IO (Card, Deck)
@@ -70,6 +80,12 @@ drawKnuth _ (IsKnuth (KnuthDeck (card:deck'))) = return
     (card, IsKnuth $ KnuthDeck deck')
 
 drawKnuth _ _ = error "Expected IsKnuth deck!"
+
+drawRandomSort :: (Int -> IO Int) -> Deck -> IO (Card, Deck)
+drawRandomSort _ (IsRandomSort (RandomSortDeck (card:deck'))) = return
+    (card, IsRandomSort $ RandomSortDeck deck')
+
+drawRandomSort _ _ = error "Expected IsRandomSort deck!"
 
 drawRandomIndex :: (Int -> IO Int) -> Deck -> IO (Card, Deck)
 drawRandomIndex randomSource (IsRandomIndex (RandomIndexDeck cards)) = do
@@ -112,7 +128,9 @@ getRNGFunc MWC256 = randomFrom0ToN_MWC256
 getDrawFunc :: DrawAlgorithm -> ((Int -> IO Int) -> Deck -> IO (Card, Deck))
 getDrawFunc Knuth = drawKnuth
 getDrawFunc RandomIndex = drawRandomIndex
+getDrawFunc RandomSort = drawRandomSort
 
 getInitFunc :: DrawAlgorithm -> (Int -> IO Int) -> IO Deck
 getInitFunc Knuth = initDeckKnuth
 getInitFunc RandomIndex = initDeckRandomIndex
+getInitFunc RandomSort = initDeckRandomSort

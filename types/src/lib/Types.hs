@@ -34,6 +34,7 @@ module Types
     Deck(..),
     KnuthDeck(..),
     RandomIndexDeck(..),
+    RandomSortDeck(..),
     ShuffleType(..),
     DrawAlgorithm(..),
     RandomSource(..),
@@ -168,6 +169,7 @@ data ShuffleType = ShuffleType {
 
 data DrawAlgorithm = RandomIndex
                    | Knuth
+                   | RandomSort
                    deriving (Show, Eq, Read)
 
 data RandomSource = LEucyer
@@ -243,9 +245,11 @@ data Message = MIsAction (ActionMsg Int)
 
 data Deck = IsKnuth KnuthDeck
           | IsRandomIndex RandomIndexDeck
+          | IsRandomSort RandomSortDeck
 
 newtype KnuthDeck = KnuthDeck [Card]
 newtype RandomIndexDeck = RandomIndexDeck [Card]
+newtype RandomSortDeck = RandomSortDeck [Card]
 
 -- NEWTYPES
 
