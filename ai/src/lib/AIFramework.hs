@@ -9,7 +9,7 @@ import Control.Monad.Trans.State (evalStateT)
 import ClientFramework (establishConnection, ioLoop)
 import AITypes (AIGameStateT)
 
-import HandleMessage 
+import HandleMessageAI
     (handleAction, handleNewCards, handleMyCards, handleNewChips,
      handlePlayersRemoved, handleBadInput, handleGatherChips, handleResetRound,
      handleNextState, handleMinRaise, handleGameOver)

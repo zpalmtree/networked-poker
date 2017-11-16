@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
-module HandleMessage
+module HandleMessageAI
 (
     handleAction,
     handleNewCards,

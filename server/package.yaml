@@ -12,9 +12,6 @@ data-files:
 dependencies:
 - base >=4.9 && <=4.11
 - lens
-- random
-- transformers
-- safe
 - uuid-types
 - hslogger
 - network
@@ -22,10 +19,15 @@ dependencies:
 - text
 - bytestring
 - binary
-- mersenne-random
-- mwc-random
+- transformers
 library:
     source-dirs: src/lib
+    dependencies: 
+    - safe
+    - mersenne-random
+    - mwc-random
+    - random
+    - numbers
 executables:
     server:
         main: Main.hs

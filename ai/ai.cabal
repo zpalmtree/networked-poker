@@ -33,7 +33,7 @@ library
   exposed-modules:
       AIFramework
       AITypes
-      HandleMessage
+      HandleMessageAI
       NeuralNetwork
   other-modules:
       Paths_ai

@@ -2,7 +2,8 @@ module RandomSource
 (
     randomFrom0ToN_LEucyer,
     randomFrom0ToN_Mersenne,
-    randomFrom0ToN_MWC256
+    randomFrom0ToN_MWC256,
+    probOfUnbiasedShuffle
 )
 where
 
@@ -11,6 +12,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import System.Random (getStdRandom, randomR)
 import System.Random.MWC (Seed, createSystemRandom, uniformR, save, restore)
 import Data.Word (Word32)
+import Data.Number.CReal (showCReal)
 import qualified System.Random.Mersenne as M (getStdRandom, random)
 
 import Control.Concurrent.MVar 
@@ -65,3 +67,10 @@ randomFrom0ToN_MWC256 n = do
 {-# NOINLINE genSeed #-}
 genSeed :: MVar Seed
 genSeed = unsafePerformIO newEmptyMVar
+
+probOfUnbiasedShuffle :: Integer -> String
+probOfUnbiasedShuffle k = showCReal 100 prob
+    where prob = 1 - (numerator / denominator)
+          numerator = product $ map (\n -> k2 - n) [0..51]
+          denominator = k2^52
+          k2 = (2^k) - 1
