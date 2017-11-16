@@ -5,6 +5,7 @@ module AIFramework
 where
 
 import Control.Monad.Trans.State (evalStateT)
+import System.Random (randomR, getStdRandom)
 
 import ClientFramework (establishConnection, ioLoop)
 import AITypes (AIGameStateT)
@@ -20,7 +21,9 @@ import Types
 
 runAI :: String -> ([Action Int] -> AIGameStateT (Maybe (Action Int))) -> IO ()
 runAI name handleFunc = do
-    maybeGame <- establishConnection name
+    nameSuffix <- show <$> getStdRandom (randomR (0 :: Int, 999))
+
+    maybeGame <- establishConnection (name ++ "-" ++ nameSuffix)
     case maybeGame of
         Left err -> error $
             "Couldn't connect to server. Did you start it?\n" ++ show err

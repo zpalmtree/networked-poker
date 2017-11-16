@@ -4,7 +4,7 @@ module Main
 )
 where
 
-import System.Random (getStdGen, randomRs, randomR, getStdRandom)
+import System.Random (randomR, getStdRandom)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Control.Lens ((^.))
@@ -15,23 +15,14 @@ import Types (Action(..))
 import Lenses (cIsMe, cPlayers, cBets, cMinimumRaise, cChips, cBet)
 
 main :: IO ()
-main = do
-    gen <- getStdGen
-
-    let nameSuffix = take 10 $ randomRs ('a', 'z') gen
-        name = "ai-random-" ++ nameSuffix
-
-    runAI name handleFunc
+main = runAI "ai-random" handleFunc
 
 handleFunc :: [Action Int] -> AIGameStateT (Maybe (Action Int))
 handleFunc options = do
     index <- lift . getStdRandom $ randomR (0, length options - 1)
-    let option = options !! index
 
-    case option of
-        Raise _ -> do
-            raise <- getRaise
-            return . Just $ Raise raise
+    case options !! index of
+        Raise _ -> (Just . Raise) <$> getRaise
         x -> return $ Just x
 
     where getRaise :: AIGameStateT Int
