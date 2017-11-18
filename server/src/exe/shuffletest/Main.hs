@@ -9,16 +9,19 @@ where
 import Data.Map.Lazy (Map, insertWith, empty, toAscList)
 import Data.Text (Text, unpack, pack)
 import qualified Data.Text as T (empty)
-import Graphics.Rendering.Chart.Backend.Cairo (renderableToFile)
+import Graphics.Rendering.Chart.Backend.Cairo (renderableToFile, _fo_size)
 import Control.Lens ((.~), (^.), makeLenses)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import System.IO (openTempFile, hClose)
 import Control.Concurrent (forkIO)
 import Control.Monad (void, when)
+import Data.Char (intToDigit)
 
 import Graphics.Rendering.Chart.Easy 
     (Renderable, layout_x_axis, laxis_generate, addIndexes, plot_bars_values, 
-     toRenderable, layout_plots, layout_title, autoIndexAxis, def, plotBars)
+     toRenderable, layout_plots, layout_title, autoIndexAxis, def, plotBars,
+     laxis_style, axis_label_style, font_size, layout_title_style,
+     layout_y_axis)
 
 import Graphics.QML 
     (ObjRef, SignalKey, initialDocument, contextObject, newClass, defMethod',
@@ -26,7 +29,7 @@ import Graphics.QML
      defPropertySigRO', newObject, fireSignal)
 
 import DrawCard (getInitFunc, getDrawFunc, getRNGFunc, dealHand)
-import Types (Card)
+import Types (Card(..), Value(..), Suit(..))
 
 import Paths_server (getDataFileName)
 
@@ -104,7 +107,7 @@ testShuffle sNs this algorithm randomSource iterations = void . forkIO $ do
 
     mapping <- dealNHands iterations dealFunc
 
-    renderableToFile def fileName (chart mapping)
+    renderableToFile (def { _fo_size = (2000, 1000) }) fileName (chart mapping)
 
     setImg sNs this fileName
 
@@ -131,8 +134,29 @@ chart mapping = toRenderable layout
           layout = layout_title .~ "Number of cards drawn"
                  $ layout_x_axis . laxis_generate .~ autoIndexAxis x_axis_labels
                  $ layout_plots .~ [plotBars barChart]
+                 $ layout_x_axis . laxis_style . axis_label_style . font_size .~ 16
+                 $ layout_title_style . font_size .~ 20
+                 $ layout_y_axis . laxis_style . axis_label_style . font_size .~ 16
                  $ def
         
           list = toAscList mapping
-          x_axis_labels = map (show . fst) list
+          x_axis_labels = map (smallShow . fst) list
           y_axis_values = map (\x -> [snd x]) list
+
+smallShow :: Card -> String
+smallShow (Card value suit) = smallShowValue value : [smallShowSuit suit]
+
+smallShowValue :: Value -> Char
+smallShowValue Ace   = 'A'
+smallShowValue King  = 'K'
+smallShowValue Queen = 'Q'
+smallShowValue Jack  = 'J'
+smallShowValue Ten   = 'T'
+-- Two = 0, Three = 1, etc
+smallShowValue x = intToDigit $ fromEnum x + 2
+
+smallShowSuit :: Suit -> Char
+smallShowSuit Heart   = 'h'
+smallShowSuit Spade   = 's'
+smallShowSuit Diamond = 'd'
+smallShowSuit Club    = 'c'
