@@ -21,13 +21,14 @@ where
 
 import Control.Lens (Getting, (^.), (^?!), (%=), (.=), (^..), _head, traversed)
 import Control.Monad.Trans.State (get)
-import Data.List (elemIndex)
-import Data.Maybe (fromMaybe)
+import Data.List (elemIndex, find)
+import Data.Maybe (mapMaybe)
 import Control.Monad (when, unless, replicateM_)
 import Safe (headNote, tailNote)
 import Data.UUID.Types (UUID)
 import Network.Socket (Socket)
 import System.Random (getStdRandom, random)
+import Data.Tuple (swap)
 
 import Types (Player(..), GameState, GameStateT, Game)
 
@@ -79,7 +80,7 @@ victor = do
 
 -- this function resets the current player to the one left of the dealer
 -- imagine there are 6 players. the dealer is pointing at player 4, so left
--- of the dealer is player 5. He goes first next round. To find out how many
+-- of the dealer is player 5. He goes first next round. To findDealer out how many
 -- times we need to shift him to get him to the front of the queue, we take
 -- the number of players (6) minus (the dealer (3) + 1) - remember arrays
 -- are 0 indexed, so if dealer is pointing at 4, actual value is 3.
@@ -120,7 +121,7 @@ removeOutPlayers :: (Maybe [UUID] -> GameStateT ()) -> GameStateT ()
 removeOutPlayers outputFunc = do
     s <- get
 
-    -- find out who needs removing
+    -- findDealer out who needs removing
     let toRemove = filter (\x -> x^.chips <= 0) (s^.playerQueue.players)
         removed
             | null toRemove = Nothing
@@ -135,8 +136,8 @@ removeOutPlayers outputFunc = do
         playerQueue.players %= remove
 
         -- stick dealer at head of list
-        oldPlayers <- flatten (s^.playerQueue.dealer) (s^.playerQueue.players)
-        -- search through list starting with guy at head to find new person
+        let oldPlayers = flatten (s^.playerQueue.dealer) (s^.playerQueue.players)
+        -- search through list starting with guy at head to findDealer new person
         -- nearest left to old dealer
         updateDealer oldPlayers
 
@@ -150,27 +151,24 @@ updateDealer :: (Monad m) => [Player] -> GameState m ()
 updateDealer old = do
     new <- get
 
-    playerQueue.dealer .= find old (new^.playerQueue.players)
+    playerQueue.dealer .= findDealer (new^.playerQueue.players) old
 
-find :: Eq a => [a] -> [a] -> Int
-find [] _ = 0
-find (x:xs) new = fromMaybe (find xs new) (elemIndex x new)
+findDealer :: Eq a => [a] -> [a] -> Int
+findDealer new = head . mapMaybe (`elemIndex` new)
 
-flatten :: Monad m => Int -> [a] -> m [a]
-flatten offset p = let (end, beginning) = splitAt offset p
-                   in  return $ beginning ++ end
+flatten :: Int -> [a] -> [a]
+flatten x = uncurry (++) . swap . splitAt x
 
 leftOfDealer :: (Monad m) => [Player] -> GameState m UUID
 leftOfDealer subset = do
     s <- get
 
-    return $ findNearestToDealer subset (s^.playerQueue.players)
+    case findNearestToDealer subset (s^.playerQueue.players) of
+        Just x -> return x
+        Nothing -> error "Couldn't find dealer in subset!"
 
-findNearestToDealer :: [Player] -> [Player] -> UUID
-findNearestToDealer _ [] = error "No players in p:ps exist in subset!"
-findNearestToDealer subset (p:ps)
-    | p `elem` subset = p^.uuid
-    | otherwise = findNearestToDealer subset ps
+findNearestToDealer :: [Player] -> [Player] -> Maybe UUID
+findNearestToDealer subset = fmap (^.uuid) . find (`elem` subset)
 
 getPlayerByUUID :: (Monad m) => UUID -> GameState m Player
 getPlayerByUUID uuid' = do
@@ -189,6 +187,4 @@ mkNewPlayer name' sock = do
     return $ Player sock name' uuid' 1000 [] True False 0 False Nothing True
 
 getCurrentPlayerUUID :: (Monad m) => GameState m UUID
-getCurrentPlayerUUID = do
-    p <- getCurrentPlayer
-    return $ p^.uuid
+getCurrentPlayerUUID = fmap (^.uuid) getCurrentPlayer

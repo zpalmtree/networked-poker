@@ -12,7 +12,7 @@ module Utilities.Showdown
 where
 
 import Data.List (sort, group)
-import Safe (at, headNote)
+import Safe (at)
 import Control.Lens ((^.))
 
 import Types (Card(..), Value(..))
@@ -20,27 +20,26 @@ import Utilities.Card (hearts, clubs, diamonds, spades)
 import Lenses (value)
 
 cardValues :: [Card] -> Bool -> [Int]
-cardValues c aceHigh
-    | aceHigh = sort $ map (cardValue . (^.value)) c
-    | otherwise = sort $ map (cardValueAceLow . (^.value)) c
+cardValues c True = sort $ map (cardValue . (^.value)) c
+cardValues c _ = sort $ map (cardValueAceLow . (^.value)) c
 
 numOfSuit :: [Card] -> [Int]
 numOfSuit c = map (`numSuit` c) [isHeart, isClub, isDiamond, isSpade]
 
 numSuit :: (a -> Bool) -> [a] -> Int
-numSuit f x = length $ filter f x
+numSuit = (length .) . filter
 
 isHeart :: Card -> Bool
-isHeart x = x `elem` hearts
+isHeart = (`elem` hearts)
 
 isClub :: Card -> Bool
-isClub x = x `elem` clubs
+isClub = (`elem` clubs)
 
 isDiamond :: Card -> Bool
-isDiamond x = x `elem` diamonds
+isDiamond = (`elem` diamonds)
 
 isSpade :: Card -> Bool
-isSpade x = x `elem` spades
+isSpade = (`elem` spades)
 
 cardValue :: Value -> Int
 cardValue Two = 2
@@ -61,15 +60,9 @@ handSubsets xs = combsBySize xs `at` sizeOfHand
 sizeOfHand :: Int
 sizeOfHand = 5
 
-consecutive :: (Eq a, Num a) => [a] -> Bool
-consecutive [] = True
-consecutive xs = consecutive' xs (headNote "in consecutive!" xs)
-
-consecutive' :: (Num t, Eq t) => [t] -> t -> Bool
-consecutive' [] _ = True
-consecutive' (x:xs) val
-    | x == val = consecutive' xs (val + 1)
-    | otherwise = False
+-- from https://stackoverflow.com/a/15542475/8737306
+consecutive :: (Eq a, Enum a) => [a] -> Bool
+consecutive xs = and $ zipWith ((==) . succ) xs (tail xs)
 
 numOfEachValue :: [Card] -> [Int]
-numOfEachValue cards' = map length . group . sort $ map (^.value) cards'
+numOfEachValue = map length . group . sort . map (^.value)

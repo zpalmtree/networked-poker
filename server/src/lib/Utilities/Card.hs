@@ -14,7 +14,7 @@ where
 
 import Control.Lens ((^.), (.=), (%=), (<~), ix)
 import Control.Monad.Trans.State (get)
-import Control.Monad (replicateM_, replicateM)
+import Control.Monad (replicateM_, replicateM, forM_)
 
 import Utilities.Player (numPlayers)
 import Output (outputPlayerCards)
@@ -31,10 +31,9 @@ dealCards = do
     outputPlayerCards
 
 updateCards :: Int -> GameStateT ()
-updateCards 0 = return ()
-updateCards n = do
-    playerQueue.players.ix (n-1).cards <~ drawPlayerCards
-    updateCards (n-1)
+updateCards n = forM_ [0 .. n - 1] $ \x -> do
+    playerQueue.players.ix x.cards <~ drawPlayerCards
+    updateCards x
 
 drawPlayerCards :: GameStateT [Card]
 drawPlayerCards = replicateM 2 getRandomCard
