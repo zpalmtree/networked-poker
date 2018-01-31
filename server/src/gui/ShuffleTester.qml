@@ -8,8 +8,8 @@ Window
     title: "Shuffle Tester"
     visible: true
 
-    minimumHeight: 900
-    minimumWidth: 1600
+    minimumHeight: 700
+    minimumWidth: 1200
 
     GridLayout
     {

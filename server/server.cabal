@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.18.1.
+-- This file has been generated from package.yaml by hpack version 0.21.2.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 3012cc548b38487f8bfaad323226e2592f52d50e85f0014b3259c5f80c42cc00
 
 name:           server
 version:        0.1.0.0
@@ -26,20 +28,20 @@ library
       src/lib
   build-depends:
       base >=4.9 && <=4.11
-    , lens
-    , uuid-types
-    , hslogger
-    , network
-    , types
-    , text
-    , bytestring
     , binary
-    , transformers
-    , safe
+    , bytestring
+    , hslogger
+    , lens
     , mersenne-random
     , mwc-random
-    , random
+    , network
     , numbers
+    , random
+    , safe
+    , text
+    , transformers
+    , types
+    , uuid-types
   exposed-modules:
       Betting
       DrawCard
@@ -62,41 +64,45 @@ library
 
 executable server
   main-is: Main.hs
+  other-modules:
+      Paths_server
   hs-source-dirs:
       src/exe/server
   build-depends:
       base >=4.9 && <=4.11
-    , lens
-    , uuid-types
-    , hslogger
-    , network
-    , types
-    , text
-    , bytestring
     , binary
-    , transformers
-    , server
+    , bytestring
+    , hslogger
     , hsqml
+    , lens
+    , network
+    , server
+    , text
+    , transformers
+    , types
+    , uuid-types
   default-language: Haskell2010
 
 executable shuffletest
   main-is: Main.hs
+  other-modules:
+      Paths_server
   hs-source-dirs:
       src/exe/shuffletest
   build-depends:
-      base >=4.9 && <=4.11
-    , lens
-    , uuid-types
-    , hslogger
-    , network
-    , types
-    , text
-    , bytestring
-    , binary
-    , transformers
-    , server
-    , containers
-    , hsqml
-    , Chart
+      Chart
     , Chart-cairo
+    , base >=4.9 && <=4.11
+    , binary
+    , bytestring
+    , containers
+    , hslogger
+    , hsqml
+    , lens
+    , network
+    , server
+    , text
+    , transformers
+    , types
+    , uuid-types
   default-language: Haskell2010

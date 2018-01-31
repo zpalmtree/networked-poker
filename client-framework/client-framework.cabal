@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.18.1.
+-- This file has been generated from package.yaml by hpack version 0.21.2.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 8dd2c92b2e2ae0441d2be412d8dc57e8d858f5a7710382c5d09ffc0ba333c5dd
 
 name:           client-framework
 version:        0.1.0.0
@@ -18,13 +20,13 @@ library
       src
   build-depends:
       base >=4.9 && <=4.11
-    , types
-    , lens
-    , transformers
-    , network
     , binary
     , bytestring
     , hslogger
+    , lens
+    , network
+    , transformers
+    , types
     , uuid-types
   exposed-modules:
       ClientFramework
