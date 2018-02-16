@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 170e7ab65080662cc0797012d433361d530df4b55ee03d4bdb894786706a4368
+-- hash: a07be1c155c4d1fad1eef989889b03368676a143464698bacc477f134da4fad5
 
 name:           ai
 version:        0.1.0.0
@@ -15,9 +15,6 @@ license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.10
 
-data-files:
-    src/lib/EVs.txt
-
 library
   hs-source-dirs:
       src/lib
@@ -25,9 +22,9 @@ library
       base >=4.9 && <=4.11
     , binary
     , client-framework
-    , hmatrix
-    , hnn
+    , containers
     , lens
+    , poker-eval
     , random
     , transformers
     , types
@@ -35,8 +32,8 @@ library
   exposed-modules:
       AIFramework
       AITypes
+      CoerceCard
       HandleMessageAI
-      NeuralNetwork
   other-modules:
       Paths_ai
   default-language: Haskell2010
@@ -50,9 +47,26 @@ executable ai-random
   build-depends:
       ai
     , base >=4.9 && <=4.11
-    , hmatrix
-    , hnn
+    , containers
     , lens
+    , poker-eval
+    , random
+    , transformers
+    , types
+  default-language: Haskell2010
+
+executable rule-based-ai
+  main-is: Main.hs
+  other-modules:
+      Paths_ai
+  hs-source-dirs:
+      src/exe/rule-based-ai/
+  build-depends:
+      ai
+    , base >=4.9 && <=4.11
+    , containers
+    , lens
+    , poker-eval
     , random
     , transformers
     , types

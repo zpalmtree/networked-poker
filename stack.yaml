@@ -4,6 +4,7 @@ extra-deps:
 - hsqml-0.3.5.0
 - hnn-0.3
 - mersenne-random-1.0.0.1
+- poker-eval-0.3.1
 packages:
 - ai
 - client
