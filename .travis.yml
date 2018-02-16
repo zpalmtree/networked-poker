@@ -16,6 +16,7 @@ addons:
         - qtdeclarative5-dev
         - libblas-dev
         - liblapack-dev
+        - libpoker-eval
 
 script:
     - stack --no-terminal install
