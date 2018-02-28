@@ -28,7 +28,9 @@ handleFunc options = do
 
     let me = head $ filter (^.cIsMe) (s^.cPlayers)
         myCards = me^.cCards
-        ev = evaluateCards $ myCards !! 0 : myCards !! 1 : s^.cCommunityCards
+        evAllCards = evaluateCards $ myCards !! 0 : myCards !! 1 : s^.cCommunityCards
+        evCommunityCards = evaluateCards $ s^.cCommunityCards
+        ev = evAllCards - evCommunityCards
 
     return $ handleOptions options ev s me
 
@@ -57,7 +59,7 @@ handleOptions options ev s me
           enoughChips = me^.cBet + me^.cChips >= targetBet
     
 -- minimum value is 65535
--- maximum value is 17563648
+-- maximum value is 135004160
 -- 0 EV is 786432
 evaluateCards :: [Card] -> Int
 evaluateCards = fromIntegral . unNumericalHandValue . numericalHandValue
@@ -66,4 +68,4 @@ evaluateCards = fromIntegral . unNumericalHandValue . numericalHandValue
 -- normalise to the average 0 EV value
 targetBet' :: Int -> Int -> Int
 targetBet' x bigBlindSize = round $ (fromIntegral x - 786432) * 
-                                    fromIntegral bigBlindSize * 0.000001
+                                    fromIntegral bigBlindSize * 0.0000005
