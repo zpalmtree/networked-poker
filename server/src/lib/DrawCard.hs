@@ -41,7 +41,7 @@ dealHand initFunc drawFunc randomSource = do
             rest <- draw (n-1) newDeck
             return $ card : rest
 
-          handSize = (6 * 2) + 5
+          handSize = 13
 
 -- MONADIC INIT AND DRAW
 

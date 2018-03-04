@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.18.1.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: dc8a88c9f20c15f4d322f92f4514c3cee8ec83de05b3d2565f63f1911ea3c522
 
 name:           types
 version:        0.1.0.0
@@ -15,13 +17,13 @@ library
       src/lib
   build-depends:
       base >=4.9 && <=4.11
-    , network
     , binary
+    , lens
+    , network
+    , random
+    , text
     , transformers
     , uuid-types
-    , lens
-    , text
-    , random
   exposed-modules:
       Lenses
       Types

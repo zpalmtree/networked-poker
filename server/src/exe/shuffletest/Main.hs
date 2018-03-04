@@ -6,7 +6,7 @@ module Main
 )
 where
 
-import Data.Map.Lazy (Map, insertWith, empty, toAscList)
+import Data.Map.Lazy (Map, insertWith, empty, toAscList, size, elems)
 import Data.Text (Text, unpack, pack)
 import qualified Data.Text as T (empty)
 import Graphics.Rendering.Chart.Backend.Cairo (renderableToFile, _fo_size)
@@ -16,12 +16,13 @@ import System.IO (openTempFile, hClose)
 import Control.Concurrent (forkIO)
 import Control.Monad (void, when)
 import Data.Char (intToDigit)
+import Text.Printf (printf)
 
 import Graphics.Rendering.Chart.Easy 
     (Renderable, layout_x_axis, laxis_generate, addIndexes, plot_bars_values, 
      toRenderable, layout_plots, layout_title, autoIndexAxis, def, plotBars,
      laxis_style, axis_label_style, font_size, layout_title_style,
-     layout_y_axis)
+     layout_y_axis, laxis_title, laxis_title_style)
 
 import Graphics.QML 
     (ObjRef, SignalKey, initialDocument, contextObject, newClass, defMethod',
@@ -131,8 +132,12 @@ chart mapping = toRenderable layout
     where barChart = plot_bars_values .~ addIndexes y_axis_values
                    $ def
     
-          layout = layout_title .~ "Number of cards drawn"
+          layout = layout_title .~ createTitle mapping
                  $ layout_x_axis . laxis_generate .~ autoIndexAxis x_axis_labels
+                 $ layout_x_axis . laxis_title .~ "Card (Value + Suit)"
+                 $ layout_y_axis . laxis_title .~ "Number drawn of this card"
+                 $ layout_x_axis . laxis_title_style . font_size .~ 14
+                 $ layout_y_axis . laxis_title_style . font_size .~ 14
                  $ layout_plots .~ [plotBars barChart]
                  $ layout_x_axis . laxis_style . axis_label_style . font_size .~ 16
                  $ layout_title_style . font_size .~ 20
@@ -141,7 +146,21 @@ chart mapping = toRenderable layout
         
           list = toAscList mapping
           x_axis_labels = map (smallShow . fst) list
-          y_axis_values = map (\x -> [snd x]) list
+          y_axis_values = map (return . snd) list
+
+          title = createTitle mapping
+
+createTitle :: Map Card Int -> String
+createTitle mapping = printf 
+    ("Number of cards drawn: %d, mean: %.2f, standard deviation: %.2f, " ++
+    "coefficient of variation: %.4f") drawn mean sd cov
+
+    where drawn = sum mapping
+          mean = fromIntegral drawn / fromIntegral (size mapping)
+          sumSquares = sum . map (\x -> (fromIntegral x - mean) ^ 2) $ elems mapping
+          variance = sumSquares / fromIntegral (size mapping - 1)
+          sd = sqrt variance :: Double
+          cov = sd / mean
 
 smallShow :: Card -> String
 smallShow (Card value suit) = smallShowValue value : [smallShowSuit suit]
