@@ -42,6 +42,7 @@ Then either add ~/.local/bin to your path and run the executable of your choice:
 `client`
 `server`
 `shuffletest`
+`rule-based-ai`
 
 Or, run
 
@@ -49,6 +50,15 @@ Or, run
 `stack exec client`
 `stack exec server`
 `stack exec shuffletest`
+`stack exec rule-based-ai`
+
+##### Testing AI's
+
+`server &`
+`rule-based-ai &`
+`ai-random`
+
+ai-random and rule-based-ai will play against each other. The AI will print out when it wins and loses.
 
 #### Flags
 
