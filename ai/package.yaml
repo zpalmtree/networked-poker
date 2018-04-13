@@ -30,3 +30,8 @@ executables:
     source-dirs: src/exe/rule-based-ai/
     dependencies:
     - ai
+  call-any:
+    main: Main.hs
+    source-dirs: src/exe/call-any/
+    dependencies:
+    - ai

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a07be1c155c4d1fad1eef989889b03368676a143464698bacc477f134da4fad5
+-- hash: ba5ae9643a74ea817c5bad7311cfc1644987356fa6e66a9c3a1717d654094f63
 
 name:           ai
 version:        0.1.0.0
@@ -30,7 +30,10 @@ library
     , types
     , uuid-types
   exposed-modules:
+      AICallAny
       AIFramework
+      AIRandom
+      AIRuleBased
       AITypes
       CoerceCard
       HandleMessageAI
@@ -44,6 +47,23 @@ executable ai-random
       Paths_ai
   hs-source-dirs:
       src/exe/ai-random/
+  build-depends:
+      ai
+    , base >=4.9 && <=4.11
+    , containers
+    , lens
+    , poker-eval
+    , random
+    , transformers
+    , types
+  default-language: Haskell2010
+
+executable call-any
+  main-is: Main.hs
+  other-modules:
+      Paths_ai
+  hs-source-dirs:
+      src/exe/call-any/
   build-depends:
       ai
     , base >=4.9 && <=4.11

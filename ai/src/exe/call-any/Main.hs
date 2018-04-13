@@ -5,7 +5,7 @@ module Main
 where
 
 import AIFramework (runAI)
-import AIRandom (handleFunc)
+import AICallAny (handleFunc)
 
 main :: IO ()
-main = runAI "ai-random" handleFunc
+main = runAI "call-any" handleFunc
