@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d8b035f3b77bdab61d7a6b6972cc50eb17f069b35d3ddefb6164f3bcf554eada
+-- hash: 9759ad932aa3aa3f1166f71e29ef05657f9f99509903d47df000d4a164c1226e
 
 name:           experiments
 version:        0.1.0.0
@@ -21,6 +21,7 @@ library
       src/lib
   build-depends:
       ai
+    , async
     , base >=4.9 && <4.11
     , server
     , types
@@ -34,6 +35,7 @@ executable ai-shuffle-test
       src/exe/ai-shuffle-test
   build-depends:
       ai
+    , async
     , base >=4.9 && <4.11
     , server
     , types
