@@ -55,14 +55,34 @@ updateMaxBet n = do
 smallBlind :: GameStateT ()
 smallBlind = do
     outputAction SmallBlind
+
     s <- get
-    makeBet (s^.bets.smallBlindSize)
+    player <- getCurrentPlayer
+
+    let bet' = player^.chips + player^.bet
+        raise' = player^.chips
+
+    if player^.chips < s^.bets.smallBlindSize
+        then do
+            makeBet $ player^.chips
+            playerQueue.players.ix 0.allIn .= True
+        else makeBet (s^.bets.smallBlindSize)
 
 bigBlind :: GameStateT ()
 bigBlind = do
     outputAction BigBlind
+
     s <- get
-    makeBet (s^.bets.bigBlindSize)
+    player <- getCurrentPlayer
+
+    let bet' = player^.chips + player^.bet
+        raise' = player^.chips
+
+    if player^.chips < s^.bets.bigBlindSize
+        then do
+            makeBet $ player^.chips
+            playerQueue.players.ix 0.allIn .= True
+        else makeBet (s^.bets.bigBlindSize)
 
 gatherChips :: (Monad m) => GameState m Int
 gatherChips = do
