@@ -20,6 +20,7 @@ dependencies:
 - bytestring
 - binary
 - transformers
+- hsqml
 library:
     source-dirs: src/lib
     dependencies: 
@@ -34,13 +35,11 @@ executables:
         source-dirs: src/exe/server
         dependencies:
         - server
-        - hsqml
     shuffletest:
         main: Main.hs
         source-dirs: src/exe/shuffletest
         dependencies:
         - server
         - containers
-        - hsqml
         - Chart
         - Chart-cairo

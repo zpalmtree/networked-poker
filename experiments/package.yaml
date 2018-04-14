@@ -6,11 +6,11 @@ maintainer: zp+github@zacharypalmer.co.uk
 license: BSD3
 dependencies:
 - base >=4.9 && <4.11
+- ai
+- server
+- types
 library:
     source-dirs: src/lib
-    dependencies:
-    - ai
-    - server
 executables:
   ai-shuffle-test:
     main: Main.hs

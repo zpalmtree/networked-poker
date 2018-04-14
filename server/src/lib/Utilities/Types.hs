@@ -45,10 +45,9 @@ mkCGame = do
 
     return cgame
 
-mkGame :: [Player] -> MVar [Player] -> IO Game
-mkGame players' playerChan = do
-    let shuffleType' = ShuffleType RandomIndex LEucyer
-        cards' = Cards [] (IsRandomIndex $ RandomIndexDeck fullDeck)
+mkGame :: [Player] -> MVar [Player] -> ShuffleType -> Deck -> IO Game
+mkGame players' playerChan shuffleType' deck' = do
+    let cards' = Cards [] deck'
 
     shuffleType'' <- newIORef shuffleType'
 

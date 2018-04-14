@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3012cc548b38487f8bfaad323226e2592f52d50e85f0014b3259c5f80c42cc00
+-- hash: a16ac0cda0f0ef6f65d742c50ac9c88bedce8eb9ef85b6f3de4a77bb95829ca6
 
 name:           server
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
     , binary
     , bytestring
     , hslogger
+    , hsqml
     , lens
     , mersenne-random
     , mwc-random
@@ -48,6 +49,7 @@ library
       Game
       HumanMessage
       Input
+      LaunchServer
       Output
       RandomSource
       Showdown
