@@ -8,4 +8,9 @@ import AIFramework (runAI)
 import AICallAny (handleFunc)
 
 main :: IO ()
-main = runAI "call-any" handleFunc
+main = do
+    result <- runAI "call-any" handleFunc
+
+    case result of
+        True -> putStrLn "AI-Call-Any won!"
+        False -> putStrLn "AI-Call-Any lost!"

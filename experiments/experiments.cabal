@@ -1,0 +1,36 @@
+-- This file has been generated from package.yaml by hpack version 0.27.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: d84cc743e7e2d45e181b5f2680a10008ab0fa1deb3d6e08caa4e3141620aea10
+
+name:           experiments
+version:        0.1.0.0
+category:       Testing
+author:         ZedPea
+maintainer:     zp+github@zacharypalmer.co.uk
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+library
+  other-modules:
+      Paths_experiments
+  hs-source-dirs:
+      src/lib
+  build-depends:
+      ai
+    , base >=4.9 && <4.11
+    , server
+  default-language: Haskell2010
+
+executable ai-shuffle-test
+  main-is: Main.hs
+  other-modules:
+      Paths_experiments
+  hs-source-dirs:
+      src/exe/ai-shuffle-test
+  build-depends:
+      base >=4.9 && <4.11
+  default-language: Haskell2010

@@ -1,7 +1,8 @@
 module ClientFramework
 (
     establishConnection,
-    ioLoop
+    ioLoop,
+    ClientResponse(..),
 )
 where
 
@@ -20,6 +21,11 @@ import Network.Socket
      connect, addrAddress, withSocketsDo)
 
 import Types (Message(..), InitialGameMsg(..), ClientGame)
+
+data ClientResponse a = Nowt
+                      | Something a
+                      | GameWon
+                      | GameLoss
 
 establishConnection :: String -> IO (Either String (ClientGame, Socket))
 establishConnection name = withSocketsDo $ do
@@ -47,25 +53,30 @@ establishConnection name = withSocketsDo $ do
                     _ -> error "Invalid message recieved!"
 
 ioLoop :: (Binary a, Binary b, Show b, MonadTrans c, Monad (c IO)) => 
-           Socket -> (a -> c IO (Maybe b)) -> c IO ()
+           Socket -> (a -> c IO (ClientResponse b)) -> c IO Bool
 ioLoop sock handleFunc = do
     msg <- lift $ recv sock 4096
     decode msg sock handleFunc
 
 decode :: (Binary a, Binary b, Show b, MonadTrans c, Monad (c IO)) => 
-           ByteString -> Socket -> (a -> c IO (Maybe b)) -> c IO ()
+           ByteString -> Socket -> (a -> c IO (ClientResponse b)) -> c IO Bool
 decode input sock handleFunc = case decodeOrFail $ fromStrict input of
     Left (_, _, err) -> error err
     Right (unconsumed, _, msg) -> do
         maybeAction <- handleFunc msg
+
+        let proceed = if BL.null unconsumed
+                        then ioLoop sock handleFunc
+                        else decode (toStrict unconsumed) sock handleFunc
+
         case maybeAction of
-            Nothing -> return ()
-            Just action -> do
+            GameWon -> return True
+            GameLoss -> return False
+            Nowt -> proceed
+            Something action -> do
                 lift . infoM "Prog.decode" $ 
                     "Sending message to server: " ++ show action
                 
-                void . lift . send sock . toStrict $ encode action
+                lift . send sock . toStrict $ encode action
 
-        if BL.null unconsumed
-            then ioLoop sock handleFunc
-            else decode (toStrict unconsumed) sock handleFunc
+                proceed

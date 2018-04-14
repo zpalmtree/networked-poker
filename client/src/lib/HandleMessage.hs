@@ -22,6 +22,7 @@ import Control.Lens
      filtered)
 
 import ClientTypes (CGameStateT, CGame)
+import ClientFramework (ClientResponse(..))
 
 import CLenses 
     (game, qmlState, actionMade, winWindowVisibleSig, winWindowVisibleS,
@@ -43,7 +44,7 @@ import Types
      PlayersRemovedMsg(..), CardRevealMsg(..), InputMsg(..), MinRaiseMsg(..),
      TextMsg(..))
 
-handleMsg :: Message -> CGameStateT (Maybe (Action Int))
+handleMsg :: Message -> CGameStateT (ClientResponse (Action Int))
 handleMsg msg = do
     lift . infoM "Prog.handleMsg" $ "Recieved message: " ++ show msg
 
@@ -64,7 +65,7 @@ handleMsg msg = do
         MIsNextState -> def handleNextState
         MIsMinRaise (MinRaiseMsg m) -> def $ handleMinRaise m
         MIsTextMsg (TextMsg m) -> def $ handleTextMsg m
-    where def f = f >> return Nothing
+    where def f = f >> return Nowt
 
 handleAction :: ActionMsg a -> CGameStateT ()
 handleAction a = case a^.action of
@@ -232,7 +233,7 @@ handleCardsRevealed (p:ps) = do
     where isP x = x^.cUUID == p^.person
 
 --list of valid actions
-handleInputRequest :: [Action Int] -> CGameStateT (Maybe (Action Int))
+handleInputRequest :: [Action Int] -> CGameStateT (ClientResponse (Action Int))
 handleInputRequest as = do
     let actions = map actionButtonMap as
         boolList = buttonMap 0 $ sort actions
@@ -246,7 +247,7 @@ handleInputRequest as = do
     -- this will block until the user clicks a button and the MVar gets updated
     action' <- lift $ takeMVar (s^.qmlState.actionMade)
 
-    return $ Just action'
+    return $ Something action'
 
 buttonMap :: Int -> [Int] -> [Bool]
 buttonMap _ [] = []

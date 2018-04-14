@@ -18,7 +18,7 @@ import Lenses
      cCurrentBet, cCommunityCards, cBet)
 
 {-# ANN handleFunc "HLint: ignore Use head" #-}
-handleFunc :: [Action Int] -> AIGameStateT (Maybe (Action Int))
+handleFunc :: [Action Int] -> AIGameStateT (Action Int)
 handleFunc options = do
     s <- get
 
@@ -30,27 +30,26 @@ handleFunc options = do
 
     return $ handleOptions options ev s me
 
-handleOptions :: [Action Int] -> Int -> ClientGame -> CPlayer
-              -> Maybe (Action Int)
+handleOptions :: [Action Int] -> Int -> ClientGame -> CPlayer -> Action Int
 handleOptions options ev s me
     -- crap hand, check if possible
-    | targetBet <= 0 && Check `elem` options = Just Check
+    | targetBet <= 0 && Check `elem` options = Check
     -- can't check, so fold
-    | targetBet <= 0 = Just Fold
+    | targetBet <= 0 = Fold
     -- can make a valid raise, so do so
     | targetBet >= s^.cBets.cMinimumRaise + s^.cBets.cCurrentBet &&
-      enoughChips = Just $ Raise targetBet
+      enoughChips = Raise targetBet
     -- can't make a valid raise but have a good hand, go all in
     -- pair of tens
-    | ev >= 17301504 = Just AllIn
+    | ev >= 17301504 = AllIn
     -- can't make a valid raise but good hand, so call/check
-    | targetBet >= s^.cBets.cCurrentBet && Check `elem` options = Just Check
+    | targetBet >= s^.cBets.cCurrentBet && Check `elem` options = Check
     -- as above
-    | targetBet >= s^.cBets.cCurrentBet && enoughChips = Just Call
+    | targetBet >= s^.cBets.cCurrentBet && enoughChips = Call
     -- target bet isn't better than current, so check if possible
-    | Check `elem` options = Just Check
+    | Check `elem` options = Check
     -- otherwise fold
-    | otherwise = Just Fold
+    | otherwise = Fold
     where targetBet = targetBet' ev (s^.cBets.cBigBlindSize)
           enoughChips = me^.cBet + me^.cChips >= targetBet
     

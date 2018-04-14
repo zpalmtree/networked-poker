@@ -25,6 +25,7 @@ import Control.Lens
     (Lens', (^.), (^..), (.=), (-=), (+=), zoom, traversed, filtered)
 
 import AITypes (AIGameStateT)
+import ClientFramework (ClientResponse(..))
 import Types (ActionMsg, Action(..), CBets, Card)
 
 import Lenses 
@@ -121,18 +122,18 @@ handleNewChips ((u,n):xs) = do
 
     where isP p = p^.cUUID == u
 
-handlePlayersRemoved :: [UUID] -> AIGameStateT ()
+handlePlayersRemoved :: [UUID] -> AIGameStateT (Maybe Bool)
 handlePlayersRemoved ids = do
     s <- get
 
     let me = filter (^.cIsMe) (s^.cPlayers)
 
     if head me^.cUUID `elem` ids
-        then lift $ do
-            putStrLn "AI lost."
-            exitSuccess
+        then return $ Just True
 
-        else cPlayers .= filter isIn (s^.cPlayers)
+        else do
+            cPlayers .= filter isIn (s^.cPlayers)
+            return Nothing
 
     where isIn x = x^.cUUID `notElem` ids
 
@@ -172,7 +173,5 @@ handleNextState = do
     cBets.cMinimumRaise .= s^.cBets.cBigBlindSize
     cBets.cCurrentBet .= 0
 
-handleGameOver :: AIGameStateT ()
-handleGameOver = lift $ do
-    putStrLn "AI won!"
-    exitSuccess
+handleGameOver :: AIGameStateT (ClientResponse a)
+handleGameOver = return GameWon

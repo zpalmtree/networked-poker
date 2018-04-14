@@ -63,7 +63,7 @@ main = do
 
                 infoM "Prog.main" "Entering network loop"
 
-                void . forkIO $ evalStateT (ioLoop sock handleMsg) initialState
+                void . forkIO . void $ evalStateT (ioLoop sock handleMsg) initialState
 
     infoM "Prog.main" "Running GUI"
 

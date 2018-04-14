@@ -8,4 +8,9 @@ import AIFramework (runAI)
 import AIRandom (handleFunc)
 
 main :: IO ()
-main = runAI "ai-random" handleFunc
+main = do
+    result <- runAI "ai-random" handleFunc
+
+    case result of
+        True -> putStrLn "AI-Random won!"
+        False -> putStrLn "AI-Random lost!"

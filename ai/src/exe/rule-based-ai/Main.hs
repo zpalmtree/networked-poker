@@ -8,4 +8,9 @@ import AIFramework (runAI)
 import AIRuleBased (handleFunc)
 
 main :: IO ()
-main = runAI "rule-based-ai" handleFunc
+main = do
+    result <- runAI "rule-based-ai" handleFunc
+
+    case result of
+        True -> putStrLn "AI-Rule-Based won!"
+        False -> putStrLn "AI-Rule-Based lost!"
