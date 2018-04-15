@@ -21,19 +21,20 @@ where
 
 import Control.Lens (Getting, (^.), (^?!), (%=), (.=), (^..), _head, traversed)
 import Control.Monad.Trans.State (get)
+import Control.Monad.Trans.Class (lift)
 import Data.List (elemIndex, find)
 import Data.Maybe (mapMaybe)
 import Control.Monad (when, unless, replicateM_)
 import Safe (headNote, tailNote)
 import Data.UUID.Types (UUID)
-import Network.Socket (Socket)
+import Network.Socket (Socket, close)
 import System.Random (getStdRandom, random)
 import Data.Tuple (swap)
 
 import Types (Player(..), GameState, GameStateT, Game)
 
 import Lenses (inPlay, allIn, gameFinished, dealer, uuid, chips, players,
-               playerQueue)
+               playerQueue, socket)
 
 numInPlayPure :: Game -> Int
 numInPlayPure = numXPure inPlay
@@ -129,6 +130,9 @@ removeOutPlayers outputFunc = do
 
     -- let them know they're being removed
     outputFunc removed
+
+    -- Close their sockets so we don't run out
+    lift $ mapM_ close (toRemove^..traversed.socket)
 
     -- then actually removed them, if we remove them before telling them
     -- they are being removed, we don't have their socket to message them

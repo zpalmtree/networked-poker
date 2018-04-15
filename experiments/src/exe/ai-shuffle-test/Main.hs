@@ -12,12 +12,13 @@ import Text.Printf (printf)
 import qualified AICallAny as CA (handleFunc)
 import qualified AIRuleBased as RB (handleFunc)
 import Utilities.Card (fullDeck)
+import DrawCard (getInitFunc, getRNGFunc)
 import LaunchServer (launchServerWithShuffle)
 import AIFramework (runAI)
 
 import Types
     (DrawAlgorithm(..), Deck(..), ShuffleType, RandomIndexDeck(..), 
-     KnuthDeck(..), RandomSortDeck(..), ShuffleType(..))
+     KnuthDeck(..), RandomSortDeck(..), ShuffleType(..), RandomSource(..))
 
 data WinRate = WinRate {
     callAny :: Int,
@@ -26,12 +27,12 @@ data WinRate = WinRate {
 
 main :: IO ()
 main = do
+    algo <- getAlgo
     rng <- getRng
 
-    algo <- getAlgo rng
-    let deck = mkDeck rng
+    let shuffleType = ShuffleType algo rng
 
-    serverThread <- forkIO $ launchServerWithShuffle algo deck
+    serverThread <- forkIO $ launchServerWithShuffle shuffleType
 
     putStrLn "Launching server..."
 
@@ -63,31 +64,24 @@ playLoop n winrate
                             then winrate { callAny = callAny winrate + 1 }
                             else winrate { ruleBased = ruleBased winrate + 1 })
 
-mkDeck :: DrawAlgorithm -> Deck
-mkDeck d = case d of
-    RandomIndex -> IsRandomIndex $ RandomIndexDeck fullDeck
-    Knuth -> IsKnuth $ KnuthDeck fullDeck
-    RandomSort -> IsRandomSort $ RandomSortDeck fullDeck
+mkDeck :: RandomSource -> DrawAlgorithm -> IO Deck
+mkDeck rng algo = getInitFunc algo (getRNGFunc rng)
 
-getAlgo :: DrawAlgorithm -> IO ShuffleType
-getAlgo a = do
-    putStr "Random Source? [LEucyer, Mersenne, MWC256]: "
+getRng :: IO RandomSource
+getRng = getInput "Random Source? [LEucyer, Mersenne, MWC256]: "
+
+getAlgo :: IO DrawAlgorithm
+getAlgo = getInput "Draw algorithm? [RandomIndex, Knuth, RandomSort]: "
+
+getInput :: Read a => String -> IO a
+getInput msg = do
+    putStr msg
     hFlush stdout
-    rng <- readMaybe <$> getLine
+    input <- readMaybe <$> getLine
 
-    case rng of
-        Nothing -> putStrLn "Failed to parse. Try again." >> getAlgo a
-        Just r -> return $ ShuffleType a r
-
-getRng :: IO DrawAlgorithm
-getRng = do
-    putStr "Draw algorithm? [RandomIndex, Knuth, RandomSort]: "
-    hFlush stdout
-    algo <- readMaybe <$> getLine
-
-    case algo of
-        Nothing -> putStrLn "Failed to parse. Try again." >> getRng
-        Just a -> return a
+    case input of
+        Nothing -> putStrLn "Failed to parse. Try again." >> getInput msg
+        Just x -> return x
 
 readMaybe :: (Read a) => String -> Maybe a
 readMaybe s = case reads s of

@@ -6,6 +6,7 @@ where
 
 import Control.Monad.Trans.State (evalStateT)
 import System.Random (randomR, getStdRandom)
+import Network.Socket (close)
 
 import ClientFramework (ClientResponse(..), establishConnection, ioLoop)
 import AITypes (AIGameStateT)
@@ -28,8 +29,10 @@ runAI name handleFunc = do
         Left err -> error $
             "Couldn't connect to server. Did you start it?\n" ++ show err
 
-        Right (game, socket) -> 
-            evalStateT (ioLoop socket (filterUnneeded handleFunc)) game
+        Right (game, socket) -> do
+            result <- evalStateT (ioLoop socket (filterUnneeded handleFunc)) game
+            close socket
+            return result
 
 filterUnneeded :: ([Action Int] -> AIGameStateT (Action Int)) 
                  -> Message -> AIGameStateT (ClientResponse (Action Int))

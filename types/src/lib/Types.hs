@@ -246,10 +246,11 @@ data Message = MIsAction (ActionMsg Int)
 data Deck = IsKnuth KnuthDeck
           | IsRandomIndex RandomIndexDeck
           | IsRandomSort RandomSortDeck
+          deriving (Show)
 
-newtype KnuthDeck = KnuthDeck [Card]
-newtype RandomIndexDeck = RandomIndexDeck [Card]
-newtype RandomSortDeck = RandomSortDeck [Card]
+newtype KnuthDeck = KnuthDeck [Card] deriving (Show)
+newtype RandomIndexDeck = RandomIndexDeck [Card] deriving (Show)
+newtype RandomSortDeck = RandomSortDeck [Card] deriving (Show)
 
 -- NEWTYPES
 

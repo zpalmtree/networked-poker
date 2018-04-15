@@ -19,7 +19,7 @@ import System.IO.Error (tryIOError)
 import System.Environment (getArgs)
 import Data.Either (isLeft)
 import Data.IORef (IORef, writeIORef)
-import Control.Lens ((^.))
+import Control.Lens ((^.), (^..), traversed)
 import Data.Text (Text, unpack)
 
 import System.Log.Logger 
@@ -29,7 +29,7 @@ import System.Log.Logger
 import Network.Socket 
     (Socket, SockAddr, SocketOption(..), getAddrInfo, socket, addrFamily,
      addrSocketType, bind, addrAddress, listen, accept, isReadable,
-     addrProtocol, isSupportedSocketOption, setSocketOption)
+     addrProtocol, isSupportedSocketOption, setSocketOption, close)
 
 import Graphics.QML 
     (ObjRef, initialDocument, contextObject, newClass, defMethod', newObject,
@@ -38,9 +38,11 @@ import Graphics.QML
 import Utilities.Player (mkNewPlayer)
 import Utilities.Card (dealCards, fullDeck)
 import Utilities.Types (mkCGame, mkGame)
+import DrawCard (getInitFunc, getRNGFunc, initM)
 import Game (gameLoop)
 import Output (outputGameOver, outputInitialGame)
-import Lenses (nextRoundShuffleType)
+import Lenses (nextRoundShuffleType, playerQueue, players, socket,
+               shuffleType, algorithm, randomSource)
 
 import Types
     (GameStateT, Player(..), ShuffleType(..), Deck(..), 
@@ -50,10 +52,9 @@ import Paths_server (getDataFileName)
 
 launchServer :: IO ()
 launchServer = launchServerWithShuffle (ShuffleType RandomIndex LEucyer)
-               (IsRandomIndex $ RandomIndexDeck fullDeck)
 
-launchServerWithShuffle :: ShuffleType -> Deck -> IO ()
-launchServerWithShuffle shuffleType' deck' = do
+launchServerWithShuffle :: ShuffleType -> IO ()
+launchServerWithShuffle shuffleType' = do
     args <- getArgs
 
     let level | "--debug" `elem` args = DEBUG
@@ -65,7 +66,8 @@ launchServerWithShuffle shuffleType' deck' = do
     infoM "Prog.Main" "Starting server"
 
     addr:_ <- getAddrInfo Nothing (Just "127.0.0.1") (Just "2112")
-    sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
+    sock <- Network.Socket.socket (addrFamily addr) (addrSocketType addr)
+                                  (addrProtocol addr)
 
     -- c api -> 1 = true, 0 = false
     let reuse = if isSupportedSocketOption ReuseAddr
@@ -91,20 +93,19 @@ launchServerWithShuffle shuffleType' deck' = do
 
     unseated <- newMVar []
 
-    forever $ listenForConnections sock unseated shuffleType' deck'
+    forever $ listenForConnections sock unseated shuffleType'
 
-listenForConnections :: Socket -> MVar [Player] -> ShuffleType -> Deck -> IO ()
-listenForConnections localSock unseated shuffleType' deck' = do
+listenForConnections :: Socket -> MVar [Player] -> ShuffleType -> IO ()
+listenForConnections localSock unseated shuffleType' = do
     (sock, addr) <- accept localSock
 
     infoM "Prog.listenForConnections" 
           (printf "Connection made on %s..." (show addr))
 
-    void . forkIO $ handleNewClient sock addr unseated shuffleType' deck'
+    void . forkIO $ handleNewClient sock addr unseated shuffleType'
 
-handleNewClient :: Socket -> SockAddr -> MVar [Player] -> ShuffleType
-                          -> Deck -> IO ()
-handleNewClient sock addr unseated shuffleType' deck' = do
+handleNewClient :: Socket -> SockAddr -> MVar [Player] -> ShuffleType -> IO ()
+handleNewClient sock addr unseated shuffleType' = do
     readable <- isReadable sock
 
     if readable
@@ -113,24 +114,24 @@ handleNewClient sock addr unseated shuffleType' deck' = do
             msg <- recv sock 4096
 
             handleMsg (decodeOrFail $ fromStrict msg) sock addr unseated
-                       shuffleType' deck'
+                       shuffleType'
         else error "Socket is unreadable..."
 
 handleMsg :: Either (ByteString, ByteOffset, String) 
                     (ByteString, ByteOffset, String) 
-          -> Socket -> SockAddr -> MVar [Player] -> ShuffleType -> Deck -> IO ()
-handleMsg (Left (_, _, err)) _ addr _ _ _ = 
+          -> Socket -> SockAddr -> MVar [Player] -> ShuffleType -> IO ()
+handleMsg (Left (_, _, err)) _ addr _ _ = 
     error $ printf "Couldn't decode recieved message from %s: %s..." 
                    (show addr) err
 
-handleMsg (Right (_, _, msg)) sock addr unseated shuffleType' deck' = do
+handleMsg (Right (_, _, msg)) sock addr unseated shuffleType' = do
     infoM "Prog.handleMsg" $
           printf "Recieved message from %s: %s" (show addr) msg
 
-    seatPlayer sock msg unseated shuffleType' deck'
+    seatPlayer sock msg unseated shuffleType'
 
-seatPlayer :: Socket -> String -> MVar [Player] -> ShuffleType -> Deck -> IO ()
-seatPlayer sock name' unseated shuffleType' deck' = do
+seatPlayer :: Socket -> String -> MVar [Player] -> ShuffleType -> IO ()
+seatPlayer sock name' unseated shuffleType' = do
     args <- getArgs
 
     let numPlayers | "--fullgame" `elem` args = maxPlayers
@@ -146,7 +147,7 @@ seatPlayer sock name' unseated shuffleType' deck' = do
 
         if length a == (numPlayers - 1)
             then do
-                launchNewGame (player : a) unseated shuffleType' deck'
+                launchNewGame (player : a) unseated shuffleType'
                 return []
             else return $ player : a
 
@@ -156,11 +157,11 @@ maxPlayers = 6
 minPlayers :: Int
 minPlayers = 2
 
-launchNewGame :: [Player] -> MVar [Player] -> ShuffleType -> Deck -> IO ()
-launchNewGame players' playerChan shuffleType' deck' = do
+launchNewGame :: [Player] -> MVar [Player] -> ShuffleType -> IO ()
+launchNewGame players' playerChan shuffleType' = do
     infoM "Prog.launchNewGame" "Making new game"
 
-    game' <- mkGame players' playerChan shuffleType' deck'
+    game' <- mkGame players' playerChan shuffleType'
 
     void . forkIO $ evalStateT play game'
 
@@ -177,6 +178,11 @@ setup = do
     args <- lift getArgs
 
     s <- get
+
+    let initFunc = getInitFunc (s^.shuffleType.algorithm)
+        rngFunc = getRNGFunc (s^.shuffleType.randomSource)
+
+    initM initFunc rngFunc
 
     lift . when ("--chooseshuffle" `elem` args) $ do
 
@@ -203,7 +209,12 @@ setup = do
 cleanup :: GameStateT ()
 cleanup = do
     outputGameOver
-    lift $ infoM "Prog.cleanup" "Game finished"
+
+    s <- get
+
+    lift $ do
+        mapM_ close (s^..playerQueue.players.traversed.Lenses.socket)
+        infoM "Prog.cleanup" "Game finished"
 
 changeShuffle :: IORef ShuffleType -> ObjRef () -> Text -> Text -> IO ()
 changeShuffle shuffleTypeIORef _ algorithm randomSource = do

@@ -19,6 +19,7 @@ library:
     - client-framework
     - binary
     - uuid-types
+    - network
 executables:
   ai-random:
     main: Main.hs

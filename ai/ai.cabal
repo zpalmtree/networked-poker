@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ba5ae9643a74ea817c5bad7311cfc1644987356fa6e66a9c3a1717d654094f63
+-- hash: 2d37893b7fe3e54fe30591d9f01318c299e02b3aca0368050f5989a2b9e601a3
 
 name:           ai
 version:        0.1.0.0
@@ -24,6 +24,7 @@ library
     , client-framework
     , containers
     , lens
+    , network
     , poker-eval
     , random
     , transformers

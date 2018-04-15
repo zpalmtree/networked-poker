@@ -9,7 +9,9 @@ import Control.Monad.Trans.State (get)
 import Control.Concurrent.MVar (MVar)
 import Control.Lens ((^.))
 import Data.IORef (newIORef)
+
 import Utilities.Card (fullDeck)
+import DrawCard (getInitFunc, getRNGFunc)
 
 import Types 
     (GameStateT, ClientGame(..), Game(..), PlayerQueue(..), Cards(..), 
@@ -19,7 +21,8 @@ import Types
 import Lenses 
     (stage, tableCards, bets, playerQueue, players, dealer, name, uuid, chips,
      inPlay, canReRaise, madeInitialBet, allIn, bet, cardInfo, currentBet,
-     smallBlindSize, bigBlindSize, minimumRaise)
+     smallBlindSize, bigBlindSize, minimumRaise, shuffleType, algorithm,
+     randomSource)
     
 mkCGame :: GameStateT ClientGame
 mkCGame = do
@@ -45,11 +48,16 @@ mkCGame = do
 
     return cgame
 
-mkGame :: [Player] -> MVar [Player] -> ShuffleType -> Deck -> IO Game
-mkGame players' playerChan shuffleType' deck' = do
-    let cards' = Cards [] deck'
-
+mkGame :: [Player] -> MVar [Player] -> ShuffleType -> IO Game
+mkGame players' playerChan shuffleType' = do
     shuffleType'' <- newIORef shuffleType'
+
+    let initFunc = getInitFunc (shuffleType'^.algorithm)
+        rngFunc = getRNGFunc (shuffleType'^.randomSource)
+
+    x <- initFunc rngFunc
+
+    let cards' = Cards [] x
 
     return $ Game playerChan pq PreFlop cards' False bets' False 1 
              shuffleType' shuffleType''
