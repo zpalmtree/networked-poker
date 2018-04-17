@@ -9,6 +9,7 @@ import Control.Monad.Trans.State (get)
 import Control.Concurrent.MVar (MVar)
 import Control.Lens ((^.))
 import Data.IORef (newIORef)
+import Safe (at)
 
 import Utilities.Card (fullDeck)
 import DrawCard (getInitFunc, getRNGFunc)
@@ -31,7 +32,7 @@ mkCGame = do
     let cgame = ClientGame players' dealer' currentPlayer (s^.stage) 
                            (s^.cardInfo.tableCards) cbets'
 
-        dealer' = ((s^.playerQueue.players) !! (s^.playerQueue.dealer))^.uuid
+        dealer' = ((s^.playerQueue.players) `at` (s^.playerQueue.dealer))^.uuid
 
         currentPlayer = head (s^.playerQueue.players)^.uuid
 

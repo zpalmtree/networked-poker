@@ -8,6 +8,7 @@ import System.Random (randomR, getStdRandom)
 import Control.Monad.Trans.State (get)
 import Control.Monad.Trans.Class (lift)
 import Control.Lens ((^.))
+import Safe (at)
 
 import AITypes (AIGameStateT)
 import Types (Action(..))
@@ -17,7 +18,7 @@ handleFunc :: [Action Int] -> AIGameStateT (Action Int)
 handleFunc options = do
     index <- lift . getStdRandom $ randomR (0, length options - 1)
 
-    case options !! index of
+    case options `at` index of
         Raise _ -> getRaise
         x -> return x
 

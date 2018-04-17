@@ -17,6 +17,8 @@ import Control.Concurrent (forkIO)
 import Control.Monad (void, when)
 import Data.Char (intToDigit)
 import Text.Printf (printf)
+import Data.List (sortBy, group, sort, partition)
+import Data.Function (on)
 
 import Graphics.Rendering.Chart.Easy 
     (Renderable, layout_x_axis, laxis_generate, addIndexes, plot_bars_values, 
@@ -134,8 +136,10 @@ chart mapping = toRenderable layout
     
           layout = layout_title .~ createTitle mapping
                  $ layout_x_axis . laxis_generate .~ autoIndexAxis x_axis_labels
-                 $ layout_x_axis . laxis_title .~ "Card (Value + Suit)"
-                 $ layout_y_axis . laxis_title .~ "Number drawn of this card"
+                 -- $ layout_x_axis . laxis_title .~ "Card (Value + Suit)"
+                 -- $ layout_y_axis . laxis_title .~ "Number drawn of this card"
+                 $ layout_x_axis . laxis_title .~ "Number of cards drawn"
+                 $ layout_y_axis . laxis_title .~ "Frequency"
                  $ layout_x_axis . laxis_title_style . font_size .~ 14
                  $ layout_y_axis . laxis_title_style . font_size .~ 14
                  $ layout_plots .~ [plotBars barChart]
@@ -145,10 +149,33 @@ chart mapping = toRenderable layout
                  $ def
         
           list = toAscList mapping
+
+          {-
           x_axis_labels = map (smallShow . fst) list
           y_axis_values = map (return . snd) list
+          -}
+
+          numberDrawn = getNumberDrawn $ map snd list
+
+          x_axis_labels = map fst numberDrawn
+          y_axis_values = map (return . snd) numberDrawn
 
           title = createTitle mapping
+
+getNumberDrawn :: [Int] -> [(String, Int)]
+getNumberDrawn frequency = band frequency (start + bandSize)
+    where start = minimum frequency
+          end = maximum frequency
+
+          bandSize = ceiling $ fromIntegral (end - start) / 10
+
+          band [] _ = []
+          band xs n
+            | null lesser = band greater (n+bandSize)
+            | otherwise = (formatBand n, length lesser) : band greater (n+bandSize)
+            where (lesser, greater) = partition (< n) xs
+
+          formatBand n = printf "%d-%d" (n - bandSize) n
 
 createTitle :: Map Card Int -> String
 createTitle mapping = printf 

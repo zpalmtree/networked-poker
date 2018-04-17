@@ -16,6 +16,7 @@ import Control.Monad (replicateM)
 import Data.List (sortBy)
 import Data.Function (on)
 import Control.Lens ((.=), (^.))
+import Safe (at)
 
 import Lenses (cardInfo, deck)
 
@@ -113,8 +114,8 @@ shuffle randomSource i xs = do
 swap :: Int -> Int -> [a] -> [a]
 swap i j xs
     | i == j = xs
-    | otherwise = let elemI = xs !! i
-                      elemJ = xs !! j
+    | otherwise = let elemI = xs `at` i
+                      elemJ = xs `at` j
                       left = take j xs
                       middle = take (i - j - 1) (drop (j + 1) xs)
                       right = drop (i + 1) xs

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2d37893b7fe3e54fe30591d9f01318c299e02b3aca0368050f5989a2b9e601a3
+-- hash: e098d2085434a7a96cd6d4243b94fd61256963b45ee0aa5800419f7c63f2bce1
 
 name:           ai
 version:        0.1.0.0
@@ -27,6 +27,7 @@ library
     , network
     , poker-eval
     , random
+    , safe
     , transformers
     , types
     , uuid-types
@@ -55,6 +56,7 @@ executable ai-random
     , lens
     , poker-eval
     , random
+    , safe
     , transformers
     , types
   default-language: Haskell2010
@@ -72,6 +74,7 @@ executable call-any
     , lens
     , poker-eval
     , random
+    , safe
     , transformers
     , types
   default-language: Haskell2010
@@ -89,6 +92,7 @@ executable rule-based-ai
     , lens
     , poker-eval
     , random
+    , safe
     , transformers
     , types
   default-language: Haskell2010

@@ -8,6 +8,7 @@ import Data.Poker (numericalHandValue, fromList)
 import Data.Poker.Internal (unNumericalHandValue)
 import Control.Monad.Trans.State (get)
 import Control.Lens ((^.))
+import Safe (at)
 
 import CoerceCard (cardToEval)
 import AITypes (AIGameStateT)
@@ -24,7 +25,7 @@ handleFunc options = do
 
     let me = head $ filter (^.cIsMe) (s^.cPlayers)
         myCards = me^.cCards
-        evAllCards = evaluateCards $ myCards !! 0 : myCards !! 1 : s^.cCommunityCards
+        evAllCards = evaluateCards $ myCards `at` 0 : myCards `at` 1 : s^.cCommunityCards
         evCommunityCards = evaluateCards $ s^.cCommunityCards
         ev = evAllCards - evCommunityCards
 

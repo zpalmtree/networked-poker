@@ -13,6 +13,7 @@ dependencies:
 - lens
 - containers
 - poker-eval
+- safe
 library:
     source-dirs: src/lib
     dependencies:
