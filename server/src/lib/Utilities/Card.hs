@@ -31,9 +31,8 @@ dealCards = do
     outputPlayerCards
 
 updateCards :: Int -> GameStateT ()
-updateCards n = forM_ [0 .. n - 1] $ \x -> do
-    playerQueue.players.ix x.cards <~ drawPlayerCards
-    updateCards x
+updateCards n = forM_ [0 .. n - 1] $ 
+    \x -> playerQueue.players.ix x.cards <~ drawPlayerCards
 
 drawPlayerCards :: GameStateT [Card]
 drawPlayerCards = replicateM 2 getRandomCard
