@@ -6,7 +6,7 @@ Rectangle
     property alias textColor: label.color
 
     height: 70
-    width: 100
+    width: 70
 
     radius: 10
 

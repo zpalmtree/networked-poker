@@ -6,6 +6,7 @@ where
 
 import Data.Poker (numericalHandValue, fromList)
 import Data.Poker.Internal (unNumericalHandValue)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State (get)
 import Control.Lens ((^.))
 import Safe (at)
@@ -25,7 +26,12 @@ handleFunc options = do
 
     let me = head $ filter (^.cIsMe) (s^.cPlayers)
         myCards = me^.cCards
-        evAllCards = evaluateCards $ myCards `at` 0 : myCards `at` 1 : s^.cCommunityCards
+
+    if null (me^.cCards)
+        then lift $ print s
+        else return ()
+
+    let evAllCards = evaluateCards $ myCards `at` 0 : myCards `at` 1 : s^.cCommunityCards
         evCommunityCards = evaluateCards $ s^.cCommunityCards
         ev = evAllCards - evCommunityCards
 
@@ -35,6 +41,9 @@ handleOptions :: [Action Int] -> Int -> ClientGame -> CPlayer -> Action Int
 handleOptions options ev s me
     -- crap hand, check if possible
     | targetBet <= 0 && Check `elem` options = Check
+    -- call tiny bets such as small/big blind 
+    | targetBet <= 0 && s^.cBets.cCurrentBet <= s^.cBets.cBigBlindSize &&
+      Call `elem` options = Call
     -- can't check, so fold
     | targetBet <= 0 = Fold
     -- can make a valid raise, so do so
