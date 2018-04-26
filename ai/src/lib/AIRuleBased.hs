@@ -43,7 +43,8 @@ handleOptions options ev s me
     | targetBet <= 0 && Check `elem` options = Check
     -- call tiny bets such as small/big blind 
     | targetBet <= 0 && s^.cBets.cCurrentBet <= s^.cBets.cBigBlindSize &&
-      Call `elem` options = Call
+      Call `elem` options &&
+      me^.cBet + me^.cChips >= s^.cBets.cCurrentBet = Call
     -- can't check, so fold
     | targetBet <= 0 = Fold
     -- can make a valid raise, so do so

@@ -45,6 +45,9 @@ makeBet amount = do
 
     player <- getCurrentPlayer
 
+    when (player^.chips < 0) $
+        error "Negative chips in makeBet!"
+
     updateMaxBet (player^.bet)
 
 updateMaxBet :: (Monad m) => Int -> GameState m ()
