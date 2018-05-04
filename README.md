@@ -104,6 +104,7 @@ They fall under the CC0 1.0 license - https://creativecommons.org/licenses/by/1.
 
 Icons were resized.
 
-#### Deuces
+#### poker-eval
+poker-eval is used for determining EV in one of the AI's developed. 
 
-I'm using deuces from https://github.com/worldveil/deuces with a python3 port from https://github.com/msaindon/deuces
+This was created by Loic Dachary - http://pokersource.sourceforge.net/
