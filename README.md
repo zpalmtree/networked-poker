@@ -5,7 +5,7 @@ A collection of programs to allow multiple clients to play poker together on one
 
 There is also a utility program to test different card picking algorithms and randomness sources, along with a tiny GUI to hot swap card picking algorithms and random sources mid game.
 
-![poker-client](https://zacharypalmer.co.uk/images/poker-client.png)
+![poker-client](https://zacharypalmer.co.uk/img/portfolio/poker.png)
 
 ## Installation
 
