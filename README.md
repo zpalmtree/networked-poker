@@ -16,7 +16,7 @@ You need stack and QtQuick installed.
 `sudo apt-get install haskell-stack qtdeclarative5-dev`
 
 ##### Arch based:
-`sudo pacman -S stack qt5-quickcontrols qt5-quickcontrols`
+`sudo pacman -S stack qt5-quickcontrols qt5-quickcontrols2`
 
 If you're using arch you might need to add 
 
