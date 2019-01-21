@@ -1,11 +1,7 @@
 # networked-poker
-[![Build Status](https://travis-ci.org/ZedPea/networked-poker.svg)](https://travis-ci.org/ZedPea/networked-poker)
-
-A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and an AI to play against. Multiple AI's will be implemented, currently the only one implemented picks an action at random.
+A collection of programs to allow multiple clients to play poker together on one server, with a GUI for clients, and a few AIs to play against.
 
 There is also a utility program to test different card picking algorithms and randomness sources, along with a tiny GUI to hot swap card picking algorithms and random sources mid game.
-
-![poker-client](https://zacharypalmer.co.uk/img/portfolio/poker.png)
 
 ## Installation
 
@@ -28,7 +24,7 @@ You may also need to install `ncurses5-compat-libs` from the AUR
 
 #### Clone the repository
 
-`git clone https://github.com/ZedPea/networked-poker.git`
+`git clone https://github.com/zpalmtree/networked-poker.git`
 
 `cd networked-poker`
 
